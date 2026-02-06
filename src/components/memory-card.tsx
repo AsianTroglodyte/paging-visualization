@@ -273,25 +273,58 @@ export function MemoryCard({
             throw new Error(`Cannot allocate ${numPages} pages. Only ${freeList.length} free.`);
         }
 
-        // select random free pages. result is the list of numbers. each number represents a page frame number. 
-        // the index of the item in the list represents the VPN
-        const newAllocatedPagesPFN = selectRandPages(numPages, freeList);
+        // Inline: select random free pages
+        const shuffled = [...freeList];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+        }
+        const newAllocatedPagesPFN = shuffled.slice(0, numPages);
         console.log("AllocatedPagesPFN: ", newAllocatedPagesPFN);
         
-        // determine new process ID
-        const newProcessID = createProcessID();
+        // Inline: determine new process ID
+        let newProcessID: number | undefined;
+        for (let i = 0; i <= activePageTableBases.length; i += 1) {
+            if (activePageTableBases.length === 0) {
+                newProcessID = i;
+                break;
+            }
+            if (activePageTableBases.some(entry => entry.processID === i) === false) {
+                newProcessID = i;
+                break;
+            }
+        }
+        if (newProcessID === undefined) {
+            throw new Error("createProcessID(): Available ID somehow not found.");
+        }
 
-        // find base of free space for page table
-        let newPageTableBase = findFreePageTableBase(activePageTableBases, numPages);
-        // console.log("newPageTableBase", newPageTableBase);
+        // Inline: find base of free space for page table
+        let newPageTableBase: number | null = null;
+        const tables = activePageTableBases
+            .map(e => ({
+                start: e.pageTableBase,
+                end: e.pageTableBase + e.numPages,
+            }))
+            .sort((a, b) => a.start - b.start);
+        
+        let cursor = START_OF_PAGE_TABLES;
+        for (const t of tables) {
+            if (cursor + numPages <= t.start) {
+                newPageTableBase = cursor;
+                break;
+            }
+            cursor = t.end;
+        }
 
-        // no space found, compact page tables and try again. NOTE we already check if there is enough space 
-        // before at the very beginning of this function, so compaction followed by retrying should always work
+        if (newPageTableBase === null && cursor + numPages <= (START_OF_PAGE_TABLES + MAX_PAGES_ALLOCATABLE)) {
+            newPageTableBase = cursor;
+        }
+
+        // no space found, compact page tables and try again. guaranteed to work because 
+        // we checked whether there were enough free pages earlier
         if (newPageTableBase === null) {
             newPageTableBase = compactPagetables();
         }
-
-        // console.log("newPageTableBase: ", newPageTableBase);
 
         setActivePageTablesBases([
             ...activePageTableBases,
@@ -312,7 +345,6 @@ export function MemoryCard({
                 valid: true
             }
         ]);
-
 
         writePageTable(newAllocatedPagesPFN, newPageTableBase);
 
@@ -343,54 +375,7 @@ export function MemoryCard({
         setFreeList([...freeList, ...newlyFreedPages]);
     }
 
-    function createProcessID() {
-        for (let i = 0; i <= activePageTableBases.length; i += 1) {
-            // Check if i is already used as a processID in the pageTable Directory
-            // if not, use it as the new process ID
-            if (activePageTableBases.length === 0) {
-                return i;
-            }
-            if (activePageTableBases.some(entry => entry.processID === i) === false) {
-                return i;
-            }
-        }
-        throw new Error("createProcessID(): Available ID somehow not found.");
-    }
-       
-    function selectRandPages(numPages: number, freeList: number[]): number[] {
-        for (let i = freeList.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [freeList[i], freeList[j]] = [freeList[j], freeList[i]]
-        }
-        const allocated = freeList.slice(0, numPages);
 
-        return allocated;
-    }
-
-    function findFreePageTableBase(active: ActivePageTablesBases, needed: number): number | null {
-        const tables = active
-        .map(e => ({
-            start: e.pageTableBase,
-            end: e.pageTableBase + e.numPages,
-        }))
-        .sort((a, b) => a.start - b.start);
-
-        let cursor = START_OF_PAGE_TABLES ; // start of page tables
-
-        for (const t of tables) {
-            if (cursor + needed <= t.start) {
-                return cursor; // found a gap
-            }
-            cursor = t.end;
-        }
-
-        // check space at the end
-        if (cursor + needed <= (START_OF_PAGE_TABLES + MAX_PAGES_ALLOCATABLE)) {
-            return cursor;
-        }
-
-        return null; // no space
-    }
 
     function compactPagetables() {
         const sortedActivePageTableBases = [...activePageTableBases].sort((a, b) => a.pageTableBase - b.pageTableBase);
