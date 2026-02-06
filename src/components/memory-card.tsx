@@ -55,7 +55,6 @@ export function MemoryCard({
     ...props
     }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
 
-    
     // the memory byte array contains 4 crucial pieces of data:
     //  - page table base list - list of bytes, each byte is an entry mapping a process to the 
     //    base address of their corresponding page table.
@@ -64,8 +63,8 @@ export function MemoryCard({
     //  - process memory - the memory used by processes. 
     // Yes, I could have seperated these into multiple useStates, and that would have probably been an
     // easier more maintainable approach, but simulating a proper single piece of memory seemed more fun
-    // 
-    const FREE_LIST_ADDRESS = 7;
+    // and a bit more extensible
+    const FREE_LIST_ADDRESS = 15; // address where free list byte is stored
     const MAX_PROCESSES = 3;
     const MAX_PAGES_ALLOCATABLE = 6; // maximum space for page tables in bytes
     const START_OF_PROCESS_MEMORY = 15; // address where process memory starts
@@ -73,9 +72,10 @@ export function MemoryCard({
 
     const [memory, setMemory] = useState(() => {
         const initialMemory = new Array(64).fill(0);
-        // initialize free list. most significant bit represents free status 
-        // of first page in process memory, bit after that represents state of 
-        // page in process memory, and so on.
+        // initialize free list. least significant bit represents free status 
+        // of first page in process memory. Since the first two pages are reserved for page tables, 
+        // they are marked as not free. this makes interpreting the free list easier since the page
+        // frame number corresponds to the bit position in the free list byte.
         initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
         // 
         return initialMemory;
@@ -113,17 +113,20 @@ export function MemoryCard({
         return free;
     }
 
-    function setFreeList(newFreeList: number[]) {
-        const bitmap = newFreeList.reduce(
-            (acc, page) => acc | (1 << page),
-            0
-        );
-
-        setMemory(prev => {
-            const next = [...prev];
-            next[FREE_LIST_ADDRESS] = bitmap;
-            return next;
-        });
+    function getActivePageTablesBases(mem: number[]): ActivePageTablesBases {
+        const active: ActivePageTablesBases = [];
+        for (let i = 0; i < MAX_PROCESSES; i++) {
+            const entry = mem[i];
+            if ((entry & 0b00000001) === 1) { // check valid bit
+                active.push({
+                    processID: i,
+                    pageTableBase: (entry >> 4),
+                    numPages: (entry >> 1 & 0b00000111),
+                    valid: true
+                });
+            }
+        }
+        return active;
     }
 
     function getAllPageTables(): {processID: number, pageTable: PageTable}[] {
@@ -162,20 +165,50 @@ export function MemoryCard({
 
     // Everything below are regular functions that operate on the memory byte array 
     // this also includes functions that generate some specialized views such as getPageTable that 
-    // don't fit the views that above
+    // don't fit the views  above
+
+    function writeProcessPages(newAllocatedPages: number[]) {
+        // const allAllocatedPages = [...freeList, ...allocatedPages];
+
+
+        setMemory((prev) => {
+            const newMemory = [...prev];
+
+            for (let pageFrameNumber = 2; pageFrameNumber < 8; pageFrameNumber++) {
+                if (newAllocatedPages.includes(pageFrameNumber)) {
+                    // write some dummy data to allocated pages
+                    for (let i = 0; i < 8; i++) {
+                        newMemory[pageFrameNumber * 8 + i] = Math.floor(Math.random() * 256);
+                    }
+                }
+            }
+
+            return newMemory
+        })
+    }
 
     function setActivePageTablesBases(activePageTablesBases: ActivePageTablesBases) {
+
         if (activePageTablesBases.some(entry => entry.numPages !== 2 && entry.numPages !== 4)) {
-            throw new Error("number of pages for processes' must be either2 or 4.");
+            throw new Error(`number of pages for processes' must be either2 or 4.`);
         }
 
         setMemory(prev => {
             const newMemory = [...prev];
-            activePageTablesBases.forEach(entry => {
-                // raw processID works because the process ID is the index in the page table base list
-                newMemory[entry.processID] = 
-                (entry.pageTableBase << 4) | (entry.numPages << 1) | 0b00000001; // set valid bit
-            });
+            
+            // Set all possible process entries
+            for (let i = 0; i < MAX_PROCESSES; i++) {
+                const entry = activePageTablesBases.find(e => e.processID === i);
+                
+                if (entry) {
+                    // Process exists in new list - write valid entry
+                    newMemory[i] = (entry.pageTableBase << 4) | (entry.numPages << 1) | 0b00000001; // set valid bit
+                } else {
+                    // Process doesn't exist - mark as invalid by clearing the valid bit
+                    newMemory[i] = 0b00000000;
+                }
+            }
+            
             return newMemory;
         });
     }
@@ -201,8 +234,21 @@ export function MemoryCard({
         );
     }
 
+    function setFreeList(newFreePages: number[]) {
+        const bitmap = newFreePages.reduce(
+            (accumulator, pageFrameNumber) => accumulator | (1 << pageFrameNumber),
+            0
+        );
+
+        setMemory(prev => {
+            const next = [...prev];
+            next[FREE_LIST_ADDRESS] = bitmap;
+            return next;
+        });
+    }
+
     
-    function setPageTable(AllocatedPagesPFN: number[], pageTableBase: number) {
+    function writePageTable(AllocatedPagesPFN: number[], pageTableBase: number) {
         setMemory(prev => {
             const newMemory = [...prev];
             AllocatedPagesPFN.forEach((_, index) => {
@@ -222,23 +268,15 @@ export function MemoryCard({
     }
 
 
-    function setProcessPages(numPages: number, freeList: number[]): number[] {
-        for (let pageFrameNumber = 2; pageFrameNumber < 8; pageFrameNumber++) {    
-            const ownerPid =activePageTableBases.find(entry => {
-                    const pageTable = getPageTable(entry.processID);
-                    return pageTable.some(pte => pte.pfn === pageFrameNumber);
-                })?.processID || null;
-        }
-    }
-
     function createProcessRandom(numPages: number) {
         if (freeList.length < numPages) {
             throw new Error(`Cannot allocate ${numPages} pages. Only ${freeList.length} free.`);
         }
 
-        // select random free pages
-        const allocatedPagesPFN = selectRandPages(numPages, freeList);
-        console.log("AllocatedPagesPFN: ", allocatedPagesPFN);
+        // select random free pages. result is the list of numbers. each number represents a page frame number. 
+        // the index of the item in the list represents the VPN
+        const newAllocatedPagesPFN = selectRandPages(numPages, freeList);
+        console.log("AllocatedPagesPFN: ", newAllocatedPagesPFN);
         
         // determine new process ID
         const newProcessID = createProcessID();
@@ -253,6 +291,7 @@ export function MemoryCard({
             newPageTableBase = compactPagetables();
         }
 
+        // console.log("newPageTableBase: ", newPageTableBase);
 
         setActivePageTablesBases([
             ...activePageTableBases,
@@ -264,54 +303,46 @@ export function MemoryCard({
             }
         ]);
 
+        console.log("activePageTableBases after setting: ", [
+            ...activePageTableBases,
+            {
+                processID: newProcessID,
+                pageTableBase: newPageTableBase, 
+                numPages: numPages,
+                valid: true
+            }
+        ]);
 
-        setPageTable(allocatedPagesPFN, newPageTableBase);
 
+        writePageTable(newAllocatedPagesPFN, newPageTableBase);
 
-        // TODO: The entire process of creating the process is made up of two stage
-        // 1. getting the data to create a process: 
-        //    - newProcessID
-        //    - newPageTableBase
-        //    - allocatedPagesPFN.
-        // 2. then using that information to set data using a function associated with the main
-        //    - pageTableBaseAddresses
-        //    - setPageTable
-        //    - freelist - free list is currently modified in the select randpages function and 
-        //      and updates the free list based on list of the remaining pages.
-        //      ideally it is called here along with setActivePageTablebases and setPagetable
-        //      This makes the createProcessRandom function more well structured and it 
-        //      makes it easier to understand. Having free list modified covertly by another 
-        //      function is very icky and stinky. Having the free list modification here makes it
-        //      more explicit about what is happening
-        //      Currently it takes remaining pages as an argument. createProcessRandom only 
-        //      ever gets access to allocatedPagesPFN. we need to mdify setFreeList to use 
-        //      allocatedPagesPFN as input instead
+        const remainingFreePages = freeList.filter(page => !newAllocatedPagesPFN.includes(page));
+        setFreeList(remainingFreePages);
 
-        
-        // const newPageTableAddress = freeStart.current;  
-        // freeStart.current += numPages;  
-
-        // // update page table directory
-        // setPageTableDirectory(prev => [...prev, {processID: newProcessID, pageTableAddress: newPageTableAddress, pageTableLength: numPages}]);
-
-        // // Write PTEs into memory 
-        // setMemory(prevMemory => {
-        //     const newMemory = [...prevMemory];
-        //     AllocatedPagesPFN.forEach((pfn, index) => {
-        //         newMemory[newPageTableAddress + index] = pfn;
-        //     })
-        //     return newMemory;
-        // })
-
-        // console.log(`Created process ${newProcessID} with pages: ${AllocatedPagesPFN}`);
-        
-        // // print entire page table directory
-        // console.log("Page Table Directory:");
-        // pageTableDirectory.forEach(entry => {
-        //     console.log(`Process ${entry.processID}: Pages ${entry.pageTableAddress} - ${entry.pageTableAddress + entry.pageTableLength - 1}`);
-        // });
+        writeProcessPages(newAllocatedPagesPFN);
     }
+
+    function deleteProcess(processID: number) {
+        const pageTableEntry = activePageTableBases.find(entry => entry.processID === processID);
     
+        if (!pageTableEntry) {
+            throw new Error(`Process ID ${processID} not found in active page table bases.`);
+        }
+
+        setActivePageTablesBases(
+            [...activePageTableBases].filter(entry => entry.processID !== processID)
+        )
+
+        // free up allocated pages
+        const pageTable = getPageTable(processID);
+        const newlyFreedPages = pageTable
+            .filter(pte => pte.valid)
+            .map(pte => pte.pfn);
+
+        // combination of old free list 
+        setFreeList([...freeList, ...newlyFreedPages]);
+    }
+
     function createProcessID() {
         for (let i = 0; i <= activePageTableBases.length; i += 1) {
             // Check if i is already used as a processID in the pageTable Directory
@@ -332,13 +363,11 @@ export function MemoryCard({
             [freeList[i], freeList[j]] = [freeList[j], freeList[i]]
         }
         const allocated = freeList.slice(0, numPages);
-        const remaining = freeList.slice(numPages);
-        setFreeList(remaining);
+
         return allocated;
     }
 
     function findFreePageTableBase(active: ActivePageTablesBases, needed: number): number | null {
-        console.log("active: ", active);
         const tables = active
         .map(e => ({
             start: e.pageTableBase,
@@ -366,19 +395,41 @@ export function MemoryCard({
     function compactPagetables() {
         const sortedActivePageTableBases = [...activePageTableBases].sort((a, b) => a.pageTableBase - b.pageTableBase);
 
-        let cursor = 0;
+        let cursor = START_OF_PAGE_TABLES;
+        const moveOperations: Array<{oldBase: number, newBase: number, numPages: number}> = [];
+        const compactedEntries: ActivePageTablesBases = [];
 
-        // compacting the data
+        // Plan the compaction without mutating
         for (const entry of sortedActivePageTableBases) {
-            entry.pageTableBase = cursor;
+            moveOperations.push({
+                oldBase: entry.pageTableBase,
+                newBase: cursor,
+                numPages: entry.numPages
+            });
+            compactedEntries.push({
+                ...entry,
+                pageTableBase: cursor
+            });
             cursor += entry.numPages;
         }
 
-        setActivePageTablesBases(sortedActivePageTableBases);
+        // Update memory with the planned moves
+        setMemory(prev => {
+            const newMemory = [...prev];
+            
+            for (const op of moveOperations) {
+                for (let i = 0; i < op.numPages; i++) {
+                    newMemory[op.newBase + i] = prev[op.oldBase + i];
+                }
+            }
+            
+            return newMemory;
+        });
 
-        return 0; // after compaction, first page table base is always at 0
+        setActivePageTablesBases(compactedEntries);
+
+        return cursor;
     }
-
 
 
 
@@ -395,6 +446,26 @@ export function MemoryCard({
                     <Button variant="default" onClick={() => createProcessRandom(4)}>Create Process (4)</Button>
                     <Button variant="default" onClick={() => createProcessRandom(2)}>Create Process (2)</Button>
                     {/* <Button variant="default" onClick={createProcessRandom}> Process Random</Button> */}
+                </ButtonGroup>
+
+                <ButtonGroup orientation="vertical">
+                    {activePageTableBases.map((entry) => {
+                        return (<Button 
+                            key={entry.processID} 
+                            variant="destructive" 
+                            onClick={() => deleteProcess(entry.processID)}
+                        >
+                            Delete Process {entry.processID} 
+                        </Button>
+                        )
+                    })}
+                    {/* <Button variant="default" onClick={createProcessRandom}> Process Random</Button> */}
+                </ButtonGroup>
+                <ButtonGroup orientation="vertical">
+                    <Button variant="outline" onClick={() => {
+                        // compact page tables
+                        compactPagetables();
+                    }}>Compact Page Tables</Button>
                 </ButtonGroup>
                 <Table> 
                     <TableHeader>
