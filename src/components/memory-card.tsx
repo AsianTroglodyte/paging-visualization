@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"   
-import { useState} from "react";
+import { useMemo, useState} from "react";
 import {
     Table,
     TableBody,
@@ -9,76 +9,85 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-import {Button} from "./ui/button"
-import { ButtonGroup } from "./ui/button-group";
+
+
+// type pageView = {
+//   pfn: number
+//   isFree: boolean
+//   ownerPid: number | null
+//   vpn: number | null
+// }[]
+
+type ActivePageTablesBases = {
+    processID: number,
+    pageTableBase:  number, // 4 most significant bits contain page table base
+    // technically numpages would more accurately be 2 | 4, but this is easier to work with
+    numPages: number,
+    valid: boolean,
+}[]
+
+type Page = {
+    pfn: number,
+    ownerPid: number | null,
+    vpn: number | null,
+    isFree: boolean,
+    bytes: number[],
+}
+
+type Pages = Page[];
+
+type PageTableEntry = {
+    pfn: number,
+    valid: boolean,
+    present: boolean,
+    referenced: boolean,
+    dirty: boolean,
+    writable: boolean
+}
+
+type PageTable = PageTableEntry[];
+
+interface MemoryCardProps extends React.ComponentProps<"div"> {
+  size?: "default" | "sm";
+  activePageTablesBases: ActivePageTablesBases;
+  allProcessPages: Pages;
+  getPageTable: (processID: number) => PageTable;
+  memory: number[];
+}
 
 export function MemoryCard({
     className,
     size = "default",
+    activePageTablesBases,
+    memory,
+    allProcessPages,
+    getPageTable,
     ...props
-    }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
-    
-    const [memory, setMemory] = useState(new Array(64).fill(0)); // Example memory addresses 64 items 
-    const pageTableDirectory: {pageID: number, pageTableAddress: number []}[] = [];
-    let freeList: number[] = [0, 8, 16, 24, 32, 40, 48, 56];
+    }: MemoryCardProps) {
 
-    function createProcess(numPages: number = 4) {
-        if (freeList.length < numPages) {
-            throw new Error(`Cannot allocate ${numPages} pages. Only ${freeList.length} free.`);
-        }
 
-        const newProcessID = createProcessID();
-        const AllocatedPages = allocatePages(numPages); // For simplicity, allocate 4 pages per process
-        pageTableDirectory.push({pageID: newProcessID, pageTableAddress: AllocatedPages});
-        console.log(`Created process ${newProcessID} with pages: ${AllocatedPages.toString()}`);
-    }
 
-    function createProcessID() {
-        // let i = 1;
-        for (let i = 0; i <= pageTableDirectory.length; i += 1) {
-            // Check if i is already used as a pageID in the pageTable Directory
-            // if not, use it as the new process ID
-            if (pageTableDirectory.length === 0) {
-                return i;
+    const virtualMemoryView = useMemo(() => {
+        const activeProcessesIDs = activePageTablesBases.map(entry => entry.processID);
+
+        const activePageTables = activeProcessesIDs.map(activeProcessID => {
+            const pageTable = getPageTable(activeProcessID);
+            const PFNs = pageTable.map(pte => memory.slice(pte.pfn * 8, pte.pfn * 8 + 8)); // get the bytes corresponding to the PFN in the page table entry. this is the content of the page in physical memory.
+            return {
+                processID: activeProcessID,
+                pageTable: pageTable,
+                PFNs: PFNs,
             }
-            if (pageTableDirectory.some(entry => entry.pageID === i) === false) {
-                return i;
-            }
-        }
-        throw new Error("createProcessID(): Available ID somehow not found.");
-    }
-
-    function allocatePages(numPages: number): number[] {
-        // maybe we can have a global list of page addresses
-        // or maybe just calculate them on the fly from the memory size
-        const allocated = freeList.slice(0, numPages)
-        const remaining = freeList.slice(numPages)
-        freeList = remaining;
-
-        return allocated;
-    }
-
-    function createProcessRandom() {
-        const newProcessID = createProcessID();
-        const AllocatedPages = randAllocatePages(4); // For simplicity, allocate 4 pages per process
-        pageTableDirectory.push({pageID: newProcessID, pageTableAddress: AllocatedPages});
-        console.log(`Created process ${newProcessID} with pages: ${AllocatedPages}`);
-    }
+        });
 
 
-    function randAllocatePages(numPages: number): number[] {
-        for (let i = freeList.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1))
-            ;[freeList[i], freeList[j]] = [freeList[j], freeList[i]]
-        }
-        const allocated = freeList.slice(0, numPages)
-        const remaining = freeList.slice(numPages)
-        freeList = remaining;
-        return allocated;
-    }
+        console.log("activePageTables", activePageTables);
+
+        return activePageTables;
+    }, [activePageTablesBases, memory]);
 
 
-    return (
+    return (<>
         <Card className={className} {...props} size={size}>
             <CardHeader>
                 <CardTitle className="text-center mb-2">
@@ -87,10 +96,6 @@ export function MemoryCard({
 
             </CardHeader>
             <CardContent className="">
-                <ButtonGroup orientation="vertical">
-                    <Button onClick={() => createProcess(4)}>Create Process</Button>
-                    <Button onClick={createProcessRandom}>Create Process Random</Button>
-                </ButtonGroup>
                 <Table> 
                     <TableHeader>
                         <TableRow>
@@ -99,11 +104,18 @@ export function MemoryCard({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {memory.filter(
-                            (_, index) => ((index + 1)% 8 === 0)).map((_, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="text-lg">{index}</TableCell>
-                                <TableCell className="text-lg text-right">{`Process ${Math.floor(Math.random() * 3) + 1}`}</TableCell>
+                        {allProcessPages.map(({ pfn, ownerPid, vpn, isFree, bytes}) => (
+                            <TableRow key={pfn}>
+                                <TableCell className="text-lg">{pfn}</TableCell>
+                                <TableCell className="text-lg text-right">
+                                    <Table>
+                                        <TableBody>
+                                            <TableRow>
+                                                <TableCell className="text-sm">Process {ownerPid !== null ? ownerPid : "Free"}</TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -119,15 +131,60 @@ export function MemoryCard({
                         {memory.map(
                             (_, index) => (index % 8 === 0)).map((_, index) => (
                             <TableRow key={index}>
-                                {/* (index).toString(2).padStart(6, "0") */}
                                 <TableCell className="text-sm">{index}</TableCell>
-                                <TableCell className="text-sm text-right">{`${memory[index]}`}</TableCell>
+                                <TableCell className="text-sm text-right">
+                                    {memory[index].toString(2).padStart(8, '0')}
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
+                    
                 </Table>
             </CardContent>
         </Card>
+
+
+        {/* <Card className={className} {...props} size={size}>
+            <CardHeader>
+                <CardTitle className="text-center mb-2">
+                    <h1 className="text-4xl font-semibold">Virtual Memory</h1>
+                </CardTitle>
+
+            </CardHeader>
+            <CardContent className="">
+                {virtualMemoryView.map((entry, index) => (
+                    <Table key={index} className="mb-4"> 
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="text-lg font-black">ProcessID {entry.processID}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {entry.pageTable.map((pte, index) => 
+                                <TableRow key={index}>
+                                    <TableCell className="text-lg">VPN: {index}</TableCell>
+                                    <TableCell className="text-lg text-right">PFN: {pte.pfn}</TableCell>
+                                    <TableCell className="text-sm">
+                                        <Table>
+                                            <TableBody>
+                                                {entry.PFNs[index].map(byte => 
+                                            <TableRow>
+                                                <TableCell className="text-sm">{byte.toString(2).padStart(8, '0')}</TableCell>
+                                            </TableRow>
+                                                )}
+                                            <TableRow>
+                                            </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </TableCell>
+                                </TableRow>    
+                            )}
+                        </TableBody>
+                    </Table>
+                ))}
+            </CardContent>
+        </Card> */}
+        </>
     )
 }
 
