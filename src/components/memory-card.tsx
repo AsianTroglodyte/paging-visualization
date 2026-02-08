@@ -51,7 +51,7 @@ interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
   activePageTablesBases: ActivePageTablesBases;
   allProcessPages: Pages;
-  getPageTable: (processID: number) => PageTable;
+  getPageTable: (memory:  number[], processID: number) => PageTable;
   memory: number[];
 }
 
@@ -71,7 +71,7 @@ export function MemoryCard({
         const activeProcessesIDs = activePageTablesBases.map(entry => entry.processID);
 
         const activePageTables = activeProcessesIDs.map(activeProcessID => {
-            const pageTable = getPageTable(activeProcessID);
+            const pageTable = getPageTable(memory, activeProcessID);
             const PFNs = pageTable.map(pte => memory.slice(pte.pfn * 8, pte.pfn * 8 + 8)); // get the bytes corresponding to the PFN in the page table entry. this is the content of the page in physical memory.
             return {
                 processID: activeProcessID,

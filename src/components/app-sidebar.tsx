@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsTrigger, TabsList} from "./ui/tabs"
 import { ButtonGroup } from "./ui/button-group"
 
 
-export function AppSidebar({createProcessRandom, activePageTablesBases, deleteProcess}: any) {
+export function AppSidebar({memoryDispatch, activePageTablesBases}: any) {
   return (
     <Sidebar>
       <SidebarHeader />
@@ -26,8 +26,8 @@ export function AppSidebar({createProcessRandom, activePageTablesBases, deletePr
                     <SidebarHeader>Add Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-4 justify-center">
                         <ButtonGroup orientation="vertical" className="gap-2">
-                            <Button onClick={() => createProcessRandom(2)}>Create 2 Page Process</Button>
-                            <Button onClick={() => createProcessRandom(4)}>Create 4 Page Process</Button>
+                            <Button onClick={() => memoryDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 2}})}>Create 2 Page Process</Button>
+                            <Button onClick={() => memoryDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 4}})}>Create 4 Page Process</Button>
                         </ButtonGroup>
                       </div>
                     <SidebarHeader>Processes</SidebarHeader>
@@ -42,7 +42,7 @@ export function AppSidebar({createProcessRandom, activePageTablesBases, deletePr
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
-                                  onClick={() => deleteProcess(process.processID)}
+                                  onClick={() => memoryDispatch({type: "DELETE_PROCESS", payload: {processID: process.processID}})}
                                   className="h-6 w-6 p-0"
                                 >
                                   ✕
