@@ -1,7 +1,7 @@
 import {CpuCard}  from "./components/cpu-card";
 import MmuCard from "./components/mmu-card";
 import { MemoryCard } from "./components/memory-card";
-import { useMemo, useState } from "react";
+import { useMemo, useState, createContext} from "react";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 
@@ -10,7 +10,7 @@ type ActivePageTablesBases = {
     processID: number,
     pageTableBase:  number, // 4 most significant bits contain page table base
     // technically numpages would more accurately be 2 | 4, but this is easier to work with
-    numPages: number,
+    numPages: 2 | 4, // 3 bits for num pages, but we only use 2 values so it's easier to just have it as a union type
     valid: boolean,
 }[]
 
@@ -36,6 +36,14 @@ type Page = {
 
 type Pages = Page[];
 
+
+type CurRunningPIDContextType = {
+  curRunningPID: number | null;
+  setCurRunningPID: (pid: number | null) => void;
+};
+
+export const curRunningPIDContext = createContext<CurRunningPIDContextType | null>(null);
+
 export function App() {
     // grid grid-cols-3 grid-rows-2 
     // the memory byte array contains 4 crucial pieces of data:
@@ -52,6 +60,8 @@ export function App() {
     const MAX_PAGES_ALLOCATABLE = 6; // maximum space for page tables in bytes
     const START_OF_PROCESS_MEMORY = 15; // address where process memory starts
     const START_OF_PAGE_TABLES = 8; // address where process memory starts
+
+    const [curRunningPID, setCurRunningPID] = useState<number | null>(null);
 
     const [memory, setMemory] = useState(() => {
         const initialMemory = new Array(64).fill(0);
@@ -74,7 +84,7 @@ export function App() {
     }, [memory]);
 
     const allPageTables = useMemo(() => {
-        return getAllPageTables(memory);
+        return getAllPageTables();
     }, [memory]);
 
     const allProcessPages = useMemo(() => {
@@ -100,13 +110,22 @@ export function App() {
 
     function getActivePageTablesBases(mem: number[]): ActivePageTablesBases {
         const active: ActivePageTablesBases = [];
+
+        
         for (let i = 0; i < MAX_PROCESSES; i++) {
             const entry = mem[i];
             if ((entry & 0b00000001) === 1) { // check valid bit
+
+                // check if numPages is valid (either 2 or 4). this is a sanity check to make sure that the memory isn't corrupted, since if numPages is invalid, it could cause out of bounds errors when trying to read page tables
+                const numPages = (entry >> 1) & 0b00000111; // extract numPages (3 bits)
+                if (numPages !== 2 && numPages !== 4) {
+                    throw new Error(`Invalid numPages value ${numPages} for process ${i}. Must be 2 or 4.`);
+                }
+
                 active.push({
                     processID: i,
                     pageTableBase: (entry >> 4),
-                    numPages: (entry >> 1 & 0b00000111),
+                    numPages: numPages,
                     valid: true
                 });
             }
@@ -312,6 +331,10 @@ export function App() {
             newPageTableBase = compactPagetables();
         }
 
+        if (numPages !== 2 && numPages !== 4) {
+            throw new Error(`numPages must be either 2 or 4. Received ${numPages}`);
+        }
+
         setActivePageTablesBases([
             ...activePageTablesBases,
             {
@@ -321,16 +344,6 @@ export function App() {
                 valid: true
             }
         ]);
-
-        // console.log("activePageTableBases after setting: ", [
-        //     ...activePageTablesBases,
-        //     {
-        //         processID: newProcessID,
-        //         pageTableBase: newPageTableBase, 
-        //         numPages: numPages,
-        //         valid: true
-        //     }
-        // ]);
 
         writePageTable(newAllocatedPagesPFN, newPageTableBase);
 
@@ -402,27 +415,28 @@ export function App() {
 
     
     return (
-    <SidebarProvider>
-        <AppSidebar 
-            createProcessRandom={createProcessRandom}
-            activePageTablesBases={activePageTablesBases}
-            deleteProcess={deleteProcess}
-        />
-        <SidebarTrigger className="" size="lg" />
+    <curRunningPIDContext.Provider value={{curRunningPID, setCurRunningPID}}>
+        <SidebarProvider>
+            <AppSidebar 
+                createProcessRandom={createProcessRandom}
+                activePageTablesBases={activePageTablesBases}
+                deleteProcess={deleteProcess}
+            />
+            <SidebarTrigger className="" size="lg" />
 
-        <div className="py-10  pl-1 w-full h-full 
-        flex flex-3 flex items-start gap-4">
+            <div className="py-10  pl-1 w-full h-full 
+            flex flex-3 flex items-start gap-4">
 
-            <CpuCard></CpuCard>
-            <MmuCard></MmuCard>
-            <MemoryCard className="row-span-2" 
-            activePageTablesBases={activePageTablesBases} 
-            allProcessPages={allProcessPages} 
-            getPageTable={getPageTable}
-            memory={memory}></MemoryCard>
-        </div>
-    </SidebarProvider>
-    
+                <CpuCard></CpuCard>
+                <MmuCard></MmuCard>
+                <MemoryCard className="row-span-2" 
+                activePageTablesBases={activePageTablesBases} 
+                allProcessPages={allProcessPages} 
+                getPageTable={getPageTable}
+                memory={memory}></MemoryCard>
+            </div>
+        </SidebarProvider>
+    </curRunningPIDContext.Provider>
     )
 }
 

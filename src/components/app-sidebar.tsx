@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsTrigger, TabsList} from "./ui/tabs"
 import { ButtonGroup } from "./ui/button-group"
 
 
-export function AppSidebar({createProcessRandom, activePageTablesBases, deleteProcess} : any) {
+export function AppSidebar({createProcessRandom, activePageTablesBases, deleteProcess}: any) {
   return (
     <Sidebar>
       <SidebarHeader />
@@ -30,18 +30,26 @@ export function AppSidebar({createProcessRandom, activePageTablesBases, deletePr
                             <Button onClick={() => createProcessRandom(4)}>Create 4 Page Process</Button>
                         </ButtonGroup>
                       </div>
-                    <SidebarHeader>Remove Processes</SidebarHeader>
+                    <SidebarHeader>Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-2 justify-center">
                         {activePageTablesBases.length === 0 ? (
                           <p className="text-xs text-muted-foreground">No active processes</p>
                         ) : (
-                          <ButtonGroup orientation="vertical" className="gap-2">
+                          <div className="flex flex-col gap-2">
                             {activePageTablesBases.map((process) => (
-                              <Button key={process.processID} onClick={() => deleteProcess(process.processID)} variant="destructive">
-                                Delete Process {process.processID} ({process.numPages}p)
-                              </Button>
+                              <div key={process.processID} className="flex items-center justify-between bg-secondary p-2 rounded">
+                                <span className="text-sm">Process {process.processID} ({process.numPages}p)</span>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => deleteProcess(process.processID)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  ✕
+                                </Button>
+                              </div>
                             ))}
-                          </ButtonGroup>
+                          </div>
                         )}
                       </div>
                   </SidebarGroup>
