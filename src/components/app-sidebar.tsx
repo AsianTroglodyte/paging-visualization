@@ -8,9 +8,17 @@ import {
 import { Button } from "./ui/button"
 import { Tabs, TabsContent, TabsTrigger, TabsList} from "./ui/tabs"
 import { ButtonGroup } from "./ui/button-group"
+import type { PageTablesBases, MemoryAction} from "@/simulation/types";
 
-
-export function AppSidebar({memoryDispatch, activePageTablesBases}: any) {
+export function AppSidebar(
+  {
+    memoryDispatch,
+    activePageTablesBases,
+  }: {
+    memoryDispatch: React.Dispatch<MemoryAction>;
+    activePageTablesBases: PageTablesBases;
+  }
+) {
   return (
     <Sidebar>
       <SidebarHeader />
@@ -23,22 +31,23 @@ export function AppSidebar({memoryDispatch, activePageTablesBases}: any) {
               
               <TabsContent value="Control" className="mt-4">
                   <SidebarGroup>
-                    <SidebarHeader>Add Processes</SidebarHeader>
+                    <SidebarHeader className="text-lg">Add Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-4 justify-center">
                         <ButtonGroup orientation="vertical" className="gap-2">
                             <Button onClick={() => memoryDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 2}})}>Create 2 Page Process</Button>
                             <Button onClick={() => memoryDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 4}})}>Create 4 Page Process</Button>
                         </ButtonGroup>
                       </div>
-                    <SidebarHeader>Processes</SidebarHeader>
+                    <SidebarHeader className="text-lg">Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-2 justify-center">
                         {activePageTablesBases.length === 0 ? (
                           <p className="text-xs text-muted-foreground">No active processes</p>
                         ) : (
                           <div className="flex flex-col gap-2">
+                            Press a process to context switch
                             {activePageTablesBases.map((process) => (
                               <div key={process.processID} className="flex items-center justify-between bg-secondary p-2 rounded">
-                                <span className="text-sm">Process {process.processID} ({process.numPages}p)</span>
+                                <span className="text-sm">Process {process.processID} ({process.numPages} pages)</span>
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
@@ -57,7 +66,7 @@ export function AppSidebar({memoryDispatch, activePageTablesBases}: any) {
 
               <TabsContent value="Settings" className="mt-4">
                   <SidebarGroup>
-                      <SidebarHeader>Settings</SidebarHeader>
+                      <SidebarHeader className="text-lg">Settings</SidebarHeader>
                       <div className="w-full p-2 h-64 flex flex-col items-center gap-4 justify-center">
                         <p className="text-xs text-muted-foreground">
                             Nothing to see here yet, but enjoy this rickroll in the meantime

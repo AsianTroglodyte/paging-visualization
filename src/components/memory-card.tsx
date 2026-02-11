@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"   
-import { useMemo, useState} from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"   
+import { useMemo} from "react";
 import {
     Table,
     TableBody,
@@ -8,50 +8,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { getPageTable } from "@/simulation/selectors";
 
+import type { PageTablesBases, Pages } from "@/simulation/types";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
-
-// type pageView = {
-//   pfn: number
-//   isFree: boolean
-//   ownerPid: number | null
-//   vpn: number | null
-// }[]
-
-type ActivePageTablesBases = {
-    processID: number,
-    pageTableBase:  number, // 4 most significant bits contain page table base
-    // technically numpages would more accurately be 2 | 4, but this is easier to work with
-    numPages: number,
-    valid: boolean,
-}[]
-
-type Page = {
-    pfn: number,
-    ownerPid: number | null,
-    vpn: number | null,
-    isFree: boolean,
-    bytes: number[],
-}
-
-type Pages = Page[];
-
-type PageTableEntry = {
-    pfn: number,
-    valid: boolean,
-    present: boolean,
-    referenced: boolean,
-    dirty: boolean,
-    writable: boolean
-}
-
-type PageTable = PageTableEntry[];
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
-  activePageTablesBases: ActivePageTablesBases;
+  activePageTablesBases: PageTablesBases;
   allProcessPages: Pages;
-  getPageTable: (memory:  number[], processID: number) => PageTable;
   memory: number[];
 }
 
@@ -61,15 +27,13 @@ export function MemoryCard({
     activePageTablesBases,
     memory,
     allProcessPages,
-    getPageTable,
     ...props
     }: MemoryCardProps) {
 
-
-
+        
     const virtualMemoryView = useMemo(() => {
         const activeProcessesIDs = activePageTablesBases.map(entry => entry.processID);
-
+        
         const activePageTables = activeProcessesIDs.map(activeProcessID => {
             const pageTable = getPageTable(memory, activeProcessID);
             const PFNs = pageTable.map(pte => memory.slice(pte.pfn * 8, pte.pfn * 8 + 8)); // get the bytes corresponding to the PFN in the page table entry. this is the content of the page in physical memory.
@@ -79,112 +43,147 @@ export function MemoryCard({
                 PFNs: PFNs,
             }
         });
-
-
+        
         console.log("activePageTables", activePageTables);
-
+        
         return activePageTables;
     }, [activePageTablesBases, memory]);
+        
+    return (
+    <Card size="sm">
+        <CardHeader>
+            <CardTitle>
+                <h1 className="text-4xl"> Memory </h1>
+            </CardTitle>
+            <CardDescription>
 
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="w-70">
 
-    return (<>
-        <Card className={className} {...props} size={size}>
-            <CardHeader>
-                <CardTitle className="text-center mb-2">
-                    <h1 className="text-4xl font-semibold">Memory</h1>
-                </CardTitle>
+            <Accordion type="single" collapsible className="w-full">
+                {/* OS Pages */}
+                <AccordionItem value="pfn-0">
+                    <AccordionTrigger className="hover:no-underline">
+                    <div className="flex justify-between w-full pr-4">
+                        <span className="font-mono">PFN 0</span>
+                        <span className="text-muted-foreground">OS: Others</span>
+                    </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Address</TableHead>
+                                    <TableHead className="text-right text-right">Content</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {memory.slice(0, 8).map((byte, index) => (
+                                    <TableRow>
+                                        <TableCell>
+                                            {index}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {byte.toString(2).padStart(8, "0")}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </AccordionContent>
+                </AccordionItem>
 
-            </CardHeader>
-            <CardContent className="">
-                <Table> 
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="text-lg font-black">PFN</TableHead>
-                            <TableHead className="text-lg font-black text-right">Process</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {allProcessPages.map(({ pfn, ownerPid, vpn, isFree, bytes}) => (
-                            <TableRow key={pfn}>
-                                <TableCell className="text-lg">{pfn}</TableCell>
-                                <TableCell className="text-lg text-right">
-                                    <Table>
-                                        <TableBody>
-                                            <TableRow>
-                                                <TableCell className="text-sm">Process {ownerPid !== null ? ownerPid : "Free"}</TableCell>
-                                            </TableRow>
-                                        </TableBody>
-                                    </Table>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                <Table> 
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="text-sm font-black">address</TableHead>
-                            <TableHead className="text-sm font-black text-right">mem content</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {memory.map(
-                            (_, index) => (index % 8 === 0)).map((_, index) => (
-                            <TableRow key={index}>
-                                <TableCell className="text-sm">{index}</TableCell>
-                                <TableCell className="text-sm text-right">
-                                    {memory[index].toString(2).padStart(8, '0')}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                    
-                </Table>
-            </CardContent>
-        </Card>
-
-
-        {/* <Card className={className} {...props} size={size}>
-            <CardHeader>
-                <CardTitle className="text-center mb-2">
-                    <h1 className="text-4xl font-semibold">Virtual Memory</h1>
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent className="">
-                {virtualMemoryView.map((entry, index) => (
-                    <Table key={index} className="mb-4"> 
+                <AccordionItem value="pfn-1">
+                    <AccordionTrigger className="hover:no-underline">
+                    <div className="flex justify-between w-full pr-4">
+                        <span className="font-mono">PFN 1</span>
+                        <span className="text-muted-foreground text-xs">OS: Page Tables</span>
+                    </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                    {/* Byte table here */}
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Address</TableHead>
+                                    <TableHead className="text-right text-right">Content</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {memory.slice(8, 16).map((byte, index) => (
+                                    <TableRow>
+                                        <TableCell>
+                                            {index}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {byte.toString(2).padStart(8, "0")}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </AccordionContent>
+                </AccordionItem>
+            
+                {allProcessPages.map(({ pfn, ownerPid, bytes }) => (
+                    <AccordionItem key={pfn} value={`pfn-${pfn}`}>
+                    <AccordionTrigger className="hover:no-underline">
+                        <div className="flex justify-between w-full pr-4">
+                        <span className="font-mono">PFN {pfn}</span>
+                        <span className="text-muted-foreground">
+                            {ownerPid !== null ? `Process ${ownerPid}` : "Free"}
+                        </span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="text-lg font-black">ProcessID {entry.processID}</TableHead>
+                                <TableHead>Address</TableHead>
+                                <TableHead className="text-right">Content</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {entry.pageTable.map((pte, index) => 
-                                <TableRow key={index}>
-                                    <TableCell className="text-lg">VPN: {index}</TableCell>
-                                    <TableCell className="text-lg text-right">PFN: {pte.pfn}</TableCell>
-                                    <TableCell className="text-sm">
-                                        <Table>
-                                            <TableBody>
-                                                {entry.PFNs[index].map(byte => 
-                                            <TableRow>
-                                                <TableCell className="text-sm">{byte.toString(2).padStart(8, '0')}</TableCell>
-                                            </TableRow>
-                                                )}
-                                            <TableRow>
-                                            </TableRow>
-                                            </TableBody>
-                                        </Table>
-                                    </TableCell>
-                                </TableRow>    
-                            )}
+                            {bytes.map((byte, index) => (
+                            <TableRow key={index}>
+                                <TableCell className="font-mono">{pfn * 8 + index}</TableCell>
+                                <TableCell className="font-mono text-right">
+                                {byte.toString(2).padStart(8, "0")}
+                                </TableCell>
+                            </TableRow>
+                            ))}
                         </TableBody>
-                    </Table>
+                        </Table>
+                    </AccordionContent>
+                    </AccordionItem>
                 ))}
-            </CardContent>
-        </Card> */}
-        </>
+            </Accordion>
+
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead className="w-[100px]">Address</TableHead>
+                    <TableHead>Binary</TableHead>
+                </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                {memory.map((byte, index) => (
+                    <TableRow key={index}>
+                    <TableCell className="font-mono">
+                        {index}
+                    </TableCell>
+
+                    <TableCell className="font-mono text-muted-foreground">
+                        {byte.toString(2).padStart(8, "0")}
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
     )
 }
 
