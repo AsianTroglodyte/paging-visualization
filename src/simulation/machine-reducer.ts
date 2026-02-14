@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import { compactPagetables, setActivePageTablesBases, setFreeList, writePageTable, writeProcessPages } from "./writers";
 import { getActivePageTablesBases, getFreeList, getPageTable } from "./selectors";
-import type { CurRunningPIDContextType } from "./types";
+import type { CurRunningPIDContextType, MemoryAction } from "./types";
 
 export const curRunningPIDContext = createContext<CurRunningPIDContextType | null>(null);
 
@@ -11,19 +11,7 @@ export const MAX_PAGES_ALLOCATABLE = 6; // maximum space for page tables in byte
 export const START_OF_PROCESS_MEMORY = 16; // address where process memory starts
 export const START_OF_PAGE_TABLES = 8; // address where process memory starts
 
-export type MemoryAction =
-  | {
-      type: "COMPACT_PAGE_TABLES";
-      payload?: never;
-    }
-  | {
-      type: "CREATE_PROCESS_RANDOM";
-      payload: { numPages: 2 | 4 };
-    }
-  | {
-      type: "DELETE_PROCESS";
-      payload: { processID: number };
-    };
+
 
 // the memory byte array contains 4 crucial pieces of data:
 //  - page table base list - list of bytes, each byte is an entry mapping a process to the 
@@ -32,7 +20,7 @@ export type MemoryAction =
 //  - page tables - maps the VPNs to the PFNs along with showing control bits. 
 //  - process memory - the memory used by processes. 
 
-export function memoryReducer(memory: number[], action: MemoryAction) {
+export function machineReducer(memory: number[], action: MemoryAction) {
     switch (action.type) {
         case "COMPACT_PAGE_TABLES":
             return compactPagetables(memory).newMemory;

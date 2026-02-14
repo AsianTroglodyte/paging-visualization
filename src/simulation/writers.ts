@@ -3,7 +3,7 @@
 // based on the previous state and any information provided. 
 // this make use of selector functions that generate some specialized views such as getPageTable
 
-import { FREE_LIST_ADDRESS, MAX_PROCESSES, START_OF_PAGE_TABLES } from "./reducer";
+import { FREE_LIST_ADDRESS, MAX_PROCESSES, START_OF_PAGE_TABLES } from "./machine-reducer";
 import { getActivePageTablesBases } from "./selectors";
 import type { PageTablesBases } from "./types";
 

@@ -5,7 +5,7 @@
 // essentially the building blocks of advanced queries or views into our memory
 
 
-import { FREE_LIST_ADDRESS, MAX_PROCESSES} from "./reducer";
+import { FREE_LIST_ADDRESS, MAX_PROCESSES} from "./machine-reducer";
 import type { PageTablesBases, Pages, PageTable, VirtualPage } from "./types";
 
 export function getFreeList(mem: number[]): number[] {

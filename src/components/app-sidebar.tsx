@@ -12,10 +12,10 @@ import type { PageTablesBases, MemoryAction} from "@/simulation/types";
 
 export function AppSidebar(
   {
-    memoryDispatch,
+    machineStateDispatch,
     activePageTablesBases,
   }: {
-    memoryDispatch: React.Dispatch<MemoryAction>;
+    machineStateDispatch: React.Dispatch<MemoryAction>;
     activePageTablesBases: PageTablesBases;
   }
 ) {
@@ -34,8 +34,8 @@ export function AppSidebar(
                     <SidebarHeader className="text-lg">Add Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-4 justify-center">
                         <ButtonGroup orientation="vertical" className="gap-2">
-                            <Button onClick={() => memoryDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 2}})}>Create 2 Page Process</Button>
-                            <Button onClick={() => memoryDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 4}})}>Create 4 Page Process</Button>
+                            <Button onClick={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 2}})}>Create 2 Page Process</Button>
+                            <Button onClick={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 4}})}>Create 4 Page Process</Button>
                         </ButtonGroup>
                       </div>
                     <SidebarHeader className="text-lg">Processes</SidebarHeader>
@@ -51,7 +51,7 @@ export function AppSidebar(
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
-                                  onClick={() => memoryDispatch({type: "DELETE_PROCESS", payload: {processID: process.processID}})}
+                                  onClick={() => machineStateDispatch({type: "DELETE_PROCESS", payload: {processID: process.processID}})}
                                   className="h-6 w-6 p-0"
                                 >
                                   ✕

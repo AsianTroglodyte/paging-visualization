@@ -13,10 +13,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 
 export function VirtualMemory(
 {
-    memory, 
+    machineState, 
     activePageTablesBases
 } : {
-    memory: number[], 
+    machineState: number[], 
     activePageTablesBases : PageTablesBases
 }) {
 
@@ -27,7 +27,7 @@ export function VirtualMemory(
 
     if (processIDs.length !== 0) {
         for (const processID of processIDs) {
-            const newVirtualPage = getProcessVirtualAddressSpace(memory, processID);
+            const newVirtualPage = getProcessVirtualAddressSpace(machineState, processID);
             allVirtualMemory.push(newVirtualPage);
         }
     }
@@ -47,35 +47,37 @@ export function VirtualMemory(
                     <h1 className="text-4xl">Virtual Memory</h1>
                 </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="w-60">
                 {
                 allVirtualMemory.map((processVirtualPages) => (
                     <>
-                    
-                    <h1 className="text-lg"> process: {processVirtualPages[0].ownerPid}</h1>
+                    <h2 className="text-lg"> process: {processVirtualPages[0].ownerPid}</h2>
                     <Accordion type="single" collapsible className="w-full">
-                    {processVirtualPages.map(({pfn, ownerPid, bytes}) => (
+                    {processVirtualPages.map(({pfn, ownerPid, bytes}, index_virtualPageNumber) => (
                         <AccordionItem key={pfn} value={`pfn-${pfn}`}>
                             <AccordionTrigger className="hover:no-underline">
                                 <div className="flex justify-between w-full pr-4">
-                                <span className="font-mono">PFN {pfn}</span>
-                                <span className="text-muted-foreground">
-                                    {ownerPid !== null ? `Process ${ownerPid}` : "Free"}
-                                </span>
+                                    <div className="font-mono">PFN {pfn}</div>
+                                    <div className="text-muted-foreground">
+                                        {ownerPid !== null ? `Process ${ownerPid}` : "Free"}
+                                    </div>
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent>
                                 <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Address</TableHead>
+                                        <TableHead>Virtual Address</TableHead>
                                         <TableHead className="text-right">Content</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {bytes.map((byte, index) => (
-                                        <TableRow key={index}>
-                                        <TableCell className="font-mono">{pfn * 8 + index}</TableCell>
+                                    {bytes.map((byte, index_offset) => (
+                                        <TableRow key={index_offset}>
+                                        <TableCell className="font-mono">
+                                            {/* virtual page number and offset determined by  */}
+                                            {(index_virtualPageNumber * 8) + index_offset}
+                                        </TableCell>
                                         <TableCell className="font-mono text-right">
                                         {byte.toString(2).padStart(8, "0")}
                                         </TableCell>
