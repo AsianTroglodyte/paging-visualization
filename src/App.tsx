@@ -5,7 +5,7 @@ import { useMemo, useReducer} from "react";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { machineReducer, getInitialMachineState } from "./simulation/machine-reducer";
-import { getActivePageTablesBases, getAllPageTables, getAllProcessPages, getFreeList } from "./simulation/selectors";
+import { getProcessControlBlocks, getAllPageTables, getAllProcessPages, getFreeList } from "./simulation/selectors";
 import VirtualMemory from "./components/VirtualMemory";
 
 
@@ -25,8 +25,8 @@ export function App() {
         return getFreeList(memory);
     }, [memory]);
 
-    const activePageTablesBases = useMemo(() => {
-        return getActivePageTablesBases(memory);
+    const processControlBlocks = useMemo(() => {
+        return getProcessControlBlocks(memory);
     }, [memory]);
 
     const allPageTables = useMemo(() => {
@@ -45,7 +45,7 @@ export function App() {
         <SidebarProvider>
             <AppSidebar 
                 machineStateDispatch={machineStateDispatch}
-                activePageTablesBases={activePageTablesBases}
+                processControlBlocks={processControlBlocks}
                 runningPid={cpu.runningPid}
             />
             <SidebarTrigger className="" size="lg" />
@@ -55,10 +55,10 @@ export function App() {
                 <CpuCard cpu={cpu}></CpuCard>
                 <MmuCard></MmuCard>
                 <MemoryCard className="row-span-2" 
-                activePageTablesBases={activePageTablesBases} 
+                processControlBlocks={processControlBlocks} 
                 allProcessPages={allProcessPages} 
                 machineState={memory}></MemoryCard>
-                <VirtualMemory machineState={memory} activePageTablesBases={activePageTablesBases}> </VirtualMemory>
+                <VirtualMemory machineState={memory} processControlBlocks={processControlBlocks}> </VirtualMemory>
             </div>
         </SidebarProvider>
     )

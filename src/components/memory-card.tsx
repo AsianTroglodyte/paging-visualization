@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/table"
 import { getPageTable } from "@/simulation/selectors";
 
-import type { PageTablesBases, Pages } from "@/simulation/types";
+import type { ProcessControlBlocks, Pages } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
-  activePageTablesBases: PageTablesBases;
+  processControlBlocks: ProcessControlBlocks;
   allProcessPages: Pages;
   machineState: number[];
 }
@@ -24,7 +24,7 @@ interface MemoryCardProps extends React.ComponentProps<"div"> {
 export function MemoryCard({
     className,
     size = "default",
-    activePageTablesBases,
+    processControlBlocks,
     machineState,
     allProcessPages,
     ...props
@@ -32,7 +32,7 @@ export function MemoryCard({
 
         
     const virtualMemoryView = useMemo(() => {
-        const activeProcessesIDs = activePageTablesBases.map(entry => entry.processID);
+        const activeProcessesIDs = processControlBlocks.map(pcb => pcb.processID);
         
         const activePageTables = activeProcessesIDs.map(activeProcessID => {
             const pageTable = getPageTable(machineState, activeProcessID);
@@ -47,7 +47,7 @@ export function MemoryCard({
         console.log("activePageTables", activePageTables);
         
         return activePageTables;
-    }, [activePageTablesBases, machineState]);
+    }, [processControlBlocks, machineState]);
         
     return (
     <Card size="sm">

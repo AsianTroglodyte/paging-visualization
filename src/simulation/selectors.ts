@@ -14,7 +14,7 @@ import {
     PCB_PROGRAM_COUNTER_MASK,
     PCB_PAGE_TABLE_BASE_MASK,
 } from "./constants";
-import type { PageTablesBases, Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks } from "./types";
+import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks } from "./types";
 
 export function getFreeList(mem: number[]): number[] {
     const bitmap = mem[FREE_LIST_ADDRESS];
@@ -59,40 +59,23 @@ export function getProcessControlBlocks(mem: number[]): ProcessControlBlocks {
     return blocks;
 }
 
-export function getActivePageTablesBases(mem: number[]): PageTablesBases {
-    const pcbs = getProcessControlBlocks(mem);
-    return pcbs.map(pcb => ({
-        processID: pcb.processID,
-        pageTableBase: pcb.pageTableBase,
-        numPages: 2 as const,
-        valid: true,
-    }));
-}
-
-
 export function getAllPageTables(memory: number[]): {processID: number, pageTable: PageTable}[] {
-
-    const activePageTablesBases = getActivePageTablesBases(memory);
-    
-    const allPageTables = activePageTablesBases.map(entry => {
-        return {
-            processID: entry.processID,
-            pageTable: getPageTable(memory, entry.processID)
-        }
-    });
-    return allPageTables;
+    const processControlBlocks = getProcessControlBlocks(memory);
+    return processControlBlocks.map(pcb => ({
+        processID: pcb.processID,
+        pageTable: getPageTable(memory, pcb.processID)
+    }));
 }
 
 
 export function getAllProcessPages(memory: number[]): Pages {
 
     const pages: Pages = [];
-    for (let pageFrameNumber = 2; pageFrameNumber < 8; pageFrameNumber++) {
+    const processControlBlocks = getProcessControlBlocks(memory);
 
-        const activePageTablesBases = getActivePageTablesBases(memory);
-        
-        const ownerPid = activePageTablesBases.find(entry => {
-                const pageTable = getPageTable(memory, entry.processID);
+    for (let pageFrameNumber = 2; pageFrameNumber < 8; pageFrameNumber++) {
+        const ownerPid = processControlBlocks.find(pcb => {
+                const pageTable = getPageTable(memory, pcb.processID);
                 return pageTable.some(pte => pte.pfn === pageFrameNumber);
             })?.processID ?? null;
     
@@ -113,21 +96,13 @@ export function getAllProcessPages(memory: number[]): Pages {
 
 
 export function getPageTable(memory: number[], processID: number): PageTable {
-    const activePageTablesBases = getActivePageTablesBases(memory);
-
-    // console.log("activePageTablesBases: ", activePageTablesBases);
-
-
-    const pageTableEntry = activePageTablesBases.find(entry => entry.processID === processID);
-
-
-    if (pageTableEntry === undefined) {
-        throw new Error(`Process ID ${processID} not found in active page table bases.`);
+    const pcb = getProcessControlBlock(memory, processID);
+    if (pcb === null) {
+        throw new Error(`Process ID ${processID} not found.`);
     }
 
-    const pageTableBase = pageTableEntry.pageTableBase;
-    const numPages = pageTableEntry.numPages;
-    const baseAddr = START_OF_PAGE_TABLES + pageTableBase;
+    const baseAddr = START_OF_PAGE_TABLES + pcb.pageTableBase;
+    const numPages = 2;
     return memory.slice(baseAddr, baseAddr + numPages).map(
         (entryByte) => {
             return {
@@ -171,4 +146,24 @@ export function getProcessVirtualAddressSpace(memory: number[], processID: numbe
 
 export function getPage(memory: number[], pfn: number): number[] {
     return memory.slice(pfn * 8, pfn * 8 + 8);
+}
+
+
+export function getProcessVirtualMemory(memory: number[], processID: number): VirtualPage[] {
+
+    const processVirtualAddressSpace = getProcessVirtualAddressSpace(memory, processID);
+
+    const processVirtualMemory = processVirtualAddressSpace.map((virtualPage) => {
+        return {
+            pfn: virtualPage.pfn,
+            bytes: virtualPage.bytes,
+        }
+    });
+
+    return processVirtualMemory;
+}
+
+export function getAllProcessVirtualMemory(memory: number[]): VirtualPage[][] {
+    const processControlBlocks = getProcessControlBlocks(memory);
+    return processControlBlocks.map(pcb => getProcessVirtualMemory(memory, pcb.processID));
 }

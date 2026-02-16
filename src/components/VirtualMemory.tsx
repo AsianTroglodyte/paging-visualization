@@ -1,43 +1,21 @@
 import { getProcessVirtualAddressSpace } from "@/simulation/selectors";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import type {PageTablesBases, PageTablesBase, PageTable, VirtualPage} from "@/simulation/types";
+import type { ProcessControlBlocks, VirtualPage } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-
-// interface VirtualMemoryCardProps extends React.ComponentProps<"div"> {
-//   size?: "default" | "sm";
-//   activePageTablesBases: PageTablesBases;
-//   allProcessPages: Pages;
-//   memory: number[];
-// }
 
 export function VirtualMemory(
 {
     machineState, 
-    activePageTablesBases
+    processControlBlocks
 } : {
     machineState: number[], 
-    activePageTablesBases : PageTablesBases
+    processControlBlocks: ProcessControlBlocks
 }) {
 
-    const currentProcess = 0;
-    const processIDs = activePageTablesBases.map((process: PageTablesBase) => (process.processID))
-
-    const allVirtualMemory: VirtualPage[][] = [];
-
-    if (processIDs.length !== 0) {
-        for (const processID of processIDs) {
-            const newVirtualPage = getProcessVirtualAddressSpace(machineState, processID);
-            allVirtualMemory.push(newVirtualPage);
-        }
-    }
-
-// export type VirtualPage = {
-//     vpn: number,
-//     ownerPid: number | null,
-//     pfn: number,
-//     bytes: number[],
-// }
+    const allVirtualMemory: VirtualPage[][] = processControlBlocks.map(pcb =>
+        getProcessVirtualAddressSpace(machineState, pcb.processID)
+    );
 
     
     return (
@@ -49,11 +27,11 @@ export function VirtualMemory(
             </CardHeader>
             <CardContent className="w-60">
                 {
-                allVirtualMemory.map((processVirtualPages) => (
-                    <>
-                    <h2 className="text-lg"> process: {processVirtualPages[0].ownerPid}</h2>
+                processControlBlocks.map((pcb, idx) => (
+                    <div key={pcb.processID}>
+                    <h2 className="text-lg"> process: {pcb.processID}</h2>
                     <Accordion type="single" collapsible className="w-full">
-                    {processVirtualPages.map(({pfn, ownerPid, bytes}, index_virtualPageNumber) => (
+                    {allVirtualMemory[idx].map(({pfn, ownerPid, bytes}, index_virtualPageNumber) => (
                         <AccordionItem key={pfn} value={`pfn-${pfn}`}>
                             <AccordionTrigger className="hover:no-underline">
                                 <div className="flex justify-between w-full pr-4">
@@ -89,9 +67,9 @@ export function VirtualMemory(
                         </AccordionItem>
                     ))}
                     </Accordion>
-                    </>
-                    )
-                )}
+                    </div>
+                ))
+                }
             </CardContent>
         </Card>
     )
