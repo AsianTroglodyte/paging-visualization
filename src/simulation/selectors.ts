@@ -5,8 +5,16 @@
 // essentially the building blocks of advanced queries or views into our memory
 
 
-import { FREE_LIST_ADDRESS, MAX_PROCESSES} from "./machine-reducer";
-import type { PageTablesBases, Pages, PageTable, VirtualPage } from "./types";
+import {
+    FREE_LIST_ADDRESS,
+    START_OF_PAGE_TABLES,
+    START_OF_PCBS,
+    BYTES_PER_PCB,
+    PCB_VALID_BIT_MASK,
+    PCB_PROGRAM_COUNTER_MASK,
+    PCB_PAGE_TABLE_BASE_MASK,
+} from "./constants";
+import type { PageTablesBases, Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks } from "./types";
 
 export function getFreeList(mem: number[]): number[] {
     const bitmap = mem[FREE_LIST_ADDRESS];
@@ -23,29 +31,42 @@ export function getFreeList(mem: number[]): number[] {
     return freePFNList;
 }
 
-export function getActivePageTablesBases(mem: number[]): PageTablesBases {
-    const active: PageTablesBases = [];
+export function getProcessControlBlock(mem: number[], processID: number): ProcessControlBlock | null {
+    const addr = START_OF_PCBS + processID * BYTES_PER_PCB;
+    const byte0 = mem[addr];
+    const validBit = byte0 & PCB_VALID_BIT_MASK;
+    if (validBit === 0) return null;
 
-    
-    for (let i = 0; i < MAX_PROCESSES; i++) {
-        const entry = mem[i];
-        if ((entry & 0b00000001) === 1) { // check valid bit
+    const pageTableBase = (byte0 >> 5) & PCB_PAGE_TABLE_BASE_MASK;
+    const programCounter = (byte0 >> 1) & PCB_PROGRAM_COUNTER_MASK;
+    const accumulator = mem[addr + 1];
 
-            // check if numPages is valid (either 2 or 4). this is a sanity check to make sure that the memory isn't corrupted, since if numPages is invalid, it could cause out of bounds errors when trying to read page tables
-            const numPages = (entry >> 1) & 0b00000111; // extract numPages (3 bits)
-            if (numPages !== 2 && numPages !== 4) {
-                throw new Error(`Invalid numPages value ${numPages} for process ${i}. Must be 2 or 4.`);
-            }
+    return {
+        processID,
+        pageTableBase,
+        programCounter,
+        validBit,
+        accumulator,
+    };
+}
 
-            active.push({
-                processID: i,
-                pageTableBase: (entry >> 4),
-                numPages: numPages,
-                valid: true
-            });
-        }
+export function getProcessControlBlocks(mem: number[]): ProcessControlBlocks {
+    const blocks: ProcessControlBlocks = [];
+    for (let i = 0; i < 4; i++) {
+        const pcb = getProcessControlBlock(mem, i);
+        if (pcb !== null) blocks.push(pcb);
     }
-    return active;
+    return blocks;
+}
+
+export function getActivePageTablesBases(mem: number[]): PageTablesBases {
+    const pcbs = getProcessControlBlocks(mem);
+    return pcbs.map(pcb => ({
+        processID: pcb.processID,
+        pageTableBase: pcb.pageTableBase,
+        numPages: 2 as const,
+        valid: true,
+    }));
 }
 
 
@@ -106,7 +127,8 @@ export function getPageTable(memory: number[], processID: number): PageTable {
 
     const pageTableBase = pageTableEntry.pageTableBase;
     const numPages = pageTableEntry.numPages;
-    return memory.slice(pageTableBase, pageTableBase + numPages).map(
+    const baseAddr = START_OF_PAGE_TABLES + pageTableBase;
+    return memory.slice(baseAddr, baseAddr + numPages).map(
         (entryByte) => {
             return {
                 pfn: (entryByte >> 5),

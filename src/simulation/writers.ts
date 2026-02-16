@@ -3,19 +3,32 @@
 // based on the previous state and any information provided. 
 // this make use of selector functions that generate some specialized views such as getPageTable
 
-import { FREE_LIST_ADDRESS, MAX_PROCESSES, START_OF_PAGE_TABLES } from "./machine-reducer";
-import { getActivePageTablesBases } from "./selectors";
-import type { PageTablesBases } from "./types";
+import {
+    FREE_LIST_ADDRESS,
+    MAX_PROCESSES,
+    START_OF_PAGE_TABLES,
+    BYTES_PER_PAGE_TABLE,
+    PAGE_SIZE,
+    BYTES_PER_PCB,
+    FIRST_PROCESS_PFN,
+    LAST_PROCESS_PFN,
+    PROGRAM_COUNTER_MAX,
+    ACCUMULATOR_MAX,
+    PCB_VALID_BIT_CLEAR_MASK,
+    WRITABLE_PAGE_PROBABILITY,
+    START_OF_PCBS
+} from "./constants";
+import { getProcessControlBlocks, getProcessControlBlock } from "./selectors";
+import type {ProcessControlBlock, ProcessControlBlocks } from "./types";
 
 export function writeProcessPages(newAllocatedPages: number[], memory: number[]): number[] {
     // const allAllocatedPages = [...freeList, ...allocatedPages];
     const newMemory = [...memory];
 
-    for (let pageFrameNumber = 2; pageFrameNumber < 8; pageFrameNumber++) {
+    for (let pageFrameNumber = FIRST_PROCESS_PFN; pageFrameNumber <= LAST_PROCESS_PFN; pageFrameNumber++) {
         if (newAllocatedPages.includes(pageFrameNumber)) {
-            // write some dummy data to allocated pages
-            for (let i = 0; i < 8; i++) {
-                newMemory[pageFrameNumber * 8 + i] = Math.floor(Math.random() * 256);
+            for (let i = 0; i < PAGE_SIZE; i++) {
+                newMemory[pageFrameNumber * PAGE_SIZE + i] = Math.floor(Math.random() * 256);
             }
         }
     }
@@ -23,29 +36,41 @@ export function writeProcessPages(newAllocatedPages: number[], memory: number[])
     return newMemory
 }
 
-export function setActivePageTablesBases(activePageTablesBases: PageTablesBases, memory: number[]): number[] {
 
-    if (activePageTablesBases.some(entry => entry.numPages !== 2 && entry.numPages !== 4)) {
-        throw new Error(`number of pages for processes' must be either2 or 4.`);
-    }
-
-    const newMemory: number[] = [...memory];
-    
+export function setProcessControlBlocks(processControlBlocks: ProcessControlBlocks, memory: number[]): number[] {
+    const newMemory: number[] = [...memory];    
     // Set all possible process entries
-    for (let i = 0; i < MAX_PROCESSES; i++) {
-        const entry = activePageTablesBases.find(e => e.processID === i);
-        
-        if (entry) {
-            // Process exists in new list - write valid entry
-            newMemory[i] = (entry.pageTableBase << 4) | (entry.numPages << 1) | 0b00000001; // set valid bit
-        } else {
-            // Process doesn't exist - mark as invalid by clearing the valid bit
-            newMemory[i] = 0b00000000;
+    for (let processID = 0; processID < MAX_PROCESSES; processID++) {
+
+        const processControlBlock = processControlBlocks.find((pcb) => pcb.processID === processID);
+
+        if (processControlBlock !== undefined) {
+
+            // I know, I know I already check if it exists 
+
+            if (processControlBlock.programCounter < 0 || processControlBlock.programCounter > PROGRAM_COUNTER_MAX) {
+                throw new Error(`Invalid programCounter value ${processControlBlock.programCounter}. Must be 0-${PROGRAM_COUNTER_MAX} inclusive.`);
+            }
+
+            if (processControlBlock.accumulator < 0 || processControlBlock.accumulator > ACCUMULATOR_MAX) {
+                throw new Error(`Invalid accumulator value ${processControlBlock.accumulator}. Must be 0-${ACCUMULATOR_MAX} inclusive.`);
+            }
+
+            const pcbAddr = START_OF_PCBS + processID * BYTES_PER_PCB;
+            newMemory[pcbAddr] = processControlBlock.pageTableBase << 5 
+                | processControlBlock.programCounter << 1
+                | processControlBlock.validBit;
+            newMemory[pcbAddr + 1] = processControlBlock.accumulator;
         }
+        else {
+            const pcbAddr = START_OF_PCBS + processID * BYTES_PER_PCB;
+            newMemory[pcbAddr] = newMemory[pcbAddr] & PCB_VALID_BIT_CLEAR_MASK;
+        }
+
+
     }
     
     return newMemory;
-
 }
 
 
@@ -71,49 +96,53 @@ export function writePageTable(AllocatedPagesPFN: number[], pageTableBase: numbe
 
             // I want to make sure that there is always at least one unwritable page
             let writable = 0;
-            const activePageTablesBases = getActivePageTablesBases(memory);
-            if (activePageTablesBases.length > 0) writable = Math.random() < 0.8 ? 1 : 0;
+            const processControlBlocks = getProcessControlBlocks(memory);
+            if (processControlBlocks.length > 0) writable = Math.random() < WRITABLE_PAGE_PROBABILITY ? 1 : 0;
 
             const pageTableEntry = (AllocatedPagesPFN[index] << 5) | 0b00011001 | (writable); // set valid bit and writable bit
-            newMemory[pageTableBase + index] = pageTableEntry;
+            // console.log("pageTableEntry: ", pageTableEntry.toString(2)) //.padStart(8, "0")
+            newMemory[START_OF_PAGE_TABLES + pageTableBase + index] = pageTableEntry;
         })
     return newMemory;
 }
 
 export function compactPagetables(memory: number[]) : {newMemory: number[], cursor: number} {
-    const activePageTablesBases = getActivePageTablesBases(memory);
+    const processControlBlocks = getProcessControlBlocks(memory);
 
-    const sortedActivePageTablesBases = [...activePageTablesBases].sort((a, b) => a.pageTableBase - b.pageTableBase);
+    const sortedProcessControlBlocks = [...processControlBlocks].sort((a, b) => a.pageTableBase - b.pageTableBase);
 
     let cursor = START_OF_PAGE_TABLES;
-    const moveOperations: Array<{oldBase: number, newBase: number, numPages: number}> = [];
-    const compactedPageTableBases: PageTablesBases = [];
+    const tableSize = BYTES_PER_PAGE_TABLE;
+    const moveOperations: Array<{oldOffset: number, newOffset: number}> = [];
+    const compactedPageTableBases: ProcessControlBlocks = [];
 
     // Plan the compaction without mutating
-    for (const entry of sortedActivePageTablesBases) {
+    // pageTableBase in PCB is byte offset within page table region
+    for (const entry of sortedProcessControlBlocks) {
+        const newOffset = cursor - START_OF_PAGE_TABLES;
         moveOperations.push({
-            oldBase: entry.pageTableBase,
-            newBase: cursor,
-            numPages: entry.numPages
+            oldOffset: entry.pageTableBase,
+            newOffset,
         });
         compactedPageTableBases.push({
             ...entry,
-            pageTableBase: cursor
+            pageTableBase: newOffset as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
         });
-        cursor += entry.numPages;
+        cursor += tableSize;
     }
 
     // Update memory with the planned moves
-
     let newMemory = [...memory];
     
     for (const op of moveOperations) {
-        for (let i = 0; i < op.numPages; i++) {
-            newMemory[op.newBase + i] = memory[op.oldBase + i];
+        for (let i = 0; i < tableSize; i++) {
+            const srcAddr = START_OF_PAGE_TABLES + op.oldOffset + i;
+            const dstAddr = START_OF_PAGE_TABLES + op.newOffset + i;
+            newMemory[dstAddr] = memory[srcAddr];
         }
     }
 
-    newMemory = setActivePageTablesBases(compactedPageTableBases, newMemory);
+    newMemory = setProcessControlBlocks(compactedPageTableBases, newMemory);
 
     return {cursor, newMemory};
 }

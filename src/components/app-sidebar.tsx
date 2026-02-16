@@ -30,13 +30,13 @@ export function AppSidebar(
               </TabsList>
               
               <TabsContent value="Control" className="mt-4">
-                  <SidebarGroup>
+                    <SidebarGroup>
                     <SidebarHeader className="text-lg">Add Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-4 justify-center">
                         <ButtonGroup orientation="vertical" className="gap-2">
-                            <Button onClick={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 2}})}>Create 2 Page Process</Button>
-                            <Button onClick={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM", payload: {numPages: 4}})}>Create 4 Page Process</Button>
+                            <Button onClick={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM"})}>Add Process</Button>
                         </ButtonGroup>
+                        <p className="text-xs text-muted-foreground">Each process gets 2 pages (page size fixed)</p>
                       </div>
                     <SidebarHeader className="text-lg">Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-2 justify-center">
@@ -47,7 +47,7 @@ export function AppSidebar(
                             Press a process to context switch
                             {activePageTablesBases.map((process) => (
                               <div key={process.processID} className="flex items-center justify-between bg-secondary p-2 rounded">
-                                <span className="text-sm">Process {process.processID} ({process.numPages} pages)</span>
+                                <span className="text-sm">Process {process.processID} (2 pages)</span>
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 

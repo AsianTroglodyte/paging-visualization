@@ -1,4 +1,4 @@
-import { getProcessVirtualAddressSpace, getProcessVirtualMemory } from "@/simulation/selectors";
+import { getProcessVirtualAddressSpace } from "@/simulation/selectors";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import type {PageTablesBases, PageTablesBase, PageTable, VirtualPage} from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";

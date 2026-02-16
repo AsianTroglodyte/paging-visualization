@@ -1,15 +1,13 @@
 import { createContext } from "react";
-import { compactPagetables, setActivePageTablesBases, setFreeList, writePageTable, writeProcessPages } from "./writers";
-import { getActivePageTablesBases, getFreeList, getPageTable } from "./selectors";
+import { compactPagetables, setProcessControlBlocks, setFreeList, writePageTable, writeProcessPages } from "./writers";
+import { getProcessControlBlocks, getActivePageTablesBases, getFreeList, getPageTable } from "./selectors";
+import { START_OF_PAGE_TABLES, MAX_PAGES_ALLOCATABLE } from "./constants";
 import type { CurRunningPIDContextType, MemoryAction } from "./types";
 
 export const curRunningPIDContext = createContext<CurRunningPIDContextType | null>(null);
 
-export const FREE_LIST_ADDRESS = 15; // address where free list byte is stored
-export const MAX_PROCESSES = 3;
-export const MAX_PAGES_ALLOCATABLE = 6; // maximum space for page tables in bytes
-export const START_OF_PROCESS_MEMORY = 16; // address where process memory starts
-export const START_OF_PAGE_TABLES = 8; // address where process memory starts
+// Re-export for App.tsx
+export { FREE_LIST_ADDRESS } from "./constants";
 
 
 
@@ -27,12 +25,12 @@ export function machineReducer(memory: number[], action: MemoryAction) {
 
         case "CREATE_PROCESS_RANDOM":
             return (() => {
+                const numPages = 2; // always 2 with PCB architecture
                 const freeList = getFreeList(memory);
 
-                if (freeList.length < action.payload.numPages) {
-                    console.log(`Cannot allocate ${action.payload.numPages} pages. Only ${freeList.length} free.`)
+                if (freeList.length < numPages) {
+                    console.log(`Cannot allocate ${numPages} pages. Only ${freeList.length} free.`)
                     return memory;
-                    // throw new Error(`Cannot allocate ${action.payload.numPages} pages. Only ${freeList.length} free.`);
                 }
 
                 // Inline: select random free pages
@@ -41,113 +39,80 @@ export function machineReducer(memory: number[], action: MemoryAction) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
                 }
-                const newAllocatedPagesPFN = shuffled.slice(0, action.payload.numPages);
-                console.log("AllocatedPagesPFN: ", newAllocatedPagesPFN);
+                const newAllocatedPagesPFN = shuffled.slice(0, numPages);
                 
-                // Inline: determine new process ID
+                const existingPCBs = getProcessControlBlocks(memory);
                 let newProcessID: number | undefined;
-
-                const activePageTablesBases = getActivePageTablesBases(memory);
-
-                for (let i = 0; i <= activePageTablesBases.length; i += 1) {
-                    if (activePageTablesBases.length === 0) {
-                        newProcessID = i;
-                        break;
-                    }
-                    if (activePageTablesBases.some(entry => entry.processID === i) === false) {
+                for (let i = 0; i < 4; i++) { // 4 PCB slots (addresses 8,10,12,14) but only 3 can be active
+                    if (!existingPCBs.some(pcb => pcb.processID === i)) {
                         newProcessID = i;
                         break;
                     }
                 }
                 if (newProcessID === undefined) {
-                    throw new Error("createProcessID(): Available ID somehow not found.");
+                    throw new Error("No available process ID.");
                 }
 
-                // Inline: find base of free space for page table
+                // Find free slot for page table (offset 0-6, step 2)
                 let newPageTableBase: number | null = null;
-                const tables = activePageTablesBases
-                    .map(e => ({
-                        start: e.pageTableBase,
-                        end: e.pageTableBase + e.numPages,
-                    }))
+                const tables = existingPCBs
+                    .map(p => ({ start: p.pageTableBase, end: p.pageTableBase + 2 }))
                     .sort((a, b) => a.start - b.start);
                 
-                let cursor = START_OF_PAGE_TABLES;
+                let cursor = 0;
                 for (const t of tables) {
-                    if (cursor + action.payload.numPages <= t.start) {
+                    if (cursor + numPages <= t.start) {
                         newPageTableBase = cursor;
                         break;
                     }
                     cursor = t.end;
                 }
-
-                if (newPageTableBase === null && cursor + action.payload.numPages <= (START_OF_PAGE_TABLES + MAX_PAGES_ALLOCATABLE)) {
+                if (newPageTableBase === null && cursor + numPages <= MAX_PAGES_ALLOCATABLE) {
                     newPageTableBase = cursor;
                 }
 
-                // no space found, compact page tables and try again. guaranteed to work because 
-                // we checked whether there were enough free pages earlier
                 let newMemory: number[] = [...memory];
                 if (newPageTableBase === null) {
                     const result = compactPagetables(newMemory);
-                    cursor = result.cursor;
                     newMemory = result.newMemory;
+                    newPageTableBase = result.cursor;
                 }
 
-                if (action.payload.numPages !== 2 && action.payload.numPages !== 4) {
-                    throw new Error(`numPages must be either 2 or 4. Received ${action.payload.numPages}`);
-                }
+                const newPCB = {
+                    processID: newProcessID,
+                    pageTableBase: newPageTableBase,
+                    programCounter: 0,
+                    validBit: 1,
+                    accumulator: 0,
+                };
 
-                if (newPageTableBase === null) {
-                    throw new Error("newPagetablebase is null GET OVER HERE PRONTO");
-                }
-
-                newMemory = setActivePageTablesBases([
-                    ...activePageTablesBases,
-                    {
-                        processID: newProcessID,
-                        pageTableBase: newPageTableBase, 
-                        numPages: action.payload.numPages,
-                        valid: true
-                    }
-                ], newMemory);
-
+                newMemory = setProcessControlBlocks([...existingPCBs, newPCB], newMemory);
                 newMemory = writePageTable(newAllocatedPagesPFN, newPageTableBase, newMemory);
 
                 const remainingFreePages = freeList.filter(page => !newAllocatedPagesPFN.includes(page));
                 newMemory = setFreeList(remainingFreePages, newMemory);
-
                 newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
                 return newMemory;
             })();
 
         case "DELETE_PROCESS":
             return (() => {
-
-                const activePageTablesBases = getActivePageTablesBases(memory);
-
-                const pageTableEntry = activePageTablesBases.find(entry => entry.processID === action.payload.processID);
+                const processControlBlocks = getProcessControlBlocks(memory);
+                const pcbToDelete = processControlBlocks.find(pcb => pcb.processID === action.payload.processID);
             
-                if (!pageTableEntry) {
-                    throw new Error(`Process ID ${action.payload.processID} not found in active page table bases.`);
+                if (!pcbToDelete) {
+                    throw new Error(`Process ID ${action.payload.processID} not found.`);
                 }
 
-                let newMemory = [...memory];
+                const remainingPCBs = processControlBlocks.filter(pcb => pcb.processID !== action.payload.processID);
+                let newMemory = setProcessControlBlocks(remainingPCBs, [...memory]);
 
-                newMemory = setActivePageTablesBases(
-                    [...activePageTablesBases].filter(entry => entry.processID !== action.payload.processID),
-                    newMemory
-                );
-
-                // free up allocated pages
                 const pageTable = getPageTable(memory, action.payload.processID);
                 const newlyFreedPages = pageTable
                     .filter(pte => pte.valid)
                     .map(pte => pte.pfn);
 
                 const freeList = getFreeList(memory);
-
-                // combination of old free list 
                 newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
 
                 return newMemory;

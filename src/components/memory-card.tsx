@@ -67,7 +67,7 @@ export function MemoryCard({
                     <AccordionTrigger className="hover:no-underline">
                     <div className="flex justify-between w-full pr-4">
                         <span className="font-mono">PFN 0</span>
-                        <span className="text-muted-foreground">OS: Others</span>
+                        <span className="text-muted-foreground">OS: Page Tables</span>
                     </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -98,7 +98,7 @@ export function MemoryCard({
                     <AccordionTrigger className="hover:no-underline">
                     <div className="flex justify-between w-full pr-4">
                         <span className="font-mono">PFN 1</span>
-                        <span className="text-muted-foreground text-xs">OS: Page Tables</span>
+                        <span className="text-muted-foreground text-xs">OS: PCBs + Free List</span>
                     </div>
                     </AccordionTrigger>
                     <AccordionContent>
