@@ -1,27 +1,46 @@
-import { createContext } from "react";
 import { compactPagetables, setProcessControlBlocks, setFreeList, writePageTable, writeProcessPages } from "./writers";
-import { getProcessControlBlocks, getActivePageTablesBases, getFreeList, getPageTable } from "./selectors";
-import { START_OF_PAGE_TABLES, MAX_PAGES_ALLOCATABLE } from "./constants";
-import type { CurRunningPIDContextType, MemoryAction } from "./types";
+import { getProcessControlBlocks, getProcessControlBlock, getFreeList, getPageTable } from "./selectors";
+import { START_OF_PAGE_TABLES, MAX_PAGES_ALLOCATABLE, FREE_LIST_ADDRESS } from "./constants";
+import type { MemoryAction, MachineState, CpuState } from "./types";
+import { IDLE_CPU_STATE } from "./types";
 
-export const curRunningPIDContext = createContext<CurRunningPIDContextType | null>(null);
+function createInitialMachineState(): MachineState {
+    const initialMemory = new Array(64).fill(0);
+    initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
+    return {
+        memory: initialMemory,
+        cpu: IDLE_CPU_STATE,
+    };
+}
 
-// Re-export for App.tsx
-export { FREE_LIST_ADDRESS } from "./constants";
+export function getInitialMachineState(): MachineState {
+    return createInitialMachineState();
+}
 
+export function machineReducer(state: MachineState, action: MemoryAction): MachineState {
+    const memory = state.memory;
+    const cpu = state.cpu;
 
-
-// the memory byte array contains 4 crucial pieces of data:
-//  - page table base list - list of bytes, each byte is an entry mapping a process to the 
-//    base address of their corresponding page table.
-//  - free list - a single byte containing info on which pages are free
-//  - page tables - maps the VPNs to the PFNs along with showing control bits. 
-//  - process memory - the memory used by processes. 
-
-export function machineReducer(memory: number[], action: MemoryAction) {
     switch (action.type) {
         case "COMPACT_PAGE_TABLES":
-            return compactPagetables(memory).newMemory;
+            return { ...state, memory: compactPagetables(memory).newMemory };
+
+        case "CONTEXT_SWITCH":
+            if (action.payload.processID === null) {
+                return { ...state, cpu: IDLE_CPU_STATE };
+            }
+            const pcb = getProcessControlBlock(memory, action.payload.processID);
+            if (!pcb) {
+                return { ...state, cpu: IDLE_CPU_STATE };
+            }
+            const newCpu: CpuState = {
+                runningPid: action.payload.processID,
+                programCounter: pcb.programCounter,
+                pageTableBase: pcb.pageTableBase,
+                accumulator: pcb.accumulator,
+                currentInstructionRaw: 0, // TODO: load from memory at PC
+            };
+            return { ...state, cpu: newCpu };
 
         case "CREATE_PROCESS_RANDOM":
             return (() => {
@@ -30,7 +49,7 @@ export function machineReducer(memory: number[], action: MemoryAction) {
 
                 if (freeList.length < numPages) {
                     console.log(`Cannot allocate ${numPages} pages. Only ${freeList.length} free.`)
-                    return memory;
+                    return state;
                 }
 
                 // Inline: select random free pages
@@ -92,7 +111,7 @@ export function machineReducer(memory: number[], action: MemoryAction) {
                 const remainingFreePages = freeList.filter(page => !newAllocatedPagesPFN.includes(page));
                 newMemory = setFreeList(remainingFreePages, newMemory);
                 newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
-                return newMemory;
+                return { ...state, memory: newMemory };
             })();
 
         case "DELETE_PROCESS":
@@ -115,9 +134,10 @@ export function machineReducer(memory: number[], action: MemoryAction) {
                 const freeList = getFreeList(memory);
                 newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
 
-                return newMemory;
+                const newCpu = cpu.runningPid === action.payload.processID ? IDLE_CPU_STATE : cpu;
+                return { memory: newMemory, cpu: newCpu };
             })();
         default:
-            return memory;
+            return state;
     }
 }

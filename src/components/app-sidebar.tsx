@@ -14,9 +14,11 @@ export function AppSidebar(
   {
     machineStateDispatch,
     activePageTablesBases,
+    runningPid,
   }: {
     machineStateDispatch: React.Dispatch<MemoryAction>;
     activePageTablesBases: PageTablesBases;
+    runningPid: number | null;
   }
 ) {
   return (
@@ -34,7 +36,7 @@ export function AppSidebar(
                     <SidebarHeader className="text-lg">Add Processes</SidebarHeader>
                       <div className="w-full p-2 flex flex-col gap-4 justify-center">
                         <ButtonGroup orientation="vertical" className="gap-2">
-                            <Button onClick={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM"})}>Add Process</Button>
+                            <Button onMouseDown={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM"})}>Add Process</Button>
                         </ButtonGroup>
                         <p className="text-xs text-muted-foreground">Each process gets 2 pages (page size fixed)</p>
                       </div>
@@ -46,12 +48,25 @@ export function AppSidebar(
                           <div className="flex flex-col gap-2">
                             Press a process to context switch
                             {activePageTablesBases.map((process) => (
-                              <div key={process.processID} className="flex items-center justify-between bg-secondary p-2 rounded">
+                              <div 
+                                key={process.processID} 
+                                className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+                                  runningPid === process.processID
+                                    ? "bg-primary/20 border border-primary"
+                                    : "bg-secondary hover:bg-secondary/80"
+                                }`}
+                                onMouseDown={() => {
+                                  machineStateDispatch({ type: "CONTEXT_SWITCH", payload: { processID: process.processID } });
+                                }}
+                              >
                                 <span className="text-sm">Process {process.processID} (2 pages)</span>
                                 <Button 
                                   size="sm" 
                                   variant="ghost" 
-                                  onClick={() => machineStateDispatch({type: "DELETE_PROCESS", payload: {processID: process.processID}})}
+                                  onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    machineStateDispatch({type: "DELETE_PROCESS", payload: {processID: process.processID}});
+                                  }}
                                   className="h-6 w-6 p-0"
                                 >
                                   ✕

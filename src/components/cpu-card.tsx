@@ -6,12 +6,16 @@ import { Field} from "./ui/field"
 import { Input } from "./ui/input"
 import { useState } from "react"
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "./ui/pagination"
+import type { CpuState } from "@/simulation/types";
+import { isCpuIdle } from "@/simulation/types";
 
 
-export function CpuCard() {
+export function CpuCard({ cpu }: { cpu: CpuState }) {
 
     const [lbImmediateValue, setLbImmediateValue] = useState(21);
     const [sbImmediateValue, setSbImmediateValue] = useState(21);
+    const idle = isCpuIdle(cpu);
+
     return (
         <Card size="sm">
             <CardHeader>
@@ -23,20 +27,20 @@ export function CpuCard() {
                         <span> </span>
                     </h2>
                 </CardDescription>
-                <Pagination>
-                    <PaginationContent>
-                        <h3 className="text-sm font-semibold">Processes:</h3>
-                        <PaginationItem>
-                            <PaginationLink href="#">0</PaginationLink>
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationLink href="#">1</PaginationLink>
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationLink href="#">2</PaginationLink>
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+                {/* Registers */}
+                <div className="rounded-md border bg-muted/50 p-3">
+                    <ul className="text-sm font-mono list-disc list-inside space-y-0.5">
+                        <li>runningPid: {idle ? "—" : cpu.runningPid}</li>
+                        <li>PC: {cpu.programCounter}</li>
+                        <li>pageTableBase: {cpu.pageTableBase}</li>
+                        <li>accumulator: {cpu.accumulator}</li>
+                        <li>currentInstructionRaw: {cpu.currentInstructionRaw}</li>
+                    </ul>
+                    {idle && (
+                        <p className="text-xs text-muted-foreground italic mt-1">CPU idle — select a process</p>
+                    )}
+                </div>
+
             </CardHeader>
             <CardContent >
                 <Field orientation="horizontal" className="flex flex-shrink-1  font-semibold">
@@ -52,11 +56,11 @@ export function CpuCard() {
                             [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" 
                         />
                         <Button variant="outline" size="icon" 
-                        onClick={() => setLbImmediateValue(currentValue => currentValue + 1)}>
+                        onMouseDown={() => setLbImmediateValue(currentValue => currentValue + 1)}>
                             <PlusIcon />
                         </Button>
                         <Button variant="outline" size="icon" 
-                        onClick={() => setLbImmediateValue(currentValue => currentValue - 1)}>
+                        onMouseDown={() => setLbImmediateValue(currentValue => currentValue - 1)}>
                             <MinusIcon />
                         </Button>
                     </ButtonGroup>
@@ -76,12 +80,8 @@ export function CpuCard() {
                             [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" 
                         />
                         <Button variant="outline" size="icon" 
-                        onClick={() => setSbImmediateValue(currentValue => currentValue + 1)}>
+                        onMouseDown={() => setSbImmediateValue(currentValue => currentValue + 1)}>
                             <PlusIcon />
-                        </Button>
-                        <Button variant="outline" size="icon" 
-                        onClick={() => setSbImmediateValue(currentValue => currentValue - 1)}>
-                            <MinusIcon />
                         </Button>
                     </ButtonGroup>
                     <span className="text-lg">($zero)</span>

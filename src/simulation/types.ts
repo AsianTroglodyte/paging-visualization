@@ -48,9 +48,31 @@ export type VirtualPage = {
 };
 
 
-export type CurRunningPIDContextType = {
-  curRunningPID: number | null;
-  setCurRunningPID: (pid: number | null) => void;
+export type CpuState = {
+  /** null when no process is running; register values are dormant/meaningless when idle */
+  runningPid: number | null;
+  programCounter: number;
+  pageTableBase: number;
+  accumulator: number;
+  currentInstructionRaw: number;
+};
+
+/** Dormant CPU state when no process is running. Register values are placeholders. */
+export const IDLE_CPU_STATE: CpuState = {
+  runningPid: null,
+  programCounter: 0,
+  pageTableBase: 0,
+  accumulator: 0,
+  currentInstructionRaw: 0,
+};
+
+export function isCpuIdle(cpu: CpuState): boolean {
+  return cpu.runningPid === null;
+}
+
+export type MachineState = {
+  memory: number[];
+  cpu: CpuState;
 };
 
 export type MemoryAction =
@@ -65,4 +87,8 @@ export type MemoryAction =
   | {
       type: "DELETE_PROCESS";
       payload: { processID: number };
+    }
+  | {
+      type: "CONTEXT_SWITCH";
+      payload: { processID: number | null };
     };
