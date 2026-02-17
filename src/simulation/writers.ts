@@ -16,7 +16,7 @@ import {
     WRITABLE_PAGE_PROBABILITY,
     START_OF_PCBS
 } from "./constants";
-import { getProcessControlBlocks, getProcessControlBlock } from "./selectors";
+import { getProcessControlBlocks, getProcessControlBlock, getPageTable } from "./selectors";
 import type {ProcessControlBlock, ProcessControlBlocks } from "./types";
 import { SAMPLE_PROGRAM } from "./isa";
 
@@ -152,4 +152,15 @@ export function compactPagetables(memory: number[]) : {newMemory: number[], curs
     newMemory = setProcessControlBlocks(compactedPageTableBases, newMemory);
 
     return {cursor, newMemory};
+}
+
+export function writeByteAtVirtualAddress(memory: number[], processID: number, virtualAddress: number, value: number): number[] {
+    const newMemory = [...memory];
+    const pageTable = getPageTable(memory, processID);
+    // index of PTE = vpn
+    const vpn = Math.floor(virtualAddress / 8);
+    const offset = virtualAddress % 8;
+    const pfn = pageTable[vpn].pfn; 
+    newMemory[pfn * PAGE_SIZE + offset] = value;
+    return newMemory;
 }

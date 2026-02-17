@@ -183,12 +183,13 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     return { ...state, 
                         memory: newMemory, cpu: { ...cpu, accumulator: action.payload.operand } };
                 }
-                case "add":
+                case "add":{
                     const virtualAddress = action.payload.operand;
                     const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
                     
                     return { ...state, 
                         cpu: { ...cpu, accumulator: cpu.accumulator + valueFromVirtualAddress} };
+                }
                 case "addi":
                     return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator + action.payload.operand } };
                 case "sub":

@@ -22,12 +22,9 @@ interface MemoryCardProps extends React.ComponentProps<"div"> {
 }
 
 export function MemoryCard({
-    className,
-    size = "default",
     processControlBlocks,
     memory,
     allProcessPages,
-    ...props
     }: MemoryCardProps) {
 
         
