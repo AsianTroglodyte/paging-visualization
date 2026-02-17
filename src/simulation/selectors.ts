@@ -14,7 +14,8 @@ import {
     PCB_PROGRAM_COUNTER_MASK,
     PCB_PAGE_TABLE_BASE_MASK,
 } from "./constants";
-import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks } from "./types";
+import { OPCODE_NAMES } from "./isa";
+import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks, CpuState } from "./types";
 
 export function getFreeList(mem: number[]): number[] {
     const bitmap = mem[FREE_LIST_ADDRESS];
@@ -126,9 +127,6 @@ export function getProcessVirtualAddressSpace(memory: number[], processID: numbe
     // will be in the right order
     const pfns = processPagetable.map((pte) => pte.pfn);
     
-
-
-
     const virtualAddressSpace: VirtualPage[] = pfns.map((pfn, index) => {
         const pfnAddressSpace = memory.slice(pfn * 8, pfn * 8 + 8);
         return {
@@ -139,15 +137,12 @@ export function getProcessVirtualAddressSpace(memory: number[], processID: numbe
         }
     });    
 
-    console.log("virtualAddressSpace: ", virtualAddressSpace)
-
     return virtualAddressSpace;
 }
 
 export function getPage(memory: number[], pfn: number): number[] {
     return memory.slice(pfn * 8, pfn * 8 + 8);
 }
-
 
 export function getProcessVirtualMemory(memory: number[], processID: number): VirtualPage[] {
 
@@ -166,4 +161,25 @@ export function getProcessVirtualMemory(memory: number[], processID: number): Vi
 export function getAllProcessVirtualMemory(memory: number[]): VirtualPage[][] {
     const processControlBlocks = getProcessControlBlocks(memory);
     return processControlBlocks.map(pcb => getProcessVirtualMemory(memory, pcb.processID));
+}
+
+
+/** Fetches the byte at a virtual address for a process. */
+export function getByteAtVirtualAddress(
+    memory: number[],
+    processID: number,
+    virtualAddress: number
+  ): number {
+    const pageTable = getPageTable(memory, processID);
+    // index of PTE = vpn
+    const vpn = Math.floor(virtualAddress / 8);
+    const offset = virtualAddress % 8;
+    const pfn = pageTable[vpn].pfn; 
+    return memory[pfn * 8 + offset];
+  }
+
+export function decodeInstruction(instruction: number): { opcode: string, operand: number } {
+    const opcode = (instruction & 0b11100000) >> 5;
+    const operand = instruction & 0b00011111;
+    return { opcode: OPCODE_NAMES[opcode], operand: operand};
 }

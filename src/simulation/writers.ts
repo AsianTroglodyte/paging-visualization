@@ -10,8 +10,6 @@ import {
     BYTES_PER_PAGE_TABLE,
     PAGE_SIZE,
     BYTES_PER_PCB,
-    FIRST_PROCESS_PFN,
-    LAST_PROCESS_PFN,
     PROGRAM_COUNTER_MAX,
     ACCUMULATOR_MAX,
     PCB_VALID_BIT_CLEAR_MASK,
@@ -20,20 +18,28 @@ import {
 } from "./constants";
 import { getProcessControlBlocks, getProcessControlBlock } from "./selectors";
 import type {ProcessControlBlock, ProcessControlBlocks } from "./types";
+import { SAMPLE_PROGRAM } from "./isa";
 
-export function writeProcessPages(newAllocatedPages: number[], memory: number[]): number[] {
-    // const allAllocatedPages = [...freeList, ...allocatedPages];
+// First page (VPN 0): 8 instructions. Second page (VPN 1): 8 bytes of data.
+export function writeProcessPages(newAllocatedPages: {pfn: number, vpn: number}[], memory: number[]): number[] {
     const newMemory = [...memory];
 
-    for (let pageFrameNumber = FIRST_PROCESS_PFN; pageFrameNumber <= LAST_PROCESS_PFN; pageFrameNumber++) {
-        if (newAllocatedPages.includes(pageFrameNumber)) {
+    for (const { pfn, vpn } of newAllocatedPages) {
+        const baseAddr = pfn * PAGE_SIZE;
+        if (vpn === 0) {
+            // First page: write 8 ISA instructions
+            for (let i = 0; i < PAGE_SIZE && i < SAMPLE_PROGRAM.length; i++) {
+                newMemory[baseAddr + i] = SAMPLE_PROGRAM[i];
+            }
+        } else {
+            // Second page: data area (initial values for load/store visualization)
             for (let i = 0; i < PAGE_SIZE; i++) {
-                newMemory[pageFrameNumber * PAGE_SIZE + i] = Math.floor(Math.random() * 256);
+                newMemory[baseAddr + i] = i % 16; // 0-15 for visibility
             }
         }
     }
 
-    return newMemory
+    return newMemory;
 }
 
 
@@ -87,9 +93,10 @@ export function setFreeList(newFreePages: number[], memory: number[]): number[] 
 }
 
 
-export function writePageTable(AllocatedPagesPFN: number[], pageTableBase: number, memory: number[]): number[] {
+export function writePageTable(AllocatedPagesPFN: {pfn: number, vpn: number}[], pageTableBase: number, memory: number[]): number[] {
     const newMemory: number[] = [...memory];
-    AllocatedPagesPFN.forEach((_, index) => {
+
+    AllocatedPagesPFN.forEach(({pfn, vpn}, index) => {
         // create page table entry
         // PFN (3 bit) | valid (1 bit) | Present (1 bit) | Referenced (1 bit) | Dirty (1 bit) | Writable (1 bit) 
             // valid = 1; present = 1; referenced = 0; dirty = 0; writable = random 0/1;
@@ -99,9 +106,9 @@ export function writePageTable(AllocatedPagesPFN: number[], pageTableBase: numbe
             const processControlBlocks = getProcessControlBlocks(memory);
             if (processControlBlocks.length > 0) writable = Math.random() < WRITABLE_PAGE_PROBABILITY ? 1 : 0;
 
-            const pageTableEntry = (AllocatedPagesPFN[index] << 5) | 0b00011001 | (writable); // set valid bit and writable bit
+            const pageTableEntry = (pfn << 5) | 0b00011001 | (writable); // set valid bit and writable bit
             // console.log("pageTableEntry: ", pageTableEntry.toString(2)) //.padStart(8, "0")
-            newMemory[START_OF_PAGE_TABLES + pageTableBase + index] = pageTableEntry;
+            newMemory[START_OF_PAGE_TABLES + pageTableBase + vpn] = pageTableEntry;
         })
     return newMemory;
 }

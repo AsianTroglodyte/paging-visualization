@@ -4,18 +4,24 @@ import { MemoryCard } from "./components/memory-card";
 import { useMemo, useReducer} from "react";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
-import { machineReducer, getInitialMachineState } from "./simulation/machine-reducer";
+import { machineReducer } from "./simulation/machine-reducer";
 import { getProcessControlBlocks, getAllPageTables, getAllProcessPages, getFreeList } from "./simulation/selectors";
 import VirtualMemory from "./components/VirtualMemory";
+import { FREE_LIST_ADDRESS } from "./simulation/constants";
+import { IDLE_CPU_STATE } from "./simulation/types";
 
 
 export function App() {
 
-    const [machineState, machineStateDispatch] = useReducer(
-        machineReducer,
-        null,
-        getInitialMachineState
-    );
+    const [machineState, machineStateDispatch] = useReducer(machineReducer, undefined, () => {
+        const initialMemory = new Array(64).fill(0);
+        initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
+        return {
+            memory: initialMemory,
+            cpu: IDLE_CPU_STATE,
+        };
+    });
+
 
     const memory = machineState.memory;
     const cpu = machineState.cpu;
@@ -46,7 +52,7 @@ export function App() {
             <AppSidebar 
                 machineStateDispatch={machineStateDispatch}
                 processControlBlocks={processControlBlocks}
-                runningPid={cpu.runningPid}
+                runningPid={cpu.kind === "running" ? cpu.runningPid : null}
             />
             <SidebarTrigger className="" size="lg" />
 
@@ -57,8 +63,12 @@ export function App() {
                 <MemoryCard className="row-span-2" 
                 processControlBlocks={processControlBlocks} 
                 allProcessPages={allProcessPages} 
-                machineState={memory}></MemoryCard>
-                <VirtualMemory machineState={memory} processControlBlocks={processControlBlocks}> </VirtualMemory>
+                memory={memory}></MemoryCard>
+                <VirtualMemory 
+                memory={memory} 
+                processControlBlocks={processControlBlocks} 
+                cpu={cpu} 
+                machineStateDispatch={machineStateDispatch}> </VirtualMemory>
             </div>
         </SidebarProvider>
     )

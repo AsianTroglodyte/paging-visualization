@@ -1,4 +1,4 @@
 import { createContext } from "react";
-import type { CurRunningPIDContextType } from "./types";
+// import type { CurRunningPIDContextType } from "./types";
 
-export const curRunningPIDContext = createContext<CurRunningPIDContextType | null>(null);
+// export const curRunningPIDContext = createContext<CurRunningPIDContextType | null>(null);

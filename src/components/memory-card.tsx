@@ -18,14 +18,14 @@ interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
   processControlBlocks: ProcessControlBlocks;
   allProcessPages: Pages;
-  machineState: number[];
+  memory: number[];
 }
 
 export function MemoryCard({
     className,
     size = "default",
     processControlBlocks,
-    machineState,
+    memory,
     allProcessPages,
     ...props
     }: MemoryCardProps) {
@@ -35,19 +35,17 @@ export function MemoryCard({
         const activeProcessesIDs = processControlBlocks.map(pcb => pcb.processID);
         
         const activePageTables = activeProcessesIDs.map(activeProcessID => {
-            const pageTable = getPageTable(machineState, activeProcessID);
-            const PFNs = pageTable.map(pte => machineState.slice(pte.pfn * 8, pte.pfn * 8 + 8)); // get the bytes corresponding to the PFN in the page table entry. this is the content of the page in physical memory.
+            const pageTable = getPageTable(memory, activeProcessID);
+            const PFNs = pageTable.map(pte => memory.slice(pte.pfn * 8, pte.pfn * 8 + 8)); // get the bytes corresponding to the PFN in the page table entry. this is the content of the page in physical memory.
             return {
                 processID: activeProcessID,
                 pageTable: pageTable,
                 PFNs: PFNs,
             }
         });
-        
-        console.log("activePageTables", activePageTables);
-        
+                
         return activePageTables;
-    }, [processControlBlocks, machineState]);
+    }, [processControlBlocks, memory]);
         
     return (
     <Card size="sm">
@@ -79,7 +77,7 @@ export function MemoryCard({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {machineState.slice(0, 8).map((byte, index) => (
+                                {memory.slice(0, 8).map((byte, index) => (
                                     <TableRow>
                                         <TableCell>
                                             {index}
@@ -111,7 +109,7 @@ export function MemoryCard({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {machineState.slice(8, 16).map((byte, index) => (
+                                {memory.slice(8, 16).map((byte, index) => (
                                     <TableRow>
                                         <TableCell>
                                             {index}
@@ -169,7 +167,7 @@ export function MemoryCard({
                 </TableHeader>
 
                 <TableBody>
-                {machineState.map((byte, index) => (
+                {memory.map((byte, index) => (
                     <TableRow key={index}>
                     <TableCell className="font-mono">
                         {index}

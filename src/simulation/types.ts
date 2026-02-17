@@ -48,34 +48,26 @@ export type VirtualPage = {
 };
 
 
-export type CpuState = {
-  /** null when no process is running; register values are dormant/meaningless when idle */
-  runningPid: number | null;
-  programCounter: number;
-  pageTableBase: number;
-  accumulator: number;
-  currentInstructionRaw: number;
-};
+/** Tagged union: CPU is either idle or running a process. */
+export type CpuState =
+  | { kind: "idle" }
+  | {
+      kind: "running";
+      runningPid: number;
+      programCounter: number;
+      pageTableBase: number;
+      accumulator: number;
+      currentInstructionRaw: number;
+    };
 
-/** Dormant CPU state when no process is running. Register values are placeholders. */
-export const IDLE_CPU_STATE: CpuState = {
-  runningPid: null,
-  programCounter: 0,
-  pageTableBase: 0,
-  accumulator: 0,
-  currentInstructionRaw: 0,
-};
-
-export function isCpuIdle(cpu: CpuState): boolean {
-  return cpu.runningPid === null;
-}
+export const IDLE_CPU_STATE: CpuState = { kind: "idle" };
 
 export type MachineState = {
   memory: number[];
   cpu: CpuState;
 };
 
-export type MemoryAction =
+export type MachineAction =
   | {
       type: "COMPACT_PAGE_TABLES";
       payload?: never;
@@ -91,4 +83,22 @@ export type MemoryAction =
   | {
       type: "CONTEXT_SWITCH";
       payload: { processID: number | null };
-    };
+    }
+  | {
+    type: "EXECUTE_INSTRUCTION";
+    payload?: never;
+  } 
+  | {
+    type: "FETCH_INSTRUCTION";
+    payload: { virtualAddress: number };
+  } 
+  |{
+    type: "CHANGE_PROGRAM_COUNTER";
+    payload: { newProgramCounter: number };
+  }
+  | {
+    type: "EXECUTE_INSTRUCTION";
+    payload: { opcode: number, operand: number };
+  }
+
+export type MemoryAction = MachineAction;

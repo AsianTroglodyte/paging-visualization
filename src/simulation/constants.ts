@@ -16,7 +16,7 @@ export const BYTES_PER_PCB = 2;
 export const START_OF_PAGE_TABLES = 0;
 export const START_OF_PCBS = 8;
 export const START_OF_PROCESS_MEMORY = 16;
-export const FREE_LIST_ADDRESS = 7;
+export const FREE_LIST_ADDRESS = 15;
 
 export const MAX_PROCESSES = 3; // limited by page table space (6 bytes) + free list at 7
 export const MAX_PAGES_ALLOCATABLE = 6; // 3 processes × 2 bytes (byte 7 is free list)
