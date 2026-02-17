@@ -5,16 +5,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Field} from "./ui/field"
 import { Input } from "./ui/input"
 import { useState } from "react"
-import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "./ui/pagination"
-import { OPCODE_NAMES } from "@/simulation/isa";
-import type { CpuState } from "@/simulation/types";
-import { decodeInstruction, getByteAtVirtualAddress } from "@/simulation/selectors"
+import { OPCODE_NAMES, OPCODE_LB } from "@/simulation/isa";
+import type { CpuState, MemoryAction } from "@/simulation/types";
+import { decodeInstruction } from "@/simulation/selectors"
 
 
-export function CpuCard({ cpu }: { cpu: CpuState }) {
+export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineStateDispatch: React.Dispatch<MemoryAction> }) {
 
     const [lbImmediateValue, setLbImmediateValue] = useState(21);
     const idle = cpu.kind === "idle";
+
+    const canExecuteLb = !idle && (cpu.currentInstructionRaw >> 5) === OPCODE_LB;
 
 
     // if (cpu.kind === "running") {
@@ -90,7 +91,16 @@ export function CpuCard({ cpu }: { cpu: CpuState }) {
                         </Button>
                     </ButtonGroup>
                 </Field>
-                <Button disabled={idle}>Execute</Button>
+                <Button
+                    disabled={!canExecuteLb}
+                    onClick={() => {
+                        if (!canExecuteLb || cpu.kind !== "running") return;
+                        const { operand } = decodeInstruction(cpu.currentInstructionRaw);
+                        machineStateDispatch({ type: "EXECUTE_INSTRUCTION", payload: { opcode: OPCODE_LB, operand: lbImmediateValue } });
+                    }}
+                >
+                    Execute
+                </Button>
             </CardContent>
             <CardFooter className="mt-4"> 
             </CardFooter>

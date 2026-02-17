@@ -1,4 +1,4 @@
-import { compactPagetables, setProcessControlBlocks, setFreeList, writePageTable, writeProcessPages } from "./writers";
+import { compactPagetables, setProcessControlBlocks, setFreeList, writePageTable, writeProcessPages, writeByteAtVirtualAddress } from "./writers";
 import { getProcessControlBlocks, getProcessControlBlock, getFreeList, getPageTable, getByteAtVirtualAddress } from "./selectors";
 import { START_OF_PAGE_TABLES, MAX_PAGES_ALLOCATABLE, FREE_LIST_ADDRESS } from "./constants";
 import type { MachineAction, MachineState, CpuState } from "./types";
@@ -168,16 +168,27 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             
             
             switch (OPCODE_NAMES[action.payload.opcode]) {
-                case "lb":
-                    {
-                        const newCpu: CpuState = {...cpu};
-                        newCpu.accumulator = getByteAtVirtualAddress(memory, cpu.runningPid, action.payload.operand);
-                        return { ...state, cpu: newCpu };
-                    }
+                case "lb":{
+                    const virtualAddress = action.payload.operand;
+                    const byte = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
+                    return {
+                        ...state,
+                        cpu: { ...cpu, accumulator: byte },
+                    };
+                }
                 case "sb":
-                    return { ...state, cpu: { ...cpu, accumulator: action.payload.operand } };
+                {
+                    const virtualAddress = action.payload.operand;
+                    const newMemory = writeByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress, action.payload.operand);
+                    return { ...state, 
+                        memory: newMemory, cpu: { ...cpu, accumulator: action.payload.operand } };
+                }
                 case "add":
-                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator + action.payload.operand } };
+                    const virtualAddress = action.payload.operand;
+                    const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
+                    
+                    return { ...state, 
+                        cpu: { ...cpu, accumulator: cpu.accumulator + valueFromVirtualAddress} };
                 case "addi":
                     return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator + action.payload.operand } };
                 case "sub":
