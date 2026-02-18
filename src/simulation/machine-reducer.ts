@@ -183,23 +183,52 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     return { ...state, 
                         memory: newMemory, cpu: { ...cpu, accumulator: action.payload.operand } };
                 }
-                case "add":{
+                case "add": {
                     const virtualAddress = action.payload.operand;
                     const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
                     
                     return { ...state, 
                         cpu: { ...cpu, accumulator: cpu.accumulator + valueFromVirtualAddress} };
                 }
-                case "addi":
-                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator + action.payload.operand } };
-                case "sub":
-                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator - action.payload.operand } };
-                case "subi":
-                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator - action.payload.operand } };
-                case "branch":
-                    return { ...state, cpu: { ...cpu, programCounter: action.payload.operand } };
-                case "jump":
-                    return { ...state, cpu: { ...cpu, programCounter: action.payload.operand } };
+                case "addi": {
+                    const immediateValue = action.payload.operand;
+                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator + immediateValue } };
+                }
+
+                case "sub": {
+                    const virtualAddress = action.payload.operand;
+                    const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
+                    
+                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator - valueFromVirtualAddress } };
+                }
+                case "subi": {
+                    const immediateValue = action.payload.operand;
+                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator - immediateValue } };
+                }
+
+                case "branch": {
+                    if (cpu.accumulator === 0) {
+                        const branchAddress = action.payload.operand;
+                        const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, branchAddress);
+                        return { ...state, cpu: {
+                                ...cpu, 
+                                programCounter: branchAddress, 
+                                currentInstructionRaw: newCurrentInstructionRaw 
+                            }
+                        };
+                    }
+                    return { ...state, cpu: { ...cpu} };
+                }
+                case "jump": {
+                    const jumpVirtualAddress = action.payload.operand;
+                    const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, jumpVirtualAddress);
+
+                    return { ...state, cpu: { 
+                        ...cpu, 
+                        programCounter: jumpVirtualAddress,
+                        currentInstructionRaw: newCurrentInstructionRaw
+                    }};
+                }
                 default:
                     throw new Error(`Invalid opcode: ${action.payload.opcode}`);
             }

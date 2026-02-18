@@ -1,4 +1,5 @@
 import { getProcessVirtualAddressSpace } from "@/simulation/selectors";
+import { OPCODE_NAMES } from "@/simulation/isa";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import type { ProcessControlBlocks, VirtualPage, CpuState, MachineAction } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
@@ -57,6 +58,7 @@ export function VirtualMemory(
                             <TableRow>
                                 <TableHead>Virtual Address</TableHead>
                                 <TableHead className="text-right">Content</TableHead>
+                                {vpn === 0 && <TableHead className="text-right">Instruction</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -72,6 +74,11 @@ export function VirtualMemory(
                             <TableCell className="font-mono text-right">
                             {byte.toString(2).padStart(8, "0")}
                             </TableCell>
+                            {vpn === 0 && (
+                            <TableCell className="font-mono text-right text-muted-foreground">
+                            {`${OPCODE_NAMES[(byte & 0b11100000) >> 5]} ${byte & 0b00011111}`}
+                            </TableCell>
+                            )}
                         </TableRow>
                         ))}
                         </TableBody>

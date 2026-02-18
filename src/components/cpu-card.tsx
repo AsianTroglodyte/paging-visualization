@@ -12,10 +12,9 @@ import { decodeInstruction } from "@/simulation/selectors"
 
 export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineStateDispatch: React.Dispatch<MemoryAction> }) {
 
-    const [lbImmediateValue, setLbImmediateValue] = useState(21);
-    const idle = cpu.kind === "idle";
+    const [operand, setOperand] = useState(21);
+    const isIdle = cpu.kind === "idle";
 
-    const canExecuteLb = !idle && (cpu.currentInstructionRaw >> 5) === OPCODE_LB;
 
 
     // if (cpu.kind === "running") {
@@ -52,13 +51,13 @@ export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineS
                 {/* Registers */}
                 <div className="rounded-md border bg-muted/50 p-3">
                     <ul className="text-sm font-mono list-disc list-inside space-y-0.5">
-                        <li>runningPid: {idle ? "—" : cpu.runningPid}</li>
-                        <li>PC: {idle ? "—" : cpu.programCounter}</li>
-                        <li>pageTableBase: {idle ? "—" : cpu.pageTableBase}</li>
-                        <li>accumulator: {idle ? "—" : cpu.accumulator}</li>
-                        <li>currentInstructionRaw: {idle ? "—" : cpu.currentInstructionRaw}</li>
+                        <li>runningPid: {isIdle ? "—" : cpu.runningPid}</li>
+                        <li>PC: {isIdle ? "—" : cpu.programCounter}</li>
+                        <li>pageTableBase: {isIdle ? "—" : cpu.pageTableBase}</li>
+                        <li>accumulator: {isIdle ? "—" : cpu.accumulator}</li>
+                        <li>currentInstructionRaw: {isIdle ? "—" : cpu.currentInstructionRaw}</li>
                     </ul>
-                    {idle && (
+                    {isIdle && (
                         <p className="text-xs text-muted-foreground italic mt-1">
                             CPU idle — Select a process from the sidebar
                         </p>
@@ -68,39 +67,47 @@ export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineS
             </CardHeader>
             <CardContent >
                 <Field orientation="horizontal" className="flex flex-shrink-1  font-semibold">
+                        
+                    {isIdle ? "" : 
+                    <>
                     <span className="text-lg whitespace-nowrap ">
-                        {idle ? "—" : OPCODE_NAMES[cpu.currentInstructionRaw >> 5]}
+                        {OPCODE_NAMES[(cpu.currentInstructionRaw >> 5)]}
                     </span>
+                    
                     <ButtonGroup className="flex">
                         <Input 
                             type="number" 
-                            value={lbImmediateValue}
+                            value={operand}
                             // inputMode="numeric"
                             // pattern="[0-9]"
-                            onChange={(e) => setLbImmediateValue(Number(e.target.value))}
+                            onChange={(e) => setOperand(Number(e.target.value))}
                             className="w-12 flex-none text-center font-semibold
                             [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" 
-                        />
+                            />
                         <Button variant="outline" size="icon" 
-                        onMouseDown={() => setLbImmediateValue(currentValue => currentValue + 1)}>
+                        onMouseDown={() => setOperand(currentValue => currentValue + 1)}>
                             <PlusIcon />
                         </Button>
                         <Button variant="outline" size="icon" 
-                        onMouseDown={() => setLbImmediateValue(currentValue => currentValue - 1)}>
+                        onMouseDown={() => setOperand(currentValue => currentValue - 1)}>
                             <MinusIcon />
                         </Button>
                     </ButtonGroup>
+                    <Button
+                        disabled={isIdle}
+                        onClick={() => {
+                            if (cpu.kind !== "running") return;
+                            // const { operand } = decodeInstruction(cpu.currentInstructionRaw);
+                            machineStateDispatch({ 
+                                type: "EXECUTE_INSTRUCTION", 
+                                payload: { 
+                                    opcode: cpu.currentInstructionRaw >> 5, 
+                                    operand: operand }});
+                        }}>
+                        Execute
+                    </Button>
+                    </>}
                 </Field>
-                <Button
-                    disabled={!canExecuteLb}
-                    onClick={() => {
-                        if (!canExecuteLb || cpu.kind !== "running") return;
-                        const { operand } = decodeInstruction(cpu.currentInstructionRaw);
-                        machineStateDispatch({ type: "EXECUTE_INSTRUCTION", payload: { opcode: OPCODE_LB, operand: lbImmediateValue } });
-                    }}
-                >
-                    Execute
-                </Button>
             </CardContent>
             <CardFooter className="mt-4"> 
             </CardFooter>

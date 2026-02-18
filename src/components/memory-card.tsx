@@ -9,6 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { getPageTable } from "@/simulation/selectors";
+import { OPCODE_NAMES } from "@/simulation/isa";
 
 import type { ProcessControlBlocks, Pages } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
@@ -28,6 +29,10 @@ export function MemoryCard({
     }: MemoryCardProps) {
 
         
+    const codePagePFNs = useMemo(() =>
+        new Set(allProcessPages.filter(p => p.vpn === 0).map(p => p.pfn)),
+        [allProcessPages]
+    );
     const virtualMemoryView = useMemo(() => {
         const activeProcessesIDs = processControlBlocks.map(pcb => pcb.processID);
         
@@ -70,12 +75,12 @@ export function MemoryCard({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Address</TableHead>
-                                    <TableHead className="text-right text-right">Content</TableHead>
+                                    <TableHead className="text-right">Content</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {memory.slice(0, 8).map((byte, index) => (
-                                    <TableRow>
+                                    <TableRow key={index}>
                                         <TableCell>
                                             {index}
                                         </TableCell>
@@ -102,12 +107,12 @@ export function MemoryCard({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Address</TableHead>
-                                    <TableHead className="text-right text-right">Content</TableHead>
+                                    <TableHead className="text-right">Content</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {memory.slice(8, 16).map((byte, index) => (
-                                    <TableRow>
+                                    <TableRow key={index}>
                                         <TableCell>
                                             {index}
                                         </TableCell>
@@ -121,7 +126,7 @@ export function MemoryCard({
                     </AccordionContent>
                 </AccordionItem>
             
-                {allProcessPages.map(({ pfn, ownerPid, bytes }) => (
+                {allProcessPages.map(({ pfn, ownerPid, vpn, bytes }) => (
                     <AccordionItem key={pfn} value={`pfn-${pfn}`}>
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex justify-between w-full pr-4">
@@ -137,6 +142,7 @@ export function MemoryCard({
                             <TableRow>
                                 <TableHead>Address</TableHead>
                                 <TableHead className="text-right">Content</TableHead>
+                                {vpn === 0 && <TableHead className="text-right">Instruction</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -146,6 +152,11 @@ export function MemoryCard({
                                 <TableCell className="font-mono text-right">
                                 {byte.toString(2).padStart(8, "0")}
                                 </TableCell>
+                                {vpn === 0 && (
+                                <TableCell className="font-mono text-right text-muted-foreground">
+                                {`${OPCODE_NAMES[(byte & 0b11100000) >> 5]} ${byte & 0b00011111}`}
+                                </TableCell>
+                                )}
                             </TableRow>
                             ))}
                         </TableBody>
@@ -164,7 +175,9 @@ export function MemoryCard({
                 </TableHeader>
 
                 <TableBody>
-                {memory.map((byte, index) => (
+                {memory.map((byte, index) => {
+                    const isCodePage = codePagePFNs.has(Math.floor(index / 8));
+                    return (
                     <TableRow key={index}>
                     <TableCell className="font-mono">
                         {index}
@@ -173,8 +186,10 @@ export function MemoryCard({
                     <TableCell className="font-mono text-muted-foreground">
                         {byte.toString(2).padStart(8, "0")}
                     </TableCell>
+
                     </TableRow>
-                ))}
+                    );
+                })}
                 </TableBody>
             </Table>
         </CardContent>

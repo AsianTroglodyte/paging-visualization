@@ -170,6 +170,10 @@ export function getByteAtVirtualAddress(
     processID: number,
     virtualAddress: number
   ): number {
+    if (virtualAddress < 0 || virtualAddress >= 16) {
+        throw new Error(`Virtual address ${virtualAddress} is out of bounds. Must be between 0 and 15.`);
+    }
+
     const pageTable = getPageTable(memory, processID);
     // index of PTE = vpn
     const vpn = Math.floor(virtualAddress / 8);
