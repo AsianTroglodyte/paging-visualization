@@ -1,38 +1,59 @@
-import { createContext } from "react";
-import { compactPagetables, setActivePageTablesBases, setFreeList, writePageTable, writeProcessPages } from "./writers";
-import { getActivePageTablesBases, getFreeList, getPageTable } from "./selectors";
-import type { CurRunningPIDContextType, MemoryAction } from "./types";
+import { compactPagetables, setProcessControlBlocks, setFreeList, writePageTable, writeProcessPages, writeByteAtVirtualAddress } from "./writers";
+import { getProcessControlBlocks, getProcessControlBlock, getFreeList, getPageTable, getByteAtVirtualAddress } from "./selectors";
+import { START_OF_PAGE_TABLES, MAX_PAGES_ALLOCATABLE, FREE_LIST_ADDRESS, START_OF_PCBS, BYTES_PER_PCB } from "./constants";
+import type { MachineAction, MachineState, CpuState } from "./types";
+import { IDLE_CPU_STATE } from "./types";
+import { OPCODE_NAMES } from "./isa";
 
-export const curRunningPIDContext = createContext<CurRunningPIDContextType | null>(null);
+export function machineReducer(state: MachineState, action: MachineAction): MachineState {
+    const memory = state.memory;
+    const cpu: CpuState = state.cpu;
 
-export const FREE_LIST_ADDRESS = 15; // address where free list byte is stored
-export const MAX_PROCESSES = 3;
-export const MAX_PAGES_ALLOCATABLE = 6; // maximum space for page tables in bytes
-export const START_OF_PROCESS_MEMORY = 16; // address where process memory starts
-export const START_OF_PAGE_TABLES = 8; // address where process memory starts
-
-
-
-// the memory byte array contains 4 crucial pieces of data:
-//  - page table base list - list of bytes, each byte is an entry mapping a process to the 
-//    base address of their corresponding page table.
-//  - free list - a single byte containing info on which pages are free
-//  - page tables - maps the VPNs to the PFNs along with showing control bits. 
-//  - process memory - the memory used by processes. 
-
-export function machineReducer(memory: number[], action: MemoryAction) {
     switch (action.type) {
         case "COMPACT_PAGE_TABLES":
-            return compactPagetables(memory).newMemory;
+            return { ...state, memory: compactPagetables(memory).newMemory };
+
+        case "CONTEXT_SWITCH":
+            if (action.payload.processID === null) {
+                return { ...state, cpu: IDLE_CPU_STATE };
+            }
+            const pcb = getProcessControlBlock(memory, action.payload.processID);
+            if (!pcb) {
+                return { ...state, cpu: IDLE_CPU_STATE };
+            }
+            const newCpu: CpuState = {
+                kind: "running",
+                runningPid: action.payload.processID,
+                programCounter: pcb.programCounter,
+                pageTableBase: pcb.pageTableBase,
+                accumulator: pcb.accumulator,
+                currentInstructionRaw: 0, // TODO: load from memory at PC
+            };
+
+            // don't need to write to memory is idle. This is because cpu doesn't 
+            // have any state to save onto the PCB.
+            if (cpu.kind === "idle") {
+                return { ...state, cpu: newCpu };
+            }
+
+            let newMemory = [...memory];
+
+            const firstPcbByte = (cpu.pageTableBase << 5) + (cpu.programCounter << 1) + 1;
+            const secondPcbByte = cpu.accumulator;
+
+            newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB] = firstPcbByte;
+            newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB + 1] = secondPcbByte;
+
+            return { memory: newMemory, cpu: newCpu };
 
         case "CREATE_PROCESS_RANDOM":
             return (() => {
+                const numPages = 2; // always 2 with PCB architecture
                 const freeList = getFreeList(memory);
 
-                if (freeList.length < action.payload.numPages) {
-                    console.log(`Cannot allocate ${action.payload.numPages} pages. Only ${freeList.length} free.`)
-                    return memory;
-                    // throw new Error(`Cannot allocate ${action.payload.numPages} pages. Only ${freeList.length} free.`);
+                if (freeList.length < numPages) {
+                    console.log(`Cannot allocate ${numPages} pages. Only ${freeList.length} free.`)
+                    return state;
                 }
 
                 // Inline: select random free pages
@@ -41,118 +62,192 @@ export function machineReducer(memory: number[], action: MemoryAction) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
                 }
-                const newAllocatedPagesPFN = shuffled.slice(0, action.payload.numPages);
-                console.log("AllocatedPagesPFN: ", newAllocatedPagesPFN);
+
+                const newAllocatedPagesPFN = shuffled.slice(0, numPages).map((pfn, index) => ({pfn: pfn, vpn: index}));
                 
-                // Inline: determine new process ID
+                const existingPCBs = getProcessControlBlocks(memory);
                 let newProcessID: number | undefined;
-
-                const activePageTablesBases = getActivePageTablesBases(memory);
-
-                for (let i = 0; i <= activePageTablesBases.length; i += 1) {
-                    if (activePageTablesBases.length === 0) {
-                        newProcessID = i;
-                        break;
-                    }
-                    if (activePageTablesBases.some(entry => entry.processID === i) === false) {
+                for (let i = 0; i < 4; i++) { // 4 PCB slots (addresses 8,10,12,14) but only 3 can be active
+                    if (!existingPCBs.some(pcb => pcb.processID === i)) {
                         newProcessID = i;
                         break;
                     }
                 }
                 if (newProcessID === undefined) {
-                    throw new Error("createProcessID(): Available ID somehow not found.");
+                    throw new Error("No available process ID.");
                 }
 
-                // Inline: find base of free space for page table
+                // Find free slot for page table (offset 0-6, step 2)
                 let newPageTableBase: number | null = null;
-                const tables = activePageTablesBases
-                    .map(e => ({
-                        start: e.pageTableBase,
-                        end: e.pageTableBase + e.numPages,
-                    }))
+                const tables = existingPCBs
+                    .map(p => ({ start: p.pageTableBase, end: p.pageTableBase + 2 }))
                     .sort((a, b) => a.start - b.start);
                 
-                let cursor = START_OF_PAGE_TABLES;
+                let cursor = 0;
                 for (const t of tables) {
-                    if (cursor + action.payload.numPages <= t.start) {
+                    if (cursor + numPages <= t.start) {
                         newPageTableBase = cursor;
                         break;
                     }
                     cursor = t.end;
                 }
-
-                if (newPageTableBase === null && cursor + action.payload.numPages <= (START_OF_PAGE_TABLES + MAX_PAGES_ALLOCATABLE)) {
+                if (newPageTableBase === null && cursor + numPages <= MAX_PAGES_ALLOCATABLE) {
                     newPageTableBase = cursor;
                 }
 
-                // no space found, compact page tables and try again. guaranteed to work because 
-                // we checked whether there were enough free pages earlier
                 let newMemory: number[] = [...memory];
                 if (newPageTableBase === null) {
                     const result = compactPagetables(newMemory);
-                    cursor = result.cursor;
                     newMemory = result.newMemory;
+                    newPageTableBase = result.cursor;
                 }
 
-                if (action.payload.numPages !== 2 && action.payload.numPages !== 4) {
-                    throw new Error(`numPages must be either 2 or 4. Received ${action.payload.numPages}`);
-                }
+                const newPCB = {
+                    processID: newProcessID,
+                    pageTableBase: newPageTableBase,
+                    programCounter: 0,
+                    validBit: 1,
+                    accumulator: 0,
+                };
 
-                if (newPageTableBase === null) {
-                    throw new Error("newPagetablebase is null GET OVER HERE PRONTO");
-                }
-
-                newMemory = setActivePageTablesBases([
-                    ...activePageTablesBases,
-                    {
-                        processID: newProcessID,
-                        pageTableBase: newPageTableBase, 
-                        numPages: action.payload.numPages,
-                        valid: true
-                    }
-                ], newMemory);
-
+                newMemory = setProcessControlBlocks([...existingPCBs, newPCB], newMemory);
                 newMemory = writePageTable(newAllocatedPagesPFN, newPageTableBase, newMemory);
 
-                const remainingFreePages = freeList.filter(page => !newAllocatedPagesPFN.includes(page));
+                // allocatedPFNs is a Set of numbers rather than an object array
+                const allocatedPFNs = new Set(newAllocatedPagesPFN.map(alloc => alloc.pfn));
+                const remainingFreePages = freeList.filter(page => !allocatedPFNs.has(page));
                 newMemory = setFreeList(remainingFreePages, newMemory);
 
+                // writeProcessPages takes an object array of {pfn, vpn}
                 newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
-                return newMemory;
+                return { ...state, memory: newMemory };
             })();
 
         case "DELETE_PROCESS":
             return (() => {
-
-                const activePageTablesBases = getActivePageTablesBases(memory);
-
-                const pageTableEntry = activePageTablesBases.find(entry => entry.processID === action.payload.processID);
+                const processControlBlocks = getProcessControlBlocks(memory);
+                const pcbToDelete = processControlBlocks.find(pcb => pcb.processID === action.payload.processID);
             
-                if (!pageTableEntry) {
-                    throw new Error(`Process ID ${action.payload.processID} not found in active page table bases.`);
+                if (!pcbToDelete) {
+                    throw new Error(`Process ID ${action.payload.processID} not found.`);
                 }
 
-                let newMemory = [...memory];
+                const remainingPCBs = processControlBlocks.filter(pcb => pcb.processID !== action.payload.processID);
+                let newMemory = setProcessControlBlocks(remainingPCBs, [...memory]);
 
-                newMemory = setActivePageTablesBases(
-                    [...activePageTablesBases].filter(entry => entry.processID !== action.payload.processID),
-                    newMemory
-                );
-
-                // free up allocated pages
                 const pageTable = getPageTable(memory, action.payload.processID);
                 const newlyFreedPages = pageTable
                     .filter(pte => pte.valid)
                     .map(pte => pte.pfn);
 
                 const freeList = getFreeList(memory);
-
-                // combination of old free list 
                 newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
 
-                return newMemory;
+                const newCpu: CpuState =
+                    cpu.kind === "running" && cpu.runningPid === action.payload.processID
+                        ? IDLE_CPU_STATE
+                        : cpu;
+                return { memory: newMemory, cpu: newCpu };
             })();
+        case "CHANGE_PROGRAM_COUNTER":
+            if (cpu.kind === "idle") {
+                return state;
+            }
+            const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, action.payload.newProgramCounter);
+
+            return { ...state, cpu: { 
+                ...cpu, 
+                programCounter: action.payload.newProgramCounter,
+                currentInstructionRaw: newCurrentInstructionRaw
+            }};
+        case "EXECUTE_INSTRUCTION":
+            if (cpu.kind === "idle") {
+                throw new Error("Cannot execute instruction when CPU is idle.");
+            }
+
+            action.payload ?? (() => {throw new Error("Opcode is required.");})();
+
+            // opcode is a number between 0 and 7
+            if (!(action.payload.opcode >=0 && action.payload.opcode < 8)) {
+                throw new Error(`Invalid opcode: ${action.payload.opcode}`);
+            }
+
+            // [OPCODE_LB]: "lb",
+            // [OPCODE_SB]: "sb",
+            // [OPCODE_ADD]: "add",
+            // [OPCODE_ADDI]: "addi",
+            // [OPCODE_SUB]: "sub",
+            // [OPCODE_SUBI]: "subi",
+            // [OPCODE_BRANCH]: "branch",
+            // [OPCODE_JUMP]: "jump",
+            
+            
+            switch (OPCODE_NAMES[action.payload.opcode]) {
+                case "lb":{
+                    const virtualAddress = action.payload.operand;
+                    const byte = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
+                    return {
+                        ...state,
+                        cpu: { ...cpu, accumulator: byte },
+                    };
+                }
+                case "sb":
+                {
+                    const virtualAddress = action.payload.operand;
+                    const newMemory = writeByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress, cpu.accumulator);
+                    return { ...state, 
+                        memory: newMemory, cpu: { ...cpu} };
+                }
+                case "add": {
+                    const virtualAddress = action.payload.operand;
+                    const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
+                    
+                    return { ...state, 
+                        cpu: { ...cpu, accumulator: cpu.accumulator + valueFromVirtualAddress} };
+                }
+                case "addi": {
+                    const immediateValue = action.payload.operand;
+                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator + immediateValue } };
+                }
+
+                case "sub": {
+                    const virtualAddress = action.payload.operand;
+                    const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
+                    
+                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator - valueFromVirtualAddress } };
+                }
+                case "subi": {
+                    const immediateValue = action.payload.operand;
+                    return { ...state, cpu: { ...cpu, accumulator: cpu.accumulator - immediateValue } };
+                }
+
+                case "branch": {
+                    if (cpu.accumulator === 0) {
+                        const branchAddress = action.payload.operand;
+                        const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, branchAddress);
+                        return { ...state, cpu: {
+                                ...cpu, 
+                                programCounter: branchAddress, 
+                                currentInstructionRaw: newCurrentInstructionRaw 
+                            }
+                        };
+                    }
+                    return { ...state, cpu: { ...cpu} };
+                }
+                case "jump": {
+                    const jumpVirtualAddress = action.payload.operand;
+                    const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, jumpVirtualAddress);
+
+                    return { ...state, cpu: { 
+                        ...cpu, 
+                        programCounter: jumpVirtualAddress,
+                        currentInstructionRaw: newCurrentInstructionRaw
+                    }};
+                }
+                default:
+                    throw new Error(`Invalid opcode: ${action.payload.opcode}`);
+            }
         default:
-            return memory;
+            return state;
     }
 }

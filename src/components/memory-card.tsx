@@ -9,45 +9,44 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { getPageTable } from "@/simulation/selectors";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverContent } from "./hover-content";
 
-import type { PageTablesBases, Pages } from "@/simulation/types";
+import type { ProcessControlBlocks, Pages } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
-
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
-  activePageTablesBases: PageTablesBases;
+  processControlBlocks: ProcessControlBlocks;
   allProcessPages: Pages;
-  machineState: number[];
+  memory: number[];
 }
 
 export function MemoryCard({
-    className,
-    size = "default",
-    activePageTablesBases,
-    machineState,
+    processControlBlocks,
+    memory,
     allProcessPages,
-    ...props
     }: MemoryCardProps) {
-
         
+    const codePagePFNs = useMemo(() =>
+        new Set(allProcessPages.filter(p => p.vpn === 0).map(p => p.pfn)),
+        [allProcessPages]
+    );
     const virtualMemoryView = useMemo(() => {
-        const activeProcessesIDs = activePageTablesBases.map(entry => entry.processID);
+        const activeProcessesIDs = processControlBlocks.map(pcb => pcb.processID);
         
         const activePageTables = activeProcessesIDs.map(activeProcessID => {
-            const pageTable = getPageTable(machineState, activeProcessID);
-            const PFNs = pageTable.map(pte => machineState.slice(pte.pfn * 8, pte.pfn * 8 + 8)); // get the bytes corresponding to the PFN in the page table entry. this is the content of the page in physical memory.
+            const pageTable = getPageTable(memory, activeProcessID);
+            const PFNs = pageTable.map(pte => memory.slice(pte.pfn * 8, pte.pfn * 8 + 8)); // get the bytes corresponding to the PFN in the page table entry. this is the content of the page in physical memory.
             return {
                 processID: activeProcessID,
                 pageTable: pageTable,
                 PFNs: PFNs,
             }
         });
-        
-        console.log("activePageTables", activePageTables);
-        
+                
         return activePageTables;
-    }, [activePageTablesBases, machineState]);
+    }, [processControlBlocks, memory]);
         
     return (
     <Card size="sm">
@@ -67,28 +66,37 @@ export function MemoryCard({
                     <AccordionTrigger className="hover:no-underline">
                     <div className="flex justify-between w-full pr-4">
                         <span className="font-mono">PFN 0</span>
-                        <span className="text-muted-foreground">OS: Others</span>
+                        <span className="text-muted-foreground">OS: Page Tables</span>
                     </div>
                     </AccordionTrigger>
                     <AccordionContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Address</TableHead>
-                                    <TableHead className="text-right text-right">Content</TableHead>
+                                    <TableHead>Phys. Addr.</TableHead>
+                                    <TableHead className="text-right">Content</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {machineState.slice(0, 8).map((byte, index) => (
-                                    <TableRow>
-                                        <TableCell>
-                                            {index}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {byte.toString(2).padStart(8, "0")}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                            {memory.slice(0, 8).map((byte, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>
+                                        {index}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <HoverCard openDelay={200} closeDelay={100}>
+                                            <HoverCardTrigger asChild>
+                                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                                    {byte.toString(2).padStart(8, "0")}
+                                                </span>
+                                            </HoverCardTrigger>
+                                            <HoverCardContent side="right" className="w-73">
+                                                <PteHoverContent byte={byte} />
+                                            </HoverCardContent>
+                                        </HoverCard>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                             </TableBody>
                         </Table>
                     </AccordionContent>
@@ -98,7 +106,7 @@ export function MemoryCard({
                     <AccordionTrigger className="hover:no-underline">
                     <div className="flex justify-between w-full pr-4">
                         <span className="font-mono">PFN 1</span>
-                        <span className="text-muted-foreground text-xs">OS: Page Tables</span>
+                        <span className="text-muted-foreground text-xs">OS: PCBs + Free List</span>
                     </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -106,27 +114,44 @@ export function MemoryCard({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Address</TableHead>
-                                    <TableHead className="text-right text-right">Content</TableHead>
+                                    <TableHead>Phys. Addr.</TableHead>
+                                    <TableHead className="text-right">Content</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {machineState.slice(8, 16).map((byte, index) => (
-                                    <TableRow>
-                                        <TableCell>
-                                            {index}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {byte.toString(2).padStart(8, "0")}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                            {memory.slice(8, 16).map((byte, index) => {
+                                const slotIndex = Math.floor(index / 2);
+                                const isByte0 = index % 2 === 0;
+                                return (
+                                <TableRow key={index}>
+                                    <TableCell className="font-mono">
+                                        {8 + index}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <HoverCard openDelay={200} closeDelay={100}>
+                                            <HoverCardTrigger asChild>
+                                                <span className="cursor-default underline decoration-dotted underline-offset-2 font-mono">
+                                                    {byte.toString(2).padStart(8, "0")}
+                                                </span>
+                                            </HoverCardTrigger>
+                                            <HoverCardContent side="right" className="w-56">
+                                                {isByte0 ? (
+                                                    <PcbByte0HoverContent byte={byte} slotIndex={slotIndex} />
+                                                ) : (
+                                                    <PcbByte1HoverContent byte={byte} slotIndex={slotIndex} />
+                                                )}
+                                            </HoverCardContent>
+                                        </HoverCard>
+                                    </TableCell>
+                                </TableRow>
+                                );
+                            })}
                             </TableBody>
                         </Table>
                     </AccordionContent>
                 </AccordionItem>
             
-                {allProcessPages.map(({ pfn, ownerPid, bytes }) => (
+                {allProcessPages.map(({ pfn, ownerPid, vpn, bytes }) => (
                     <AccordionItem key={pfn} value={`pfn-${pfn}`}>
                     <AccordionTrigger className="hover:no-underline">
                         <div className="flex justify-between w-full pr-4">
@@ -140,7 +165,7 @@ export function MemoryCard({
                         <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Address</TableHead>
+                                <TableHead>Phys. Addr.</TableHead>
                                 <TableHead className="text-right">Content</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -149,7 +174,16 @@ export function MemoryCard({
                             <TableRow key={index}>
                                 <TableCell className="font-mono">{pfn * 8 + index}</TableCell>
                                 <TableCell className="font-mono text-right">
-                                {byte.toString(2).padStart(8, "0")}
+                                <HoverCard openDelay={100} closeDelay={100}>
+                                    <HoverCardTrigger asChild>
+                                        <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                            {byte.toString(2).padStart(8, "0")}
+                                        </span>
+                                    </HoverCardTrigger>
+                                    <HoverCardContent side="right" className="w-38">
+                                        <ByteHoverContent byte={byte} />
+                                    </HoverCardContent>
+                                </HoverCard>
                                 </TableCell>
                             </TableRow>
                             ))}
@@ -163,23 +197,25 @@ export function MemoryCard({
             <Table>
                 <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[100px]">Physical Address</TableHead>
+                    <TableHead className="w-[100px]">Phys. Addr.</TableHead>
                     <TableHead>Content</TableHead>
                 </TableRow>
                 </TableHeader>
 
                 <TableBody>
-                {machineState.map((byte, index) => (
+                {memory.map((byte, index) => {
+                    return (
                     <TableRow key={index}>
-                    <TableCell className="font-mono">
-                        {index}
-                    </TableCell>
+                        <TableCell className="font-mono">
+                            {index}
+                        </TableCell>
 
-                    <TableCell className="font-mono text-muted-foreground">
-                        {byte.toString(2).padStart(8, "0")}
-                    </TableCell>
+                        <TableCell className="font-mono text-muted-foreground">
+                            {byte.toString(2).padStart(8, "0")}
+                        </TableCell>
                     </TableRow>
-                ))}
+                    );
+                })}
                 </TableBody>
             </Table>
         </CardContent>

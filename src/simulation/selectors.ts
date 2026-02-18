@@ -5,8 +5,17 @@
 // essentially the building blocks of advanced queries or views into our memory
 
 
-import { FREE_LIST_ADDRESS, MAX_PROCESSES} from "./machine-reducer";
-import type { PageTablesBases, Pages, PageTable, VirtualPage } from "./types";
+import {
+    FREE_LIST_ADDRESS,
+    START_OF_PAGE_TABLES,
+    START_OF_PCBS,
+    BYTES_PER_PCB,
+    PCB_VALID_BIT_MASK,
+    PCB_PROGRAM_COUNTER_MASK,
+    PCB_PAGE_TABLE_BASE_MASK,
+} from "./constants";
+import { OPCODE_NAMES } from "./isa";
+import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks, CpuState } from "./types";
 
 export function getFreeList(mem: number[]): number[] {
     const bitmap = mem[FREE_LIST_ADDRESS];
@@ -23,55 +32,51 @@ export function getFreeList(mem: number[]): number[] {
     return freePFNList;
 }
 
-export function getActivePageTablesBases(mem: number[]): PageTablesBases {
-    const active: PageTablesBases = [];
+export function getProcessControlBlock(mem: number[], processID: number): ProcessControlBlock | null {
+    const addr = START_OF_PCBS + processID * BYTES_PER_PCB;
+    const byte0 = mem[addr];
+    const validBit = byte0 & PCB_VALID_BIT_MASK;
+    if (validBit === 0) return null;
 
-    
-    for (let i = 0; i < MAX_PROCESSES; i++) {
-        const entry = mem[i];
-        if ((entry & 0b00000001) === 1) { // check valid bit
+    const pageTableBase = (byte0 >> 5) & PCB_PAGE_TABLE_BASE_MASK;
+    const programCounter = (byte0 >> 1) & PCB_PROGRAM_COUNTER_MASK;
+    const accumulator = mem[addr + 1];
 
-            // check if numPages is valid (either 2 or 4). this is a sanity check to make sure that the memory isn't corrupted, since if numPages is invalid, it could cause out of bounds errors when trying to read page tables
-            const numPages = (entry >> 1) & 0b00000111; // extract numPages (3 bits)
-            if (numPages !== 2 && numPages !== 4) {
-                throw new Error(`Invalid numPages value ${numPages} for process ${i}. Must be 2 or 4.`);
-            }
-
-            active.push({
-                processID: i,
-                pageTableBase: (entry >> 4),
-                numPages: numPages,
-                valid: true
-            });
-        }
-    }
-    return active;
+    return {
+        processID,
+        pageTableBase,
+        programCounter,
+        validBit,
+        accumulator,
+    };
 }
 
+export function getProcessControlBlocks(mem: number[]): ProcessControlBlocks {
+    const blocks: ProcessControlBlocks = [];
+    for (let i = 0; i < 4; i++) {
+        const pcb = getProcessControlBlock(mem, i);
+        if (pcb !== null) blocks.push(pcb);
+    }
+    return blocks;
+}
 
 export function getAllPageTables(memory: number[]): {processID: number, pageTable: PageTable}[] {
-
-    const activePageTablesBases = getActivePageTablesBases(memory);
-    
-    const allPageTables = activePageTablesBases.map(entry => {
-        return {
-            processID: entry.processID,
-            pageTable: getPageTable(memory, entry.processID)
-        }
-    });
-    return allPageTables;
+    const processControlBlocks = getProcessControlBlocks(memory);
+    return processControlBlocks.map(pcb => ({
+        processID: pcb.processID,
+        pageTable: getPageTable(memory, pcb.processID)
+    }));
 }
 
 
 export function getAllProcessPages(memory: number[]): Pages {
 
     const pages: Pages = [];
-    for (let pageFrameNumber = 2; pageFrameNumber < 8; pageFrameNumber++) {
+    const processControlBlocks = getProcessControlBlocks(memory);
 
-        const activePageTablesBases = getActivePageTablesBases(memory);
-        
-        const ownerPid = activePageTablesBases.find(entry => {
-                const pageTable = getPageTable(memory, entry.processID);
+    for (let pageFrameNumber = 2; pageFrameNumber < 8; pageFrameNumber++) {
+        const ownerPid = processControlBlocks.find(pcb => {
+                const pageTable = getPageTable(memory, pcb.processID);
                 return pageTable.some(pte => pte.pfn === pageFrameNumber);
             })?.processID ?? null;
     
@@ -92,21 +97,14 @@ export function getAllProcessPages(memory: number[]): Pages {
 
 
 export function getPageTable(memory: number[], processID: number): PageTable {
-    const activePageTablesBases = getActivePageTablesBases(memory);
-
-    // console.log("activePageTablesBases: ", activePageTablesBases);
-
-
-    const pageTableEntry = activePageTablesBases.find(entry => entry.processID === processID);
-
-
-    if (pageTableEntry === undefined) {
-        throw new Error(`Process ID ${processID} not found in active page table bases.`);
+    const pcb = getProcessControlBlock(memory, processID);
+    if (pcb === null) {
+        throw new Error(`Process ID ${processID} not found.`);
     }
 
-    const pageTableBase = pageTableEntry.pageTableBase;
-    const numPages = pageTableEntry.numPages;
-    return memory.slice(pageTableBase, pageTableBase + numPages).map(
+    const baseAddr = START_OF_PAGE_TABLES + pcb.pageTableBase;
+    const numPages = 2;
+    return memory.slice(baseAddr, baseAddr + numPages).map(
         (entryByte) => {
             return {
                 pfn: (entryByte >> 5),
@@ -129,9 +127,6 @@ export function getProcessVirtualAddressSpace(memory: number[], processID: numbe
     // will be in the right order
     const pfns = processPagetable.map((pte) => pte.pfn);
     
-
-
-
     const virtualAddressSpace: VirtualPage[] = pfns.map((pfn, index) => {
         const pfnAddressSpace = memory.slice(pfn * 8, pfn * 8 + 8);
         return {
@@ -142,11 +137,53 @@ export function getProcessVirtualAddressSpace(memory: number[], processID: numbe
         }
     });    
 
-    console.log("virtualAddressSpace: ", virtualAddressSpace)
-
     return virtualAddressSpace;
 }
 
 export function getPage(memory: number[], pfn: number): number[] {
     return memory.slice(pfn * 8, pfn * 8 + 8);
+}
+
+export function getProcessVirtualMemory(memory: number[], processID: number): VirtualPage[] {
+
+    const processVirtualAddressSpace = getProcessVirtualAddressSpace(memory, processID);
+
+    const processVirtualMemory = processVirtualAddressSpace.map((virtualPage) => {
+        return {
+            pfn: virtualPage.pfn,
+            bytes: virtualPage.bytes,
+        }
+    });
+
+    return processVirtualMemory;
+}
+
+export function getAllProcessVirtualMemory(memory: number[]): VirtualPage[][] {
+    const processControlBlocks = getProcessControlBlocks(memory);
+    return processControlBlocks.map(pcb => getProcessVirtualMemory(memory, pcb.processID));
+}
+
+
+/** Fetches the byte at a virtual address for a process. */
+export function getByteAtVirtualAddress(
+    memory: number[],
+    processID: number,
+    virtualAddress: number
+  ): number {
+    if (virtualAddress < 0 || virtualAddress >= 16) {
+        throw new Error(`Virtual address ${virtualAddress} is out of bounds. Must be between 0 and 15.`);
+    }
+
+    const pageTable = getPageTable(memory, processID);
+    // index of PTE = vpn
+    const vpn = Math.floor(virtualAddress / 8);
+    const offset = virtualAddress % 8;
+    const pfn = pageTable[vpn].pfn; 
+    return memory[pfn * 8 + offset];
+  }
+
+export function decodeInstruction(instruction: number): { opcode: string, operand: number } {
+    const opcode = (instruction & 0b11100000) >> 5;
+    const operand = instruction & 0b00011111;
+    return { opcode: OPCODE_NAMES[opcode], operand: operand};
 }
