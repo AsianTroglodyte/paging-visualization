@@ -30,8 +30,6 @@ export function VirtualMemory(
             : [];
 
 
-
-
     return (
     <Card className="w-70">
     <CardHeader>
@@ -39,14 +37,14 @@ export function VirtualMemory(
             <h1 className="text-4xl">Virtual Memory</h1>
         </CardTitle>
     </CardHeader>
-    <CardContent >
+    <CardContent>
         <h2 className="text-lg">
             {cpu.kind === "running" ? `Process ${cpu.runningPid}` : "No process selected"}
         </h2>
         <Accordion type="single" collapsible className="w-full">
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
             <AccordionItem key={vpn} value={`vpn-${vpn}`}>
-                <AccordionTrigger className="hover:no-underline">
+                <AccordionTrigger className="hover:no-underline text-sm">
                     <div className="flex justify-between w-full pr-4">
                         <div className="font-mono">VPN {vpn}</div>
                         <div className="text-muted-foreground">
@@ -54,11 +52,11 @@ export function VirtualMemory(
                         </div>
                     </div>
                 </AccordionTrigger>
-                <AccordionContent>
-                    <Table>
+                <AccordionContent className="text-sm">
+                    <Table className="text-sm w-full table-fixed">
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Virt. Addr.</TableHead>
+                            <TableHead className="w-[100px]">Virt. Addr.</TableHead>
                             <TableHead className="text-right">Content</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -73,13 +71,13 @@ export function VirtualMemory(
                         </TableCell>
                         <TableCell className="font-mono text-right">
                         {vpn === 0 && (
-                            <>
-                                <span className="text-muted-foreground ml-2">
-                                    {`${OPCODE_NAMES[(byte & 0b11100000) >> 5]} ${byte & 0b00011111}`}
-                                </span>
-                                <span className="text-muted-foreground ml-2"></span>
-                                {byte.toString(2).padStart(8, "0")}
-                            </>
+                        <>
+                            <span className="text-muted-foreground ml-2">
+                                {`${OPCODE_NAMES[(byte & 0b11100000) >> 5]} ${byte & 0b00011111}`}
+                            </span>
+                            <span className="text-muted-foreground ml-2"></span>
+                            {byte.toString(2).padStart(8, "0")}
+                        </>
                         )}
                         {vpn === 1 && (
                         <HoverCard openDelay={100} closeDelay={100}>
