@@ -38,6 +38,12 @@
     --sidebar-accent-foreground: oklch(0.971 0.013 17.38);
     --sidebar-border: oklch(0.923 0.003 48.717);
     --sidebar-ring: oklch(0.709 0.01 56.259);
+
+    --process-0: 210 90% 55%;  /* blue */
+    --process-1: 25 95% 53%;   /* orange */
+    --process-2: 145 63% 42%;  /* emerald */
+    --process-3: 270 50% 60%;  /* purple */
+    --process-4: 350 75% 60%;  /* rose */
 }
 
 .dark {
@@ -114,6 +120,12 @@
     --radius-2xl: calc(var(--radius) + 8px);
     --radius-3xl: calc(var(--radius) + 12px);
     --radius-4xl: calc(var(--radius) + 16px);
+
+    --color-process-0: var(--process-0);
+    --color-process-1: var(--process-1);
+    --color-process-2: var(--process-2);
+    --color-process-3: var(--process-3);
+    --color-process-4: var(--process-4);
 }
 
 @layer base {

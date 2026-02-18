@@ -86,13 +86,19 @@ export function MemoryCard({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {bytes.map((byte, index) => (
+                        {bytes.map((byte, index) => {
+                            const isOwned = ownerPid !== null;
+                            return (
                             <TableRow key={index}>
                                 <TableCell className="font-mono">{pfn * 8 + index}</TableCell>
                                 <TableCell className="font-mono text-right">
                                 <HoverCard openDelay={100} closeDelay={100}>
                                     <HoverCardTrigger asChild>
-                                        <span className="inline-block leading-4 cursor-default underline decoration-dotted underline-offset-2 font-mono">
+                                        <span
+                                            className={`inline-block leading-4 cursor-default font-mono ${
+                                                isOwned ? "underline decoration-dotted underline-offset-2" : ""
+                                            }`}
+                                        >
                                             {byte.toString(2).padStart(8, "0")}
                                         </span>
                                     </HoverCardTrigger>
@@ -102,7 +108,8 @@ export function MemoryCard({
                                 </HoverCard>
                                 </TableCell>
                             </TableRow>
-                            ))}
+                            );
+                        })}
                     </TableBody>
                     </Table>
                     </div>
@@ -169,31 +176,35 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
             </TableHeader>
             <TableBody>
                 {memory.slice(0, 8).map((byte, index) => {
-                    const showHover = index === 7 || (index < 6 && pteIndicesInUse.has(index)); // Free list always; PTEs for active processes; byte 6 unused
+                    const isFreeListByte = index === 7;
+                    const isPteInUse = index < 6 && pteIndicesInUse.has(index); // byte 6 is not used for active PT entries
+                    const isOwned = isFreeListByte || isPteInUse;
                     return (
                     <TableRow key={index}>
                         <TableCell className="font-mono">
                             {index}
                         </TableCell>
                         <TableCell className="font-mono text-right">
-                        {showHover ? (
-                            <HoverCard openDelay={200} closeDelay={100}>
-                                <HoverCardTrigger asChild>
-                                    <span className="inline-block leading-4 cursor-default underline decoration-dotted underline-offset-2 font-mono">
-                                        {byte.toString(2).padStart(8, "0")}
-                                    </span>
-                                </HoverCardTrigger>
-                                <HoverCardContent side="right" className="w-73">
-                                {index === 7 ? (
+                        <HoverCard openDelay={200} closeDelay={100}>
+                            <HoverCardTrigger asChild>
+                                <span
+                                    className={`inline-block leading-4 cursor-default font-mono ${
+                                        isOwned ? "underline decoration-dotted underline-offset-2" : ""
+                                    }`}
+                                >
+                                    {byte.toString(2).padStart(8, "0")}
+                                </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-73">
+                                {isFreeListByte ? (
                                     <FreeListHoverContent byte={byte} />
-                                ) : (
+                                ) : isPteInUse ? (
                                     <PteHoverContent byte={byte} />
+                                ) : (
+                                    <ByteHoverContent byte={byte} />
                                 )}
-                                </HoverCardContent>
-                            </HoverCard>
-                        ) : (
-                            <span className="inline-block leading-4 font-mono">{byte.toString(2).padStart(8, "0")}</span>
-                        )}
+                            </HoverCardContent>
+                        </HoverCard>
                         </TableCell>
                     </TableRow>
                     );
@@ -234,24 +245,28 @@ function osPage1Accordion(memory: number[]) {
                             {8 + index}
                         </TableCell>
                         <TableCell className="font-mono text-right">
-                        {isPcbValid ? (
-                            <HoverCard openDelay={200} closeDelay={100}>
-                                <HoverCardTrigger asChild>
-                                    <span className="inline-block leading-4 cursor-default underline decoration-dotted underline-offset-2 font-mono">
-                                        {byte.toString(2).padStart(8, "0")}
-                                    </span>
-                                </HoverCardTrigger>
-                                <HoverCardContent side="right" className="w-65">
-                                    {isByte0 ? (
+                        <HoverCard openDelay={200} closeDelay={100}>
+                            <HoverCardTrigger asChild>
+                                <span
+                                    className={`inline-block leading-4 cursor-default font-mono ${
+                                        isPcbValid ? "underline decoration-dotted underline-offset-2" : ""
+                                    }`}
+                                >
+                                    {byte.toString(2).padStart(8, "0")}
+                                </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-65">
+                                {isPcbValid ? (
+                                    isByte0 ? (
                                         <PcbByte0HoverContent byte={byte} slotIndex={slotIndex} />
                                     ) : (
                                         <PcbByte1HoverContent byte={byte} slotIndex={slotIndex} />
-                                    )}
-                                </HoverCardContent>
-                            </HoverCard>
-                        ) : (
-                            <span className="inline-block leading-4 font-mono">{byte.toString(2).padStart(8, "0")}</span>
-                        )}
+                                    )
+                                ) : (
+                                    <ByteHoverContent byte={byte} />
+                                )}
+                            </HoverCardContent>
+                        </HoverCard>
                         </TableCell>
                     </TableRow>
                     );
