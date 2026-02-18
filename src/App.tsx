@@ -58,12 +58,15 @@ export function App() {
 
             <div className="py-10  pl-1 w-full h-full flex flex-3 flex items-start gap-4">
 
-                <CpuCard cpu={cpu} machineStateDispatch={machineStateDispatch}></CpuCard>
-                <MmuCard></MmuCard>
+                <CpuCard cpu={cpu} machineStateDispatch={machineStateDispatch} />
+
+                <MmuCard />
+
                 <MemoryCard className="row-span-2" 
                 processControlBlocks={processControlBlocks} 
                 allProcessPages={allProcessPages} 
-                memory={memory}></MemoryCard>
+                memory={memory} />
+
                 <VirtualMemory 
                 memory={memory} 
                 processControlBlocks={processControlBlocks} 

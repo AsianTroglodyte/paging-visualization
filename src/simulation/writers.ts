@@ -159,8 +159,10 @@ export function writeByteAtVirtualAddress(memory: number[], processID: number, v
     const pageTable = getPageTable(memory, processID);
     // index of PTE = vpn
     const vpn = Math.floor(virtualAddress / 8);
+    console.log("writeByteAtVirtualAddress, virtualAddress: ", virtualAddress);
     const offset = virtualAddress % 8;
     const pfn = pageTable[vpn].pfn; 
     newMemory[pfn * PAGE_SIZE + offset] = value;
+    console.log("newMemory,  ", newMemory[pfn * PAGE_SIZE + offset]);
     return newMemory;
 }

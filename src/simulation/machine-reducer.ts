@@ -1,13 +1,13 @@
 import { compactPagetables, setProcessControlBlocks, setFreeList, writePageTable, writeProcessPages, writeByteAtVirtualAddress } from "./writers";
 import { getProcessControlBlocks, getProcessControlBlock, getFreeList, getPageTable, getByteAtVirtualAddress } from "./selectors";
-import { START_OF_PAGE_TABLES, MAX_PAGES_ALLOCATABLE, FREE_LIST_ADDRESS } from "./constants";
+import { START_OF_PAGE_TABLES, MAX_PAGES_ALLOCATABLE, FREE_LIST_ADDRESS, START_OF_PCBS, BYTES_PER_PCB } from "./constants";
 import type { MachineAction, MachineState, CpuState } from "./types";
 import { IDLE_CPU_STATE } from "./types";
 import { OPCODE_NAMES } from "./isa";
 
 export function machineReducer(state: MachineState, action: MachineAction): MachineState {
     const memory = state.memory;
-    const cpu = state.cpu;
+    const cpu: CpuState = state.cpu;
 
     switch (action.type) {
         case "COMPACT_PAGE_TABLES":
@@ -29,7 +29,22 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 accumulator: pcb.accumulator,
                 currentInstructionRaw: 0, // TODO: load from memory at PC
             };
-            return { ...state, cpu: newCpu };
+
+            // don't need to write to memory is idle. This is because cpu doesn't 
+            // have any state to save onto the PCB.
+            if (cpu.kind === "idle") {
+                return { ...state, cpu: newCpu };
+            }
+
+            let newMemory = [...memory];
+
+            const firstPcbByte = (cpu.pageTableBase << 5) + (cpu.programCounter << 1) + 1;
+            const secondPcbByte = cpu.accumulator;
+
+            newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB] = firstPcbByte;
+            newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB + 1] = secondPcbByte;
+
+            return { memory: newMemory, cpu: newCpu };
 
         case "CREATE_PROCESS_RANDOM":
             return (() => {
@@ -179,9 +194,9 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 case "sb":
                 {
                     const virtualAddress = action.payload.operand;
-                    const newMemory = writeByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress, action.payload.operand);
+                    const newMemory = writeByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress, cpu.accumulator);
                     return { ...state, 
-                        memory: newMemory, cpu: { ...cpu, accumulator: action.payload.operand } };
+                        memory: newMemory, cpu: { ...cpu} };
                 }
                 case "add": {
                     const virtualAddress = action.payload.operand;
