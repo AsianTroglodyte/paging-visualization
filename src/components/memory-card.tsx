@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { getPageTable } from "@/simulation/selectors";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverContent } from "./hover-content";
+import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverContent, FreeListHoverContent } from "./hover-content";
 
 import type { ProcessControlBlocks, Pages } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
@@ -59,98 +59,13 @@ export function MemoryCard({
             </CardDescription>
         </CardHeader>
         <CardContent className="w-70">
+        <Accordion type="single" collapsible className="w-full">
 
-            <Accordion type="single" collapsible className="w-full">
-                {/* OS Pages */}
-                <AccordionItem value="pfn-0">
-                    <AccordionTrigger className="hover:no-underline">
-                    <div className="flex justify-between w-full pr-4">
-                        <span className="font-mono">PFN 0</span>
-                        <span className="text-muted-foreground">OS: Page Tables</span>
-                    </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Phys. Addr.</TableHead>
-                                    <TableHead className="text-right">Content</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {memory.slice(0, 8).map((byte, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>
-                                        {index}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <HoverCard openDelay={200} closeDelay={100}>
-                                            <HoverCardTrigger asChild>
-                                                <span className="cursor-default underline decoration-dotted underline-offset-2">
-                                                    {byte.toString(2).padStart(8, "0")}
-                                                </span>
-                                            </HoverCardTrigger>
-                                            <HoverCardContent side="right" className="w-73">
-                                                <PteHoverContent byte={byte} />
-                                            </HoverCardContent>
-                                        </HoverCard>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            </TableBody>
-                        </Table>
-                    </AccordionContent>
-                </AccordionItem>
+                {/* The OS, pages 0-1: */}
+                {osPage0Accordion(memory)}
+                {osPage1Accordion(memory)}
 
-                <AccordionItem value="pfn-1">
-                    <AccordionTrigger className="hover:no-underline">
-                    <div className="flex justify-between w-full pr-4">
-                        <span className="font-mono">PFN 1</span>
-                        <span className="text-muted-foreground text-xs">OS: PCBs + Free List</span>
-                    </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                    {/* Byte table here */}
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Phys. Addr.</TableHead>
-                                    <TableHead className="text-right">Content</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {memory.slice(8, 16).map((byte, index) => {
-                                const slotIndex = Math.floor(index / 2);
-                                const isByte0 = index % 2 === 0;
-                                return (
-                                <TableRow key={index}>
-                                    <TableCell className="font-mono">
-                                        {8 + index}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <HoverCard openDelay={200} closeDelay={100}>
-                                            <HoverCardTrigger asChild>
-                                                <span className="cursor-default underline decoration-dotted underline-offset-2 font-mono">
-                                                    {byte.toString(2).padStart(8, "0")}
-                                                </span>
-                                            </HoverCardTrigger>
-                                            <HoverCardContent side="right" className="w-56">
-                                                {isByte0 ? (
-                                                    <PcbByte0HoverContent byte={byte} slotIndex={slotIndex} />
-                                                ) : (
-                                                    <PcbByte1HoverContent byte={byte} slotIndex={slotIndex} />
-                                                )}
-                                            </HoverCardContent>
-                                        </HoverCard>
-                                    </TableCell>
-                                </TableRow>
-                                );
-                            })}
-                            </TableBody>
-                        </Table>
-                    </AccordionContent>
-                </AccordionItem>
-            
+                {/* The processes, pages 2-7: */}
                 {allProcessPages.map(({ pfn, ownerPid, vpn, bytes }) => (
                     <AccordionItem key={pfn} value={`pfn-${pfn}`}>
                     <AccordionTrigger className="hover:no-underline">
@@ -224,3 +139,109 @@ export function MemoryCard({
 }
 
 export default MemoryCard
+
+
+
+
+
+function osPage0Accordion(memory: number[]) {
+    return (
+    <AccordionItem value="pfn-0">
+        <AccordionTrigger className="hover:no-underline">
+        <div className="flex justify-between w-full pr-4">
+            <span className="font-mono">PFN 0</span>
+            <span className="text-muted-foreground">OS: PTs + Free List</span>
+        </div>
+        </AccordionTrigger>
+        <AccordionContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Phys. Addr.</TableHead>
+                        <TableHead className="text-right">Content</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                {memory.slice(0, 8).map((byte, index) => (
+                    <TableRow key={index}>
+                        <TableCell className="font-mono">
+                            {index}
+                        </TableCell>
+                        <TableCell className="text-right">
+                            <HoverCard openDelay={200} closeDelay={100}>
+                                <HoverCardTrigger asChild>
+                                    <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                        {byte.toString(2).padStart(8, "0")}
+                                    </span>
+                                </HoverCardTrigger>
+                                <HoverCardContent side="right" className="w-73">
+                                    {index === 7 ? (
+                                        <FreeListHoverContent byte={byte} />
+                                    ) : (
+                                        <PteHoverContent byte={byte} />
+                                    )}
+                                </HoverCardContent>
+                            </HoverCard>
+                        </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+        </AccordionContent>
+    </AccordionItem>
+    )
+}
+
+function osPage1Accordion(memory: number[]) {
+    return (
+        <AccordionItem value="pfn-1">
+        <AccordionTrigger className="hover:no-underline">
+        <div className="flex justify-between w-full pr-4">
+            <span className="font-mono">PFN 1</span>
+            <span className="text-muted-foreground text-xs">OS: PCBs</span>
+        </div>
+        </AccordionTrigger>
+        <AccordionContent>
+        {/* Byte table here */}
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Phys. Addr.</TableHead>
+                        <TableHead className="text-right">Content</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                {memory.slice(8, 16).map((byte, index) => {
+                    const slotIndex = Math.floor(index / 2);
+                    const isByte0 = index % 2 === 0;
+                    return (
+                    <TableRow key={index}>
+                        <TableCell className="font-mono">
+                            {8 + index}
+                        </TableCell>
+                        <TableCell className="text-right">
+                            <HoverCard openDelay={200} closeDelay={100}>
+                                <HoverCardTrigger asChild>
+                                    <span className="cursor-default underline decoration-dotted underline-offset-2 font-mono">
+                                        {byte.toString(2).padStart(8, "0")}
+                                    </span>
+                                </HoverCardTrigger>
+                                <HoverCardContent side="right" className="w-65">
+                                    {isByte0 ? (
+                                        <PcbByte0HoverContent byte={byte} slotIndex={slotIndex} />
+                                    ) : (
+                                        <PcbByte1HoverContent byte={byte} slotIndex={slotIndex} />
+                                    )}
+                                </HoverCardContent>
+                            </HoverCard>
+                        </TableCell>
+                    </TableRow>
+                    );
+                })}
+                </TableBody>
+            </Table>
+        </AccordionContent>
+    </AccordionItem>
+    )
+}
+

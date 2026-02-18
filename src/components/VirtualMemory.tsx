@@ -74,11 +74,11 @@ export function VirtualMemory(
                         <TableCell className="font-mono text-right">
                         {vpn === 0 && (
                             <>
-                                <span className="text-muted-foreground ml-2">
-                                    {`${OPCODE_NAMES[(byte & 0b11100000) >> 5]} ${byte & 0b00011111}`}
-                                </span>
-                                <span className="text-muted-foreground ml-2"></span>
-                                {byte.toString(2).padStart(8, "0")}
+                            <span className="text-muted-foreground ml-2">
+                                {`${OPCODE_NAMES[(byte & 0b11100000) >> 5]} ${byte & 0b00011111}`}
+                            </span>
+                            <span className="text-muted-foreground ml-2"></span>
+                            {byte.toString(2).padStart(8, "0")}
                             </>
                         )}
                         {vpn === 1 && (
