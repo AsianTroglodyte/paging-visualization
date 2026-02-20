@@ -44,27 +44,42 @@ export const PROCESS_COLOR_CLASSES = [
     {
         accent: "text-process-0",
         border: "border-process-0/50",
+        trigger: "bg-process-0",
         table: "bg-process-0/6",
         cell: "bg-process-0/10",
+        ring: "ring-process-0",
+        runningBadge: "text-process-0 bg-process-0/15",
+        hoverHighlight: "ring-1 ring-process-0/30 bg-process-0/10",
     },
     {
         accent: "text-process-1",
         border: "border-process-1/50",
+        trigger: "bg-process-1",
         table: "bg-process-1/6",
         cell: "bg-process-1/10",
+        ring: "ring-process-1",
+        runningBadge: "text-process-1 bg-process-1/15",
+        hoverHighlight: "ring-1 ring-process-1/30 bg-process-1/10",
     },
     {
         accent: "text-process-2",
         border: "border-process-2/50",
+        trigger: "bg-process-2",
         table: "bg-process-2/6",
         cell: "bg-process-2/10",
+        ring: "ring-process-2",
+        runningBadge: "text-process-2 bg-process-2/15",
+        hoverHighlight: "ring-1 ring-process-2/30 bg-process-2/10",
     },
     {
         accent: "text-process-3",
         border: "border-process-3/50",
+        trigger: "bg-process-3",
         table: "bg-process-3/6",
         cell: "bg-process-3/10",
+        ring: "ring-process-3",
+        runningBadge: "text-process-3 bg-process-3/15",
+        hoverHighlight: "ring-1 ring-process-3/30 bg-process-3/10",
     },
   ];
 
-  

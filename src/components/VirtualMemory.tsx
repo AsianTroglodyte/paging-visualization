@@ -1,4 +1,4 @@
-import { getProcessVirtualAddressSpace } from "@/simulation/selectors";
+import { getProcessVirtualAddressSpace, getProcessColorClasses } from "@/simulation/selectors";
 import { OPCODE_NAMES } from "@/simulation/isa";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
@@ -6,38 +6,6 @@ import { ByteHoverContent } from "./hover-content";
 import type { ProcessControlBlocks, VirtualPage, CpuState, MachineAction } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-
-const PROCESS_COLOR_CLASSES = [
-    {
-        accent: "text-process-0",
-        border: "border-process-0/50",
-        table: "bg-process-0/6",
-        cell: "bg-process-0/10",
-    },
-    {
-        accent: "text-process-1",
-        border: "border-process-1/50",
-        table: "bg-process-1/6",
-        cell: "bg-process-1/10",
-    },
-    {
-        accent: "text-process-2",
-        border: "border-process-2/50",
-        table: "bg-process-2/6",
-        cell: "bg-process-2/10",
-    },
-    {
-        accent: "text-process-3",
-        border: "border-process-3/50",
-        table: "bg-process-3/6",
-        cell: "bg-process-3/10",
-    },
-];
-
-function getProcessColorClasses(pid: number | null) {
-    if (pid === null) return null;
-    return PROCESS_COLOR_CLASSES[Math.abs(pid) % PROCESS_COLOR_CLASSES.length];
-}
 
 export function VirtualMemory(
 {
@@ -61,10 +29,10 @@ export function VirtualMemory(
             ? (allVirtualMemory.find(processVirtualMemory => processVirtualMemory[0].ownerPid === cpu.runningPid) ?? [])
             : [];
     const processColorClasses = getProcessColorClasses(cpu.kind === "running" ? cpu.runningPid : null);
-
+    const isRunning = cpu.kind === "running" && processColorClasses != null;
 
     return (
-    <Card className="w-70">
+    <Card className="w-74">
     <CardHeader>
         <CardTitle>
             <h1 className="text-4xl">Virtual Memory</h1>
@@ -76,12 +44,17 @@ export function VirtualMemory(
         </h2>
         <Accordion type="single" collapsible className="w-full">
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
-            <AccordionItem key={vpn} value={`vpn-${vpn}`} className={`${processColorClasses?.border}`}>
-                <AccordionTrigger className={`hover:no-underline text-sm ${processColorClasses?.table ?? ""} px-2`}>
-                    <div className="flex justify-between w-full pr-4 ">
-                        <div className="font-mono">VPN {vpn}</div>
-                        <div className={processColorClasses?.accent ?? "text-muted-foreground"}>
-                            {`PFN ${pfn} ${ vpn === 0 ? "Code" : "Heap"}`}
+            <AccordionItem key={vpn} value={`vpn-${vpn}`} className={`${processColorClasses?.border ?? ""} ${isRunning && processColorClasses ? ` ${processColorClasses.ring}` : ""}`}>
+                <AccordionTrigger className={`hover:no-underline text-sm px-2 ${isRunning && processColorClasses ? `${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColorClasses?.table ?? "")}`}>
+                    <div className="flex justify-between w-full pr-4 items-center gap-2">
+                        <div className={`font-mono ${isRunning && processColorClasses ? "text-white" : ""}`}>VPN {vpn}</div>
+                        <div className={`flex items-center gap-2 ${isRunning && processColorClasses ? "text-white" : (processColorClasses?.accent ?? "text-muted-foreground")}`}>
+                        {`PFN ${pfn} ${ vpn === 0 ? "Code" : "Heap"}`}
+                        {isRunning && processColorClasses && (
+                            <span className="text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded text-white bg-white/20">
+                                Running
+                            </span>
+                        )}
                         </div>
                     </div>
                 </AccordionTrigger>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { OPCODE_NAMES } from "@/simulation/isa";
 import { formatByteAsAscii } from "@/lib/utils";
 import { NUM_PAGES } from "@/simulation/constants";
+import { getProcessColorClasses } from "@/simulation/selectors";
 
 /** Free list: byte at page 0 byte 7. Bit N set = PFN N is free. */
 export function FreeListHoverContent({ byte }: { byte: number }) {
@@ -113,8 +114,10 @@ const PTE_FIELD_LIST: { bits: string; name: string; desc: string; cellIndices: n
   { bits: "0", name: "writable", desc: "Page may be written", cellIndices: [7] },
 ];
 
+const DEFAULT_HIGHLIGHT_CLASS = "ring-1 ring-primary/30 bg-primary/10";
+
 /** PTE: labels, bit positions, bit values; Fields list with hover sync. */
-export function PteHoverContent({ byte }: { byte: number }) {
+export function PteHoverContent({ byte, processID }: { byte: number; processID?: number | null }) {
   const [hoveredCellIndex, setHoveredCellIndex] = useState<number | null>(null);
   const [hoveredFieldIndex, setHoveredFieldIndex] = useState<number | null>(null);
   const bits = byte.toString(2).padStart(8, "0"); // bits[0]=b7 .. bits[7]=b0
@@ -131,7 +134,7 @@ export function PteHoverContent({ byte }: { byte: number }) {
     hoveredCellIndex !== null && cellBitIndices.includes(hoveredCellIndex) ||
     hoveredFieldIndex !== null && PTE_FIELD_LIST[hoveredFieldIndex].cellIndices.some(i => cellBitIndices.includes(i));
 
-  const highlightClass = "ring-1 ring-primary/30 bg-primary/10";
+  const highlightClass = processID != null ? (getProcessColorClasses(processID)?.hoverHighlight ?? DEFAULT_HIGHLIGHT_CLASS) : DEFAULT_HIGHLIGHT_CLASS;
 
   return (
     <div className="font-mono space-y-2 min-w-0 text-sm" onMouseLeave={() => { setHoveredCellIndex(null); setHoveredFieldIndex(null); }}>
@@ -232,7 +235,7 @@ export function PcbByte0HoverContent({
     hoveredCellIndex !== null && cellBitIndices.includes(hoveredCellIndex) ||
     hoveredFieldIndex !== null && PCB_BYTE0_FIELD_LIST[hoveredFieldIndex].cellIndices.some(i => cellBitIndices.includes(i));
 
-  const highlightClass = "ring-1 ring-primary/30 bg-primary/10";
+  const highlightClass = getProcessColorClasses(slotIndex)?.hoverHighlight ?? DEFAULT_HIGHLIGHT_CLASS;
 
   return (
     <div className="font-mono space-y-2 min-w-0 text-sm" onMouseLeave={() => { setHoveredCellIndex(null); setHoveredFieldIndex(null); }}>

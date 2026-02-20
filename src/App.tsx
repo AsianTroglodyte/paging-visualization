@@ -65,7 +65,8 @@ export function App() {
                 <MemoryCard className="row-span-2" 
                 processControlBlocks={processControlBlocks} 
                 allProcessPages={allProcessPages} 
-                memory={memory} />
+                memory={memory}
+                runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
 
                 <VirtualMemory 
                 memory={memory} 
