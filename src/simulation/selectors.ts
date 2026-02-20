@@ -13,6 +13,7 @@ import {
     PCB_VALID_BIT_MASK,
     PCB_PROGRAM_COUNTER_MASK,
     PCB_PAGE_TABLE_BASE_MASK,
+    PROCESS_COLOR_CLASSES,
 } from "./constants";
 import { OPCODE_NAMES } from "./isa";
 import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks, CpuState } from "./types";
@@ -187,3 +188,9 @@ export function decodeInstruction(instruction: number): { opcode: string, operan
     const operand = instruction & 0b00011111;
     return { opcode: OPCODE_NAMES[opcode], operand: operand};
 }
+
+
+export function getProcessColorClasses(pid: number | null) {
+    if (pid === null) return null;
+    return PROCESS_COLOR_CLASSES[Math.abs(pid) % PROCESS_COLOR_CLASSES.length];
+  }

@@ -7,6 +7,38 @@ import type { ProcessControlBlocks, VirtualPage, CpuState, MachineAction } from 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
+const PROCESS_COLOR_CLASSES = [
+    {
+        accent: "text-process-0",
+        border: "border-process-0/50",
+        table: "bg-process-0/6",
+        cell: "bg-process-0/10",
+    },
+    {
+        accent: "text-process-1",
+        border: "border-process-1/50",
+        table: "bg-process-1/6",
+        cell: "bg-process-1/10",
+    },
+    {
+        accent: "text-process-2",
+        border: "border-process-2/50",
+        table: "bg-process-2/6",
+        cell: "bg-process-2/10",
+    },
+    {
+        accent: "text-process-3",
+        border: "border-process-3/50",
+        table: "bg-process-3/6",
+        cell: "bg-process-3/10",
+    },
+];
+
+function getProcessColorClasses(pid: number | null) {
+    if (pid === null) return null;
+    return PROCESS_COLOR_CLASSES[Math.abs(pid) % PROCESS_COLOR_CLASSES.length];
+}
+
 export function VirtualMemory(
 {
     memory, 
@@ -28,6 +60,7 @@ export function VirtualMemory(
         cpu.kind === "running"
             ? (allVirtualMemory.find(processVirtualMemory => processVirtualMemory[0].ownerPid === cpu.runningPid) ?? [])
             : [];
+    const processColorClasses = getProcessColorClasses(cpu.kind === "running" ? cpu.runningPid : null);
 
 
     return (
@@ -43,17 +76,17 @@ export function VirtualMemory(
         </h2>
         <Accordion type="single" collapsible className="w-full">
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
-            <AccordionItem key={vpn} value={`vpn-${vpn}`}>
-                <AccordionTrigger className="hover:no-underline text-sm">
-                    <div className="flex justify-between w-full pr-4">
+            <AccordionItem key={vpn} value={`vpn-${vpn}`} className={`${processColorClasses?.border}`}>
+                <AccordionTrigger className={`hover:no-underline text-sm ${processColorClasses?.table ?? ""} px-2`}>
+                    <div className="flex justify-between w-full pr-4 ">
                         <div className="font-mono">VPN {vpn}</div>
-                        <div className="text-muted-foreground">
+                        <div className={processColorClasses?.accent ?? "text-muted-foreground"}>
                             {`PFN ${pfn} ${ vpn === 0 ? "Code" : "Heap"}`}
                         </div>
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="text-sm">
-                    <Table className="text-sm w-full table-fixed">
+                    <Table className={`text-sm w-full table-fixed ${processColorClasses?.table ?? ""}`}>
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-[100px]">Virt. Addr.</TableHead>
@@ -66,10 +99,10 @@ export function VirtualMemory(
                         onMouseDown={() => machineStateDispatch(
                             { type: "CHANGE_PROGRAM_COUNTER", payload: { newProgramCounter: (index_virtualPageNumber * 8) + index_offset } })}
                         className="cursor-pointer">
-                        <TableCell className="font-mono">
+                        <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>
                             {(index_virtualPageNumber * 8) + index_offset}
                         </TableCell>
-                        <TableCell className="font-mono text-right">
+                        <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
                         {vpn === 0 && (
                         <>
                             <span className="text-muted-foreground ml-2">

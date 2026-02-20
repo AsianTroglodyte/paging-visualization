@@ -38,3 +38,33 @@ export const PCB_VALID_BIT_CLEAR_MASK = 0b11111110;
 
 export const PCB_BASE = 8;
 export const WRITABLE_PAGE_PROBABILITY = 0.5;
+
+
+export const PROCESS_COLOR_CLASSES = [
+    {
+        accent: "text-process-0",
+        border: "border-process-0/50",
+        table: "bg-process-0/6",
+        cell: "bg-process-0/10",
+    },
+    {
+        accent: "text-process-1",
+        border: "border-process-1/50",
+        table: "bg-process-1/6",
+        cell: "bg-process-1/10",
+    },
+    {
+        accent: "text-process-2",
+        border: "border-process-2/50",
+        table: "bg-process-2/6",
+        cell: "bg-process-2/10",
+    },
+    {
+        accent: "text-process-3",
+        border: "border-process-3/50",
+        table: "bg-process-3/6",
+        cell: "bg-process-3/10",
+    },
+  ];
+
+  

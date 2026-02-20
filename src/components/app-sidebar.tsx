@@ -9,6 +9,7 @@ import { Button } from "./ui/button"
 import { Tabs, TabsContent, TabsTrigger, TabsList} from "./ui/tabs"
 import { ButtonGroup } from "./ui/button-group"
 import type { ProcessControlBlocks, MemoryAction} from "@/simulation/types";
+import { getProcessColorClasses } from "@/simulation/selectors";
 
 export function AppSidebar(
   {
@@ -47,12 +48,15 @@ export function AppSidebar(
                       ) : (
                         <div className="flex flex-col gap-2">
                           Press a process to context switch
-                          {processControlBlocks.map((pcb) => (
+                          {processControlBlocks.map((pcb) => {
+                            const isRunning = runningPid === pcb.processID;
+                            const processColors = getProcessColorClasses(pcb.processID);
+                            return (
                             <div 
                               key={pcb.processID} 
                               className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors border ${
-                                runningPid === pcb.processID
-                                  ? "bg-primary/20 border-primary"
+                                isRunning
+                                  ? `${processColors?.table ?? ""} ${processColors?.accent ?? ""}`
                                   : "border-transparent bg-secondary hover:bg-secondary/80"
                               }`}
                               onMouseDown={() => {
@@ -72,7 +76,8 @@ export function AppSidebar(
                                 ✕
                               </Button>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>

@@ -8,7 +8,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { getPageTable, getProcessControlBlock } from "@/simulation/selectors";
+import { getPageTable, getProcessColorClasses, getProcessControlBlock } from "@/simulation/selectors";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverContent, FreeListHoverContent } from "./hover-content";
 
@@ -67,18 +67,26 @@ export function MemoryCard({
                 {osPage1Accordion(memory)}
                 {/* The processes, pages 2-7: */}
                 {allProcessPages.map(({ pfn, ownerPid, vpn, bytes }) => (
-                <AccordionItem key={pfn} value={`pfn-${pfn}`}>
-                    <AccordionTrigger className="hover:no-underline text-sm">
+                <AccordionItem
+                    key={pfn}
+                    value={`pfn-${pfn}`}
+                    className={getProcessColorClasses(ownerPid)?.border}
+                >
+                    <AccordionTrigger
+                        className={`hover:no-underline text-sm ${getProcessColorClasses(ownerPid)?.table ?? ""} px-2`}
+                    >
                         <div className="flex justify-between w-full pr-4">
                         <span className="font-mono">PFN {pfn}</span>
-                        <span className="text-muted-foreground">
+                        <span className={getProcessColorClasses(ownerPid)?.accent ?? "text-muted-foreground"}>
                             {ownerPid !== null ? `Process ${ownerPid}` : "Free"}
                         </span>
                         </div>
                     </AccordionTrigger>
                 <AccordionContent className="text-sm">
                     <div className="min-w-0 overflow-x-hidden min-h-[17rem]">
-                    <Table className="text-sm w-full table-fixed [&_tbody_td]:h-8 [&_tbody_td]:leading-4">
+                    <Table
+                        className={`text-sm w-full table-fixed [&_tbody_td]:h-8 [&_tbody_td]:leading-4 ${getProcessColorClasses(ownerPid)?.table ?? ""}`}
+                    >
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-[100px]">Phys. Addr.</TableHead>
@@ -88,21 +96,21 @@ export function MemoryCard({
                     <TableBody>
                         {bytes.map((byte, index) => {
                             const isOwned = ownerPid !== null;
+                            const processColorClasses = getProcessColorClasses(ownerPid);
                             return (
                             <TableRow key={index}>
-                                <TableCell className="font-mono">{pfn * 8 + index}</TableCell>
-                                <TableCell className="font-mono text-right">
+                                <TableCell className={`font-mono ${isOwned ? processColorClasses?.cell ?? "" : ""}`}>{pfn * 8 + index}</TableCell>
+                                <TableCell className={`font-mono text-right ${isOwned ? processColorClasses?.cell ?? "" : ""}`}>
                                 <HoverCard openDelay={100} closeDelay={100}>
                                     <HoverCardTrigger asChild>
                                         <span
                                             className={`inline-block leading-4 cursor-default font-mono ${
                                                 isOwned ? "underline decoration-dotted underline-offset-2" : ""
-                                            }`}
-                                        >
+                                            }`}>
                                             {byte.toString(2).padStart(8, "0")}
                                         </span>
                                     </HoverCardTrigger>
-                                    <HoverCardContent side="right" className="w-38">
+                                    <HoverCardContent side="right" className="w-44">
                                         <ByteHoverContent byte={byte} />
                                     </HoverCardContent>
                                 </HoverCard>
@@ -160,7 +168,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 
     return (
     <AccordionItem value="pfn-0">
-        <AccordionTrigger className="hover:no-underline text-sm">
+        <AccordionTrigger className="hover:no-underline text-sm px-2">
         <div className="flex justify-between w-full pr-4">
             <span className="font-mono text-sm">PFN 0</span>
             <span className="text-muted-foreground text-sm">OS: PTs + Free List</span>
@@ -219,7 +227,7 @@ function osPage1Accordion(memory: number[]) {
     return (
     <AccordionItem value="pfn-1">
         <AccordionTrigger className="hover:no-underline text-sm">
-        <div className="flex justify-between w-full pr-4">
+        <div className="flex justify-between w-full pr-4 px-2">
             <span className="font-mono text-sm">PFN 1</span>
             <span className="text-muted-foreground text-sm">OS: PCBs</span>
         </div>
