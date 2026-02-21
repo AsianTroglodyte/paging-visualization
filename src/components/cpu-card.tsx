@@ -7,6 +7,7 @@ import { Input } from "./ui/input"
 import { useState } from "react"
 import { OPCODE_NAMES } from "@/simulation/isa";
 import type { CpuState, MemoryAction } from "@/simulation/types";
+import { getProcessColorClasses } from "@/simulation/selectors"
 
 
 export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, setSelectedVirtualAddress }: 
@@ -19,6 +20,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
 
     const [operand, setOperand] = useState(12);
     const isIdle = cpu.kind === "idle";
+    const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
 
 
@@ -36,13 +38,13 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                 </h2>
             </CardDescription>
             {/* Registers */}
-            <div className="rounded-md border bg-muted/50 p-3">
-                <ul className="text-sm font-mono list-disc list-inside space-y-0.5">
-                    <li>runningPid: {isIdle ? "—" : cpu.runningPid}</li>
-                    <li>PC: {isIdle ? "—" : cpu.programCounter}</li>
-                    <li>pageTableBase: {isIdle ? "—" : cpu.pageTableBase}</li>
-                    <li>accumulator: {isIdle ? "—" : cpu.accumulator}</li>
-                    <li>currentInstructionRaw: {isIdle ? "—" : cpu.currentInstructionRaw}</li>
+            <div className={`rounded-md border p-3 ${processColors ? processColors.cell : "bg-muted/50"}`}>
+                <h2 className="text-base font-semibold">PID {isIdle ? "—" : cpu.runningPid} Registers:</h2>
+                <ul className="text-base font-mono list-disc list-inside space-y-0.5">
+                    <li>PC: {isIdle ? "-" : cpu.programCounter}</li>
+                    <li>Page Table Base: {isIdle ? "-" : cpu.pageTableBase}</li>
+                    <li>Accumulator: {isIdle ? "-" : cpu.accumulator}</li>
+                    <li>Current Instruction: {isIdle ? "-" : cpu.currentInstructionRaw}</li>
                 </ul>
                 {isIdle && (
                     <p className="text-xs text-muted-foreground italic mt-1">

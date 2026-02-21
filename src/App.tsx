@@ -19,6 +19,11 @@ export function App() {
         return {
             memory: initialMemory,
             cpu: IDLE_CPU_STATE,
+            mmu: {
+                virtualPageNumber: 0,
+                pageFrameNumber: 0,
+                offset: 0,
+            }
         };
     });
 

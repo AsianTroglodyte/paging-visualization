@@ -34,19 +34,19 @@ export function AppSidebar(
             
             <TabsContent value="Control" className="mt-4">
               <SidebarGroup>
-              <SidebarHeader className="text-lg">Add Processes</SidebarHeader>
+              <SidebarHeader ><h1 className="text-xl">Add Processes</h1></SidebarHeader>
                 <div className="w-full p-2 flex flex-col gap-4 justify-center">
                   <ButtonGroup orientation="vertical" className="gap-2">
                       <Button onMouseDown={() => machineStateDispatch({type: "CREATE_PROCESS_RANDOM"})}>Add Process</Button>
                   </ButtonGroup>
-                  <p className="text-xs text-muted-foreground">Each process gets 2 pages (page size fixed)</p>
+                  <p className="text-base text-muted-foreground">Each process gets 2 pages (page size fixed)</p>
                 </div>
-              <SidebarHeader className="text-lg">Processes</SidebarHeader>
+              <SidebarHeader ><h1 className="text-xl">Processes</h1></SidebarHeader>
                 <div className="w-full p-2 flex flex-col gap-2 justify-center">
                   {processControlBlocks.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No active processes</p>
+                    <p className="text-base text-muted-foreground">No active processes</p>
                   ) : (
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 text-base text-muted-foreground">
                       Press a process to context switch
                       {processControlBlocks.map((pcb) => {
                         const isRunning = runningPid === pcb.processID;
@@ -57,7 +57,6 @@ export function AppSidebar(
                           className={`flex items-center justify-between p-2 rounded cursor-pointer 
                             transition-colors border 
                             ${processColors?.border ?? "border-transparent"} 
-                            ${isRunning && processColors ? `ring-2 ${processColors.ring}` : ""} 
                             ${isRunning && processColors
                               ? `${processColors.trigger ?? ""} text-white`
                               : `${processColors?.table ?? "bg-secondary"} ${processColors?.accent ?? ""} hover:opacity-90`
