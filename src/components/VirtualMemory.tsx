@@ -3,7 +3,7 @@ import { OPCODE_NAMES } from "@/simulation/isa";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent } from "./hover-content";
-import type { ProcessControlBlocks, VirtualPage, CpuState, MachineAction } from "@/simulation/types";
+import type { ProcessControlBlocks, VirtualPage, CpuState } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
@@ -11,13 +11,15 @@ export function VirtualMemory(
 {
     memory, 
     processControlBlocks,
+    selectedVirtualAddress,
+    setSelectedVirtualAddress,
     cpu,
-    machineStateDispatch
 } : {
     memory: number[],
     processControlBlocks: ProcessControlBlocks,
+    selectedVirtualAddress: number | null,
+    setSelectedVirtualAddress: React.Dispatch<React.SetStateAction<number | null>>,
     cpu: CpuState,
-    machineStateDispatch: React.Dispatch<MachineAction>
 }) {
 
     const allVirtualMemory: VirtualPage[][] = processControlBlocks.map(pcb =>
@@ -30,6 +32,9 @@ export function VirtualMemory(
             : [];
     const processColorClasses = getProcessColorClasses(cpu.kind === "running" ? cpu.runningPid : null);
     const isRunning = cpu.kind === "running" && processColorClasses != null;
+
+
+
 
     return (
     <Card className="w-74">
@@ -45,7 +50,10 @@ export function VirtualMemory(
         <Accordion type="single" collapsible className="w-full">
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
             <AccordionItem key={vpn} value={`vpn-${vpn}`} className={`${processColorClasses?.border ?? ""} ${isRunning && processColorClasses ? ` ${processColorClasses.ring}` : ""}`}>
-                <AccordionTrigger className={`hover:no-underline text-sm px-2 ${isRunning && processColorClasses ? `${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColorClasses?.table ?? "")}`}>
+                <AccordionTrigger className={`hover:no-underline text-sm px-2 
+                    ${isRunning && processColorClasses ? `
+                    ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColorClasses?.table ?? "")}
+                    ${isRunning && processColorClasses ? ` ${processColorClasses.ring}` : ""}`}>
                     <div className="flex justify-between w-full pr-4 items-center gap-2">
                         <div className={`font-mono ${isRunning && processColorClasses ? "text-white" : ""}`}>VPN {vpn}</div>
                         <div className={`flex items-center gap-2 ${isRunning && processColorClasses ? "text-white" : (processColorClasses?.accent ?? "text-muted-foreground")}`}>
@@ -67,22 +75,47 @@ export function VirtualMemory(
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {bytes.map((byte, index_offset) => (
-                        <TableRow key={index_offset}
-                        onMouseDown={() => machineStateDispatch(
-                            { type: "CHANGE_PROGRAM_COUNTER", payload: { newProgramCounter: (index_virtualPageNumber * 8) + index_offset } })}
-                        className="cursor-pointer">
+                    {bytes.map((byte, index_offset) => {
+                        const virtualAddress = (index_virtualPageNumber * 8) + index_offset;
+                        const isSelected = selectedVirtualAddress === virtualAddress;
+                        const isProgramCounter = cpu.kind === "running" && cpu.programCounter === virtualAddress;
+                        return (
+                        <TableRow
+                        key={index_offset}
+                        onMouseDown={() => {
+                            if (isProgramCounter) {
+                                return;
+                            }
+                            setSelectedVirtualAddress(virtualAddress);
+                        }}
+                        className={`border-l-2 ${
+                            isSelected
+                                ? "border-l-primary bg-primary/10 ring-1 ring-primary/40 hover:bg-primary/10"
+                                : "border-l-transparent"
+                        } ${isProgramCounter ? "bg-emerald-100/60 hover:bg-emerald-100/70" : "cursor-pointer"}`}>
                         <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>
-                            {(index_virtualPageNumber * 8) + index_offset}
+                            <div className="flex items-center gap-2">
+                                <span>{virtualAddress}</span>
+                                {isSelected && (
+                                    <span className="text-[10px] uppercase tracking-wide rounded px-1 py-0.5 bg-primary/15 text-primary">
+                                        Selected
+                                    </span>
+                                )}
+                                {isProgramCounter && (
+                                    <span className="text-[10px] uppercase tracking-wide rounded px-1 py-0.5 bg-emerald-200 text-emerald-900">
+                                        PC
+                                    </span>
+                                )}
+                            </div>
                         </TableCell>
                         <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
                         {vpn === 0 && (
                         <>
-                            <span className="text-muted-foreground ml-2">
+                            <span className={`ml-2 ${isProgramCounter ? "text-white" : "text-muted-foreground"}`}>
                                 {`${OPCODE_NAMES[(byte & 0b11100000) >> 5]} ${byte & 0b00011111}`}
                             </span>
-                            <span className="text-muted-foreground ml-2"></span>
-                            {byte.toString(2).padStart(8, "0")}
+                            <span className={`ml-2 ${isProgramCounter ? "text-white" : "text-muted-foreground"}`}></span>
+                            <span className={isProgramCounter ? "text-white" : ""}>{byte.toString(2).padStart(8, "0")}</span>
                         </>
                         )}
                         {vpn === 1 && (
@@ -99,7 +132,7 @@ export function VirtualMemory(
                         )}
                         </TableCell>
                     </TableRow>
-                    ))}
+                    )})}
                     </TableBody>
                     </Table>
                 </AccordionContent>
@@ -159,3 +192,5 @@ export default VirtualMemory;
 //     ))
 //     }
 // </CardContent>
+
+ 

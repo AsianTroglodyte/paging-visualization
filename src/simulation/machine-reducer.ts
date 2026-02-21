@@ -10,15 +10,17 @@ import {
     getProcessControlBlock, 
     getFreeList, 
     getPageTable,
-    getByteAtVirtualAddress } from "./selectors";
+    getByteAtVirtualAddress, 
+    getPfnFromVirtualAddress} from "./selectors";
 import { MAX_PAGES_ALLOCATABLE, START_OF_PCBS, BYTES_PER_PCB } from "./constants";
-import type { MachineAction, MachineState, CpuState } from "./types";
+import type { MachineAction, MachineState, CpuState, MmuState } from "./types";
 import { IDLE_CPU_STATE } from "./types";
 import { OPCODE_NAMES } from "./isa";
 
 export function machineReducer(state: MachineState, action: MachineAction): MachineState {
     const memory = state.memory;
     const cpu: CpuState = state.cpu;
+    const mmu: MmuState = state.mmu;
 
     switch (action.type) {
         case "COMPACT_PAGE_TABLES":
@@ -55,7 +57,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB] = firstPcbByte;
             newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB + 1] = secondPcbByte;
 
-            return { memory: newMemory, cpu: newCpu };
+            return { memory: newMemory, cpu: newCpu, mmu: mmu};
 
         case "CREATE_PROCESS_RANDOM":
             return (() => {
@@ -153,24 +155,34 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
 
                 const freeList = getFreeList(memory);
                 newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
+                // Keep page-table slots contiguous after process deletion.
+                newMemory = compactPagetables(newMemory).newMemory;
 
                 const newCpu: CpuState =
                     cpu.kind === "running" && cpu.runningPid === action.payload.processID
                         ? IDLE_CPU_STATE
                         : cpu;
-                return { memory: newMemory, cpu: newCpu };
+                return { memory: newMemory, cpu: newCpu, mmu: mmu};
             })();
-        case "CHANGE_PROGRAM_COUNTER":
+        case "FETCH_INSTRUCTION":
             if (cpu.kind === "idle") {
                 return state;
             }
+
+            console.log("action.payload.newProgramCounter: ", action.payload.newProgramCounter);
+
             const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, action.payload.newProgramCounter);
+            const newPfn = getPfnFromVirtualAddress(memory, cpu.runningPid, action.payload.newProgramCounter);
+            const newOffset = action.payload.newProgramCounter % 8;
 
             return { ...state, cpu: { 
                 ...cpu, 
                 programCounter: action.payload.newProgramCounter,
                 currentInstructionRaw: newCurrentInstructionRaw
-            }};
+            }, mmu: { ...mmu, 
+                virtualPageNumber: action.payload.newProgramCounter, 
+                pageFrameNumber: newPfn,
+                offset: newOffset}};
         case "EXECUTE_INSTRUCTION":
             if (cpu.kind === "idle") {
                 throw new Error("Cannot execute instruction when CPU is idle.");

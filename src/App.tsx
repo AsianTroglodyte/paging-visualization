@@ -1,7 +1,7 @@
 import {CpuCard}  from "./components/cpu-card";
 import MmuCard from "./components/mmu-card";
 import { MemoryCard } from "./components/memory-card";
-import { useMemo, useReducer} from "react";
+import { useMemo, useReducer, useState} from "react";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { machineReducer } from "./simulation/machine-reducer";
@@ -44,6 +44,7 @@ export function App() {
     }, [memory]);
 
 
+    const [selectedVirtualAddress, setSelectedVirtualAddress] = useState<number | null>(null);
 
 
 
@@ -58,7 +59,10 @@ export function App() {
 
             <div className="py-10  pl-1 w-full h-full flex flex-3 flex items-start gap-4">
 
-                <CpuCard cpu={cpu} machineStateDispatch={machineStateDispatch} />
+                <CpuCard cpu={cpu} 
+                machineStateDispatch={machineStateDispatch} 
+                selectedVirtualAddress={selectedVirtualAddress}
+                setSelectedVirtualAddress={setSelectedVirtualAddress}/>
 
                 <MmuCard />
 
@@ -70,9 +74,10 @@ export function App() {
 
                 <VirtualMemory 
                 memory={memory} 
-                processControlBlocks={processControlBlocks} 
-                cpu={cpu} 
-                machineStateDispatch={machineStateDispatch} />
+                processControlBlocks={processControlBlocks}
+                selectedVirtualAddress={selectedVirtualAddress}
+                setSelectedVirtualAddress={setSelectedVirtualAddress}
+                cpu={cpu} />
             </div>
         </SidebarProvider>
     )

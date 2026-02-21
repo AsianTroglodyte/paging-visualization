@@ -175,10 +175,17 @@ export function getByteAtVirtualAddress(
         throw new Error(`Virtual address ${virtualAddress} is out of bounds. Must be between 0 and 15.`);
     }
 
+    console.log("virtualAddress: ", virtualAddress);
+
     const pageTable = getPageTable(memory, processID);
     // index of PTE = vpn
     const vpn = Math.floor(virtualAddress / 8);
     const offset = virtualAddress % 8;
+
+    console.log("pageTable: ", pageTable);
+    console.log("vpn: ", vpn);
+    console.log("offset: ", offset);
+
     const pfn = pageTable[vpn].pfn; 
     return memory[pfn * 8 + offset];
   }
@@ -193,4 +200,5 @@ export function decodeInstruction(instruction: number): { opcode: string, operan
 export function getProcessColorClasses(pid: number | null) {
     if (pid === null) return null;
     return PROCESS_COLOR_CLASSES[Math.abs(pid) % PROCESS_COLOR_CLASSES.length];
-  }
+}
+

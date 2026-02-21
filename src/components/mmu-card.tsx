@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"    
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 
 export function MmuCard() {
     return (
@@ -58,6 +59,24 @@ export function MmuCard() {
                     <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">0</div>
                     <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
                 </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead rowSpan={2}> VPN</TableHead>
+                            <TableHead rowSpan={3}>offset</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>0</TableCell>
+                            <TableCell>0</TableCell>
+                            <TableCell>0</TableCell>
+                            <TableCell>1</TableCell>
+                            <TableCell>1</TableCell>
+                            <TableCell>1</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
             </CardContent>
         </Card>
     )

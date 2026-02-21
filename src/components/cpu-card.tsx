@@ -5,15 +5,24 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Field} from "./ui/field"
 import { Input } from "./ui/input"
 import { useState } from "react"
-import { OPCODE_NAMES, OPCODE_LB } from "@/simulation/isa";
+import { OPCODE_NAMES } from "@/simulation/isa";
 import type { CpuState, MemoryAction } from "@/simulation/types";
-import { decodeInstruction } from "@/simulation/selectors"
 
 
-export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineStateDispatch: React.Dispatch<MemoryAction> }) {
+export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, setSelectedVirtualAddress }: 
+{ 
+    cpu: CpuState; 
+    machineStateDispatch: React.Dispatch<MemoryAction>; 
+    selectedVirtualAddress: number | null ;
+    setSelectedVirtualAddress: React.Dispatch<React.SetStateAction<number | null>>;
+}) {
 
     const [operand, setOperand] = useState(12);
     const isIdle = cpu.kind === "idle";
+
+
+
+     
 
     return (
     <Card size="default" className="w-75">
@@ -43,10 +52,10 @@ export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineS
             </div>
         </CardHeader>
 
-        <CardContent >
+        <CardContent className="flex flex-col gap-2">
+            {isIdle ? "" : 
+            <>
             <Field orientation="horizontal" className="flex flex-shrink-1  font-semibold">
-                {isIdle ? "" : 
-                <>
                 <span className="text-lg whitespace-nowrap ">
                     {OPCODE_NAMES[(cpu.currentInstructionRaw >> 5)]}
                 </span>
@@ -70,9 +79,12 @@ export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineS
                         <MinusIcon />
                     </Button>
                 </ButtonGroup>
+            </Field>
+
+            <ButtonGroup orientation="horizontal" className="flex gap-3">
                 <Button
                     disabled={isIdle}
-                    onClick={() => {
+                    onMouseDown={() => {
                         if (cpu.kind !== "running") return;
                         // const { operand } = decodeInstruction(cpu.currentInstructionRaw);
                         machineStateDispatch({ 
@@ -83,8 +95,23 @@ export function CpuCard({ cpu, machineStateDispatch }: { cpu: CpuState; machineS
                     }}>
                     Execute
                 </Button>
-                </>}
-            </Field>
+                <Button
+                    disabled={isIdle || selectedVirtualAddress === null}
+                    onMouseDown={() => {
+                        if (selectedVirtualAddress === null) {
+                            throw new Error("Selected virtual address is null");
+                        }
+                        machineStateDispatch({
+                            type: "FETCH_INSTRUCTION",
+                            payload: { newProgramCounter: selectedVirtualAddress }
+                        });
+                        
+                        setSelectedVirtualAddress(null);
+                    }}>
+                    Fetch
+                </Button>
+            </ButtonGroup>
+            </>}
         </CardContent>
         <CardFooter className="mt-4"> 
         </CardFooter>

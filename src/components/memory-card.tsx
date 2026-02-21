@@ -181,19 +181,25 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                     <TableHead className="text-right">Content</TableHead>
                 </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody >
             {memory.slice(0, 8).map((byte, index) => {
                 const isFreeListByte = index === 7;
                 const isPteInUse = index < 6 && pteIndicesInUse.has(index); // byte 6 is not used for active PT entries
                 const isOwned = isFreeListByte || isPteInUse;
                 const pteOwnerPid = pteOwnerByIndex(index);
-                const processCellClass = getProcessColorClasses(pteOwnerPid)?.cell ?? "";
+                let processCellClass = getProcessColorClasses(pteOwnerPid)?.cell ?? "";
+                if (isFreeListByte) {
+                    processCellClass = "bg-primary/10";
+                }
                 return (
                 <TableRow key={index}>
                     <TableCell className={`font-mono ${processCellClass}`}>
                         {index}
                     </TableCell>
                     <TableCell className={`font-mono text-right ${processCellClass}`}>
+                    {isFreeListByte && (
+                        <span className="text-muted-foreground mr-2 ">Free List</span>
+                    )}
                     {pteOwnerPid != null && (
                         <span className="text-muted-foreground mr-2">Process {pteOwnerPid}</span>
                     )}

@@ -62,9 +62,17 @@ export type CpuState =
 
 export const IDLE_CPU_STATE: CpuState = { kind: "idle" };
 
+
+export type MmuState = {
+  virtualPageNumber: number;
+  pageFrameNumber: number;
+  offset: number;
+}
+
 export type MachineState = {
   memory: number[];
   cpu: CpuState;
+  mmu: MmuState;
 };
 
 export type MachineAction =
@@ -85,15 +93,7 @@ export type MachineAction =
       payload: { processID: number | null };
     }
   | {
-    type: "EXECUTE_INSTRUCTION";
-    payload?: never;
-  } 
-  | {
     type: "FETCH_INSTRUCTION";
-    payload: { virtualAddress: number };
-  } 
-  |{
-    type: "CHANGE_PROGRAM_COUNTER";
     payload: { newProgramCounter: number };
   }
   | {
