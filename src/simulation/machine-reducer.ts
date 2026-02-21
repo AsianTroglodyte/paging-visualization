@@ -169,18 +169,17 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 return state;
             }
 
-            console.log("action.payload.newProgramCounter: ", action.payload.newProgramCounter);
-
             const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, action.payload.newProgramCounter);
             const newPfn = getPfnFromVirtualAddress(memory, cpu.runningPid, action.payload.newProgramCounter);
             const newOffset = action.payload.newProgramCounter % 8;
+            const newVirtualPageNumber = Math.floor(action.payload.newProgramCounter / 8);
 
             return { ...state, cpu: { 
                 ...cpu, 
                 programCounter: action.payload.newProgramCounter,
                 currentInstructionRaw: newCurrentInstructionRaw
             }, mmu: { ...mmu, 
-                virtualPageNumber: action.payload.newProgramCounter, 
+                virtualPageNumber: newVirtualPageNumber, 
                 pageFrameNumber: newPfn,
                 offset: newOffset}};
         case "EXECUTE_INSTRUCTION":

@@ -30,6 +30,7 @@ export function App() {
 
     const memory = machineState.memory;
     const cpu = machineState.cpu;
+    const mmu = machineState.mmu;
 
     // derived memory view used for more convenient parsing of data and for the UI view
     const freeList = useMemo(() => {
@@ -69,7 +70,7 @@ export function App() {
                 selectedVirtualAddress={selectedVirtualAddress}
                 setSelectedVirtualAddress={setSelectedVirtualAddress}/>
 
-                <MmuCard />
+                <MmuCard mmu={mmu}/>
 
                 <MemoryCard className="row-span-2" 
                 processControlBlocks={processControlBlocks} 
