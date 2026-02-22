@@ -90,7 +90,7 @@ export function VirtualMemory(
                         }}
                         className={`border-l-2 ${
                             isSelected
-                                ? "border-l-primary bg-primary/10 ring-1 ring-primary hover:bg-primary/10"
+                                ? "bg-primary/30 hover:bg-primary/30"
                                 : "border-l-transparent"
                         } ${isProgramCounter && processColorClasses ? processColorClasses.pcRow : isProgramCounter ? "bg-emerald-100/60 hover:bg-emerald-100/70" : "cursor-pointer"}`}>
                         <TableCell className={`font-mono ${processColorClasses?.cellStrong ?? processColorClasses?.cell ?? ""}`}>
@@ -98,7 +98,7 @@ export function VirtualMemory(
                                 <span>{virtualAddress}</span>
                                 {isSelected && (
                                     <span className={`text-[10px] uppercase tracking-wide rounded px-1 py-0.5 
-                                    ${processColorClasses?.selectedBadge ?? "bg-primary/30 text-primary"}`}>
+                                    ${processColorClasses?.selectedBadge ?? "bg-primary/15 text-primary"}`}>
                                         Selected
                                     </span>
                                 )}

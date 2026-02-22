@@ -44,7 +44,6 @@ export const PROCESS_COLOR_CLASSES = [
     {
         accent: "text-process-0",
         trigger: "bg-process-0",
-        table: "bg-process-0/6",
         cell: "bg-process-0/30",
         cellStrong: "bg-process-0/20",
         ring: "ring-process-0",
@@ -57,9 +56,8 @@ export const PROCESS_COLOR_CLASSES = [
     {
         accent: "text-process-1",
         trigger: "bg-process-1",
-        table: "bg-process-1/6",
         cell: "bg-process-1/30",
-        cellStrong: "bg-process-1/30",
+        cellStrong: "bg-process-1/20",
         ring: "ring-process-1",
         runningBadge: "text-process-1 bg-process-1/15",
         hoverHighlight: "ring-1 ring-process-1/30 bg-process-1/10",
@@ -70,9 +68,8 @@ export const PROCESS_COLOR_CLASSES = [
     {
         accent: "text-process-2",
         trigger: "bg-process-2",
-        table: "bg-process-2/6",
         cell: "bg-process-2/30",
-        cellStrong: "bg-process-2/30",
+        cellStrong: "bg-process-2/20",
         ring: "ring-process-2",
         runningBadge: "text-process-2 bg-process-2/15",
         hoverHighlight: "ring-1 ring-process-2/30 bg-process-2/10",
@@ -83,7 +80,6 @@ export const PROCESS_COLOR_CLASSES = [
     {
         accent: "text-process-3",
         trigger: "bg-process-3",
-        table: "bg-process-3/6",
         cell: "bg-process-3/30",
         cellStrong: "bg-process-3/30",
         ring: "ring-process-3",

@@ -73,11 +73,11 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                         className="w-12 flex-none text-center font-semibold
                         [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
-                    <Button variant="outline" size="icon"
+                    <Button variant="outline" size="icon" className="cursor-pointer"
                     onMouseDown={() => setOperand((prev) => Math.min(31, prev + 1))}>
                         <PlusIcon />
                     </Button>
-                    <Button variant="outline" size="icon"
+                    <Button variant="outline" size="icon" className="cursor-pointer"
                     onMouseDown={() => setOperand((prev) => Math.max(0, prev - 1))}>
                         <MinusIcon />
                     </Button>

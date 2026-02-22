@@ -76,9 +76,9 @@ export function MemoryCard({
                     </AccordionTrigger>
                     <AccordionContent className="text-sm">
                         <Table
-                            className={`text-sm w-full table-fixed min-h-[17rem] ${getProcessColorClasses(ownerPid)?.table ?? ""}`}
+                            className={`text-sm w-full table-fixed min-h-[17rem]`}
                         >
-                        <TableHeader>
+                        <TableHeader className={`${getProcessColorClasses(ownerPid)?.cellStrong ?? ""}`}>
                             <TableRow>
                                 <TableHead className="w-[100px]">Phys. Addr.</TableHead>
                                 <TableHead className="text-right">Content</TableHead>

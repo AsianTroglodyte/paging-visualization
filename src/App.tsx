@@ -71,7 +71,7 @@ export function App() {
                 processControlBlocks={processControlBlocks}
                 runningPid={cpu.kind === "running" ? cpu.runningPid : null}
             />
-            <SidebarTrigger className="" size="lg" />
+            <SidebarTrigger className="cursor-pointer" size="lg" />
 
             <div className="py-10  pl-1 w-full h-full flex flex-3 flex items-start gap-4">
 
