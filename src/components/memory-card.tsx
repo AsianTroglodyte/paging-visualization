@@ -117,7 +117,7 @@ export function MemoryCard({
                 })}
             </Accordion>
 
-            <Table className="text-base">
+            {/* <Table className="text-base">
                 <TableHeader>
                 <TableRow>
                     <TableHead className="w-[100px]">Phys. Addr.</TableHead>
@@ -140,7 +140,7 @@ export function MemoryCard({
                     );
                 })}
                 </TableBody>
-            </Table>
+            </Table> */}
         </CardContent>
     </Card>
     )

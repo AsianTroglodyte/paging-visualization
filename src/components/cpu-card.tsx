@@ -34,10 +34,10 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                 </h2>
             </CardDescription>
             {/* Registers */}
-            <div className={`rounded-md border p-3 ${processColors ? processColors.cell : "bg-muted/50"}`}>
+            <div className={`rounded-md border p-3 ${processColors ? processColors.trigger : "bg-muted/50"}`}>
                 <h2 className="text-base font-semibold">PID {isIdle ? "—" : cpu.runningPid} Registers:</h2>
                 <ul className="text-base font-mono list-disc list-inside space-y-0.5">
-                    <li>PC: {isIdle ? "-" : cpu.programCounter}</li>
+                    <li>Program Counter: {isIdle ? "-" : cpu.programCounter}</li>
                     <li>Page Table Base: {isIdle ? "-" : cpu.pageTableBase}</li>
                     <li>Accumulator: {isIdle ? "-" : cpu.accumulator}</li>
                     <li>Current Instruction: {isIdle ? "-" : cpu.currentInstructionRaw}</li>

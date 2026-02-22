@@ -10,7 +10,6 @@ export function MmuCard({mmu}: {mmu: MmuState}) {
     const vpnArray = new Array(3).fill("");
     const vpnStringUnpadded = virtualPageNumber.toString(2);
     for (let i = 2; i > (2 - vpnStringUnpadded.length); i--) {
-        console.log(`vpnStringUnpadded[${2 - i}]: `, vpnStringUnpadded[2 - i]);
         vpnArray[i] = vpnStringUnpadded[2 - i];
     }
 

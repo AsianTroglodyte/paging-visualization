@@ -128,7 +128,9 @@ export function SidebarHelpTab() {
           <AccordionContent>
             <div className="w-full p-2 flex flex-col gap-3 text-sm text-muted-foreground">
               <p>
-                <strong>Page tables</strong> live in page 0. Each process has a small page table; each entry is one byte: a <strong>Page Table Entry (PTE)</strong>.
+                <strong>Page tables</strong> live in page 0. Each process has a small page table; each entry is one byte: a 
+                <strong>Page Table Entry (PTE)</strong>.
+                <i>The index of the PTE is the virtual page number.</i>
               </p>
               <p className="font-medium text-foreground">PTE layout (one byte)</p>
               <ul className="list-disc list-inside space-y-1">
