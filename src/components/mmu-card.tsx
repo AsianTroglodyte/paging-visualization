@@ -1,7 +1,24 @@
+import type { MmuState } from "@/simulation/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"    
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 
-export function MmuCard() {
+export function MmuCard({mmu}: {mmu: MmuState}) {
+
+    const { virtualPageNumber, pageFrameNumber, offset } = mmu;
+
+    // vpnArray is specially formatted if thre 
+    const vpnArray = new Array(3).fill("");
+    const vpnStringUnpadded = virtualPageNumber.toString(2);
+    for (let i = 2; i > (2 - vpnStringUnpadded.length); i--) {
+        vpnArray[i] = vpnStringUnpadded[2 - i];
+    }
+
+
+
+
+    const pfnString = pageFrameNumber.toString(2).padStart(3, "0");
+    const offsetString = offset.toString(2).padStart(3, "0");
+
     return (
         <Card size="sm" className="bg-black">
             <CardHeader>
@@ -13,70 +30,103 @@ export function MmuCard() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="">
-                <div className="grid grid-cols-6 grid-rows-4">
-                    <div className="text-sm flex justify-center font-semibold col-span-3">VPN</div>
-                    <div className="text-sm flex justify-center font-semibold col-span-3">offset</div>
+                <div className="grid grid-cols-[2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem] grid-rows-[auto_1.5rem_3rem_3rem_3rem_1.5rem] items-start">
+                    <div className="flex flex-col h-full justify-between items-center h-7 col-span-2 row-span-7">
+                        <div className="text-sm text-muted-foreground 
+                        font-medium flex items-center pr-2 justify-end pt-5">
+                            Virtual address
+                        </div>
+                        <div className="text-sm text-muted-foreground 
+                        font-medium flex items-center pr-2 justify-end pb-5">
+                            Physical address
+                        </div>
+                    </div>
+                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">VPN</div>
+                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">offset</div>
+
+                    {vpnArray.map((bit, index) => {
+                        return (<div key={index} 
+                            className={
+                            bit === "" 
+                            ? "invisible" 
+                            :`text-base flex justify-center items-center font-semibold border`}>
+                                {bit}
+                            </div>)
+                    })}
+
+                    {offsetString.split("").map((bit, index) => {
+                        return (<div key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</div>)
+                    })}
+
+                    {/* VPN Arrow Divs. created based on vpnArray*/}
+                    {vpnArray.map((bit, index) => {
+                        return ( 
+                        <div key={index} className={
+                            bit === "" 
+                            ? "invisible" 
+                            :"flex justify-center items-center"}>
+                            <svg viewBox="0 0 24 72" className="text-foreground" fill="currentColor">
+                                <line x1="12" y1="4" x2="12" y2="17" stroke="currentColor" 
+                                strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                                <path d="M12 23 L9 16 L15 16Z" />
+                            </svg>
+                        </div>)
+                    })}
+                    
+                    {/* VPN Arrow Divs */}
+                    <div className="flex justify-center items-center row-span-3">
+                        <svg viewBox="0 0 24 80" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="70" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 77 L9 70 L15 70 Z" />
+                        </svg>
+                    </div>
+                    <div className="flex justify-center items-center row-span-3">
+                        <svg viewBox="0 0 24 80" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="70" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 77 L9 70 L15 70 Z" />
+                        </svg>
+                    </div>                    
+                    <div className="flex justify-center items-center row-span-3">
+                        <svg viewBox="0 0 24 80" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="70" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 77 L9 70 L15 70 Z" />
+                        </svg>
+                    </div>
+
+                    <div className={`text-base text-center flex justify-center font-semibold 
+                    col-span-3 row border`}>Address Translation</div>
 
 
+                    <div className="flex justify-center items-center ">
+                        <svg viewBox="0 0 24 72" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 23 L9 16 L15 16Z" />
+                        </svg>
+                    </div>
+                    <div className="flex justify-center items-center ">
+                        <svg viewBox="0 0 24 72" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 23 L9 16 L15 16Z" />
+                        </svg>
+                    </div>
+                    <div className="flex justify-center items-center ">
+                        <svg viewBox="0 0 24 72" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 23 L9 16 L15 16Z" />
+                        </svg>
+                    </div>
 
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">0</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">0</div>
+                    {pfnString.split("").map((bit, index) => {
+                        return (<div key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</div>)
+                    })}
 
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">0</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
+                    {offsetString.split("").map((bit, index) => {
+                        return (<div key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</div>)
+                    })}
 
-
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-
-                    <div className="text-sm text-center flex justify-center font-semibold col-span-3">Address Translation</div>
-
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-
-
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold">|</div>
-
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
-
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">0</div>
-                    <div className="text-sm flex justify-center items-center h-8 w-8 font-semibold border">1</div>
+                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">PFN</div>
+                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">offset</div>
                 </div>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead rowSpan={2}> VPN</TableHead>
-                            <TableHead rowSpan={3}>offset</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        <TableRow>
-                            <TableCell>0</TableCell>
-                            <TableCell>0</TableCell>
-                            <TableCell>0</TableCell>
-                            <TableCell>1</TableCell>
-                            <TableCell>1</TableCell>
-                            <TableCell>1</TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
             </CardContent>
         </Card>
     )

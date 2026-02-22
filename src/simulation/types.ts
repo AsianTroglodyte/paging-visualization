@@ -69,10 +69,16 @@ export type MmuState = {
   offset: number;
 }
 
+export type PageFault = {
+  message: string;
+  virtualAddress?: number;
+};
+
 export type MachineState = {
   memory: number[];
   cpu: CpuState;
   mmu: MmuState;
+  pageFault: PageFault | null;
 };
 
 export type MachineAction =
@@ -99,6 +105,10 @@ export type MachineAction =
   | {
     type: "EXECUTE_INSTRUCTION";
     payload: { opcode: number, operand: number };
+  }
+  | {
+    type: "CLEAR_PAGE_FAULT";
+    payload?: never;
   }
 
 export type MemoryAction = MachineAction;

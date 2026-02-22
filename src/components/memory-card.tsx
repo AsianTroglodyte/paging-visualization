@@ -75,9 +75,8 @@ export function MemoryCard({
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="text-sm">
-                        <div className="min-h-[17rem]">
                         <Table
-                            className={`text-sm w-full table-fixed ${getProcessColorClasses(ownerPid)?.table ?? ""}`}
+                            className={`text-sm w-full table-fixed min-h-[17rem] ${getProcessColorClasses(ownerPid)?.table ?? ""}`}
                         >
                         <TableHeader>
                             <TableRow>
@@ -112,14 +111,13 @@ export function MemoryCard({
                         })}
                         </TableBody>
                         </Table>
-                        </div>
                     </AccordionContent>
                 </AccordionItem>
                 );
                 })}
             </Accordion>
 
-            <Table className="text-base">
+            {/* <Table className="text-base">
                 <TableHeader>
                 <TableRow>
                     <TableHead className="w-[100px]">Phys. Addr.</TableHead>
@@ -142,7 +140,7 @@ export function MemoryCard({
                     );
                 })}
                 </TableBody>
-            </Table>
+            </Table> */}
         </CardContent>
     </Card>
     )
@@ -174,6 +172,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
         </div>
         </AccordionTrigger>
         <AccordionContent className="text-sm">
+            <div className="min-h-[17rem]">
             <Table className="text-sm w-full table-fixed">
             <TableHeader>
                 <TableRow>
@@ -229,6 +228,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                 })}
                 </TableBody>
             </Table>
+            </div>
         </AccordionContent>
     </AccordionItem>
     )
@@ -244,7 +244,7 @@ function osPage1Accordion(memory: number[]) {
         </div>
         </AccordionTrigger>
         <AccordionContent className="text-sm">
-        {/* Byte table here */}
+        <div className="min-h-[17rem]">
             <Table className="text-sm w-full table-fixed">
                 <TableHeader>
                     <TableRow>
@@ -296,6 +296,7 @@ function osPage1Accordion(memory: number[]) {
                 })}
                 </TableBody>
             </Table>
+        </div>
         </AccordionContent>
     </AccordionItem>
     )
