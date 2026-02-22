@@ -31,14 +31,14 @@ export function MmuCard({mmu}: {mmu: MmuState}) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="">
-                <div className="grid grid-cols-[5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem] grid-rows-[auto_1.5rem_3rem_3rem_3rem] items-start">
-                    <div className="flex flex-col h-full justify-between items-center h-7 col-span-1 row-span-6">
+                <div className="grid grid-cols-[2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem] grid-rows-[auto_1.5rem_3rem_3rem_3rem_1.5rem] items-start">
+                    <div className="flex flex-col h-full justify-between items-center h-7 col-span-2 row-span-7">
                         <div className="text-sm text-muted-foreground 
                         font-medium flex items-center pr-2 justify-end pt-5">
                             Virtual address
                         </div>
                         <div className="text-sm text-muted-foreground 
-                        font-medium flex items-center pr-2 justify-end">
+                        font-medium flex items-center pr-2 justify-end pb-5">
                             Physical address
                         </div>
                     </div>
@@ -124,6 +124,9 @@ export function MmuCard({mmu}: {mmu: MmuState}) {
                     {offsetString.split("").map((bit, index) => {
                         return (<div key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</div>)
                     })}
+
+                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">PFN</div>
+                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">offset</div>
                 </div>
             </CardContent>
         </Card>
