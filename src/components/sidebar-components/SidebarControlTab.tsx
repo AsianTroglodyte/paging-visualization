@@ -1,6 +1,7 @@
-import { SidebarContent, SidebarGroup, SidebarHeader } from "@/components/ui/sidebar";
+import { SidebarGroup, SidebarHeader } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { ProcessControlBlocks, MemoryAction } from "@/simulation/types";
 import { getProcessColorClasses } from "@/simulation/selectors";
 
@@ -77,23 +78,30 @@ export function SidebarControlTab({
           </div>
         )}
       </div>
-      <SidebarHeader>
-        <h1 className="text-xl">Basics</h1>
-      </SidebarHeader>
-      <SidebarContent className="p-2">
-        <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-          <li>Add processes by clicking the "Add Process" button.</li>
-          <li>Click on a process to context switch to it.</li>
-          <li>Click on the "Execute" button to execute the instruction at the program counter.</li>
-          <li>click on any address in virtual memory to select it.</li>
-          <li>Click on the "Fetch" button to fetch the instruction at the selected address.</li>
-          <li>Watch for the changes in the CPU, MMU, Memory, and Virtual Memory</li>
-          <li>Click on the "Execute" button to execute the instruction at the selected address.</li>
-          <li>Watch for changes especially if the instruction accesses memory</li>
-          <li>??!?!?!?</li>
-          <li>profit</li>
-        </ol>
-      </SidebarContent>
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="how-to-use" className="border-b-0">
+          <AccordionTrigger className="py-2 text-base font-medium hover:no-underline">
+            How to use
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="w-full p-2">
+              <p className="text-sm">Pro tip: hover over bytes in memory when a process is running.</p>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground mt-2">
+                <li>Add processes by clicking the "Add Process" button.</li>
+                <li>Click on a process to context switch to it.</li>
+                <li>Click on the "Execute" button to execute the instruction at the program counter.</li>
+                <li>Click on any address in virtual memory to select it.</li>
+                <li>Click on the "Fetch" button to fetch the instruction at the selected address.</li>
+                <li>Watch for the changes in the CPU, MMU, Memory, and Virtual Memory</li>
+                <li>Click on the "Execute" button to execute the instruction at the selected address.</li>
+                <li>Watch for changes especially if the instruction accesses memory (again).</li>
+                <li>??!?!?!?</li>
+                <li>Profit.</li>
+              </ol>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </SidebarGroup>
   );
 }

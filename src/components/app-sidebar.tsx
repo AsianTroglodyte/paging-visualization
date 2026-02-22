@@ -24,7 +24,7 @@ export function AppSidebar({
         <Tabs defaultValue="Control" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="Control">Control</TabsTrigger>
-            <TabsTrigger value="Help">Help</TabsTrigger>
+            <TabsTrigger value="Help">Learn</TabsTrigger>
             <TabsTrigger value="Settings">Settings</TabsTrigger>
           </TabsList>
 
