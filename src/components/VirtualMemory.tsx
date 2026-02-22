@@ -49,11 +49,10 @@ export function VirtualMemory(
         </h2>
         <Accordion type="single" collapsible className="w-full">
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
-            <AccordionItem key={vpn} value={`vpn-${vpn}`} className={`${processColorClasses?.border ?? ""} ${isRunning && processColorClasses ? ` ${processColorClasses.ring}` : ""}`}>
+            <AccordionItem key={vpn} value={`vpn-${vpn}`} >
                 <AccordionTrigger className={`hover:no-underline text-sm px-2 
                     ${isRunning && processColorClasses ? `
-                    ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColorClasses?.table ?? "")}
-                    ${isRunning && processColorClasses ? ` ${processColorClasses.ring}` : ""}`}>
+                    ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : ""}`}>
                     <div className="flex justify-between w-full pr-4 items-center gap-2">
                         <div className={`font-mono ${isRunning && processColorClasses ? "text-white" : ""}`}>VPN {vpn}</div>
                         <div className={`flex items-center gap-2 ${isRunning && processColorClasses ? "text-white" : (processColorClasses?.accent ?? "text-muted-foreground")}`}>
@@ -67,8 +66,8 @@ export function VirtualMemory(
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="text-sm">
-                    <Table className={`text-sm w-full table-fixed ${processColorClasses?.table ?? ""}`}>
-                    <TableHeader>
+                    <Table className={`text-sm w-full table-fixed`}>
+                    <TableHeader className={`${processColorClasses?.cellStrong ?? ""}`}>
                         <TableRow>
                             <TableHead className="w-[100px]">Virt. Addr.</TableHead>
                             <TableHead className="text-right">Content</TableHead>
@@ -93,7 +92,7 @@ export function VirtualMemory(
                                 ? "bg-primary/30 hover:bg-primary/30"
                                 : "border-l-transparent"
                         } ${isProgramCounter && processColorClasses ? processColorClasses.pcRow : isProgramCounter ? "bg-emerald-100/60 hover:bg-emerald-100/70" : "cursor-pointer"}`}>
-                        <TableCell className={`font-mono ${processColorClasses?.cellStrong ?? processColorClasses?.cell ?? ""}`}>
+                        <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>
                             <div className="flex items-center gap-2">
                                 <span>{virtualAddress}</span>
                                 {isSelected && (
@@ -110,7 +109,7 @@ export function VirtualMemory(
                                 )}
                             </div>
                         </TableCell>
-                        <TableCell className={`font-mono text-right ${processColorClasses?.cellStrong ?? processColorClasses?.cell ?? ""}`}>
+                        <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
                         {vpn === 0 && (
                         <>
                             <span className={`ml-2 ${isProgramCounter ? "text-white" : "text-muted-foreground"}`}>

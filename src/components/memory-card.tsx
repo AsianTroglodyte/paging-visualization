@@ -78,7 +78,7 @@ export function MemoryCard({
                         <Table
                             className={`text-sm w-full table-fixed min-h-[17rem]`}
                         >
-                        <TableHeader className={`${getProcessColorClasses(ownerPid)?.cellStrong ?? ""}`}>
+                        <TableHeader className={`${processColors?.cellStrong ?? ""}`}>
                             <TableRow>
                                 <TableHead className="w-[100px]">Phys. Addr.</TableHead>
                                 <TableHead className="text-right">Content</TableHead>
@@ -90,8 +90,8 @@ export function MemoryCard({
                             const processColorClasses = getProcessColorClasses(ownerPid);
                             return (
                             <TableRow key={index}>
-                                <TableCell className={`font-mono ${isOwned ? processColorClasses?.cell ?? "" : ""}`}>{pfn * 8 + index}</TableCell>
-                                <TableCell className={`font-mono text-right ${isOwned ? processColorClasses?.cell ?? "" : ""}`}>
+                                <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>{pfn * 8 + index}</TableCell>
+                                <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
                                 <HoverCard openDelay={100} closeDelay={100}>
                                     <HoverCardTrigger asChild>
                                         <span
