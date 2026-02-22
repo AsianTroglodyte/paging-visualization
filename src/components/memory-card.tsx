@@ -60,7 +60,7 @@ export function MemoryCard({
                     <AccordionTrigger
                         className={`hover:no-underline text-sm px-2 
                         ${isRunning && processColors ? `${processColors.trigger} 
-                        text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColors?.table ?? "")}
+                        text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColors?.cellStrong ?? processColors?.cell ?? "")}
                         ${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
                         <div className="flex justify-between w-full pr-4 items-center gap-2">
                         <span className={isRunning && processColors ? "text-white" : ""}>PFN {pfn}</span>
@@ -188,7 +188,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                 const pteOwnerPid = pteOwnerByIndex(index);
                 let processCellClass = getProcessColorClasses(pteOwnerPid)?.cell ?? "";
                 if (isFreeListByte) {
-                    processCellClass = "bg-primary/10";
+                    processCellClass = "bg-primary/30";
                 }
                 return (
                 <TableRow key={index}>
@@ -197,7 +197,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                     </TableCell>
                     <TableCell className={`font-mono text-right ${processCellClass}`}>
                     {isFreeListByte && (
-                        <span className="text-muted-foreground mr-2 ">Free List</span>
+                        <span className="text-muted-foreground mr-2">Free List</span>
                     )}
                     {pteOwnerPid != null && (
                         <span className="text-muted-foreground mr-2">Process {pteOwnerPid}</span>
@@ -207,8 +207,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                             <span
                                 className={`inline-block leading-4 cursor-default font-mono ${
                                     isOwned ? "underline decoration-dotted underline-offset-2" : ""
-                                }`}
-                            >
+                                }`}>
                                 {byte.toString(2).padStart(8, "0")}
                             </span>
                         </HoverCardTrigger>

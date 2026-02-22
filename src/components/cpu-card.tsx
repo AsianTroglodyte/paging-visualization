@@ -53,12 +53,12 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
         <CardContent className="flex flex-col gap-2">
             {isIdle ? "" : 
             <>
-            <Field orientation="horizontal" className="flex flex-shrink-1  font-semibold">
+            <Field orientation="horizontal" className="flex flex-shrink-1 font-semibold ">
                 <span className="text-lg whitespace-nowrap ">
                     {OPCODE_NAMES[(cpu.currentInstructionRaw >> 5)]}
                 </span>
                 
-                <ButtonGroup className="flex">
+                <ButtonGroup className="flex bg-muted/50">
                     <Input
                         type="number"
                         min={0}

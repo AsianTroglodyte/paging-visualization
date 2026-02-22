@@ -90,25 +90,27 @@ export function VirtualMemory(
                         }}
                         className={`border-l-2 ${
                             isSelected
-                                ? "border-l-primary bg-primary/10 ring-1 ring-primary/40 hover:bg-primary/10"
+                                ? "border-l-primary bg-primary/10 ring-1 ring-primary hover:bg-primary/10"
                                 : "border-l-transparent"
                         } ${isProgramCounter && processColorClasses ? processColorClasses.pcRow : isProgramCounter ? "bg-emerald-100/60 hover:bg-emerald-100/70" : "cursor-pointer"}`}>
-                        <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>
+                        <TableCell className={`font-mono ${processColorClasses?.cellStrong ?? processColorClasses?.cell ?? ""}`}>
                             <div className="flex items-center gap-2">
                                 <span>{virtualAddress}</span>
                                 {isSelected && (
-                                    <span className="text-[10px] uppercase tracking-wide rounded px-1 py-0.5 bg-primary/15 text-primary">
+                                    <span className={`text-[10px] uppercase tracking-wide rounded px-1 py-0.5 
+                                    ${processColorClasses?.selectedBadge ?? "bg-primary/30 text-primary"}`}>
                                         Selected
                                     </span>
                                 )}
                                 {isProgramCounter && (
-                                    <span className={`text-[10px] uppercase tracking-wide rounded px-1 py-0.5 ${processColorClasses?.pcBadge ?? "bg-emerald-200 text-emerald-900"}`}>
+                                    <span className={`text-[10px] uppercase tracking-wide rounded px-1 py-0.5 
+                                    ${processColorClasses?.pcBadge ?? "bg-emerald-200 text-emerald-900"}`}>
                                         PC
                                     </span>
                                 )}
                             </div>
                         </TableCell>
-                        <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
+                        <TableCell className={`font-mono text-right ${processColorClasses?.cellStrong ?? processColorClasses?.cell ?? ""}`}>
                         {vpn === 0 && (
                         <>
                             <span className={`ml-2 ${isProgramCounter ? "text-white" : "text-muted-foreground"}`}>
