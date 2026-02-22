@@ -164,6 +164,12 @@ export function getAllProcessVirtualMemory(memory: number[]): VirtualPage[][] {
     return processControlBlocks.map(pcb => getProcessVirtualMemory(memory, pcb.processID));
 }
 
+/** Maps virtual address to physical frame number for a process. */
+export function getPfnFromVirtualAddress(memory: number[], processID: number, virtualAddress: number): number {
+    const pageTable = getPageTable(memory, processID);
+    const vpn = Math.floor(virtualAddress / 8);
+    return pageTable[vpn].pfn;
+}
 
 /** Fetches the byte at a virtual address for a process. */
 export function getByteAtVirtualAddress(
@@ -175,18 +181,8 @@ export function getByteAtVirtualAddress(
         throw new Error(`Virtual address ${virtualAddress} is out of bounds. Must be between 0 and 15.`);
     }
 
-    console.log("virtualAddress: ", virtualAddress);
-
-    const pageTable = getPageTable(memory, processID);
-    // index of PTE = vpn
-    const vpn = Math.floor(virtualAddress / 8);
+    const pfn = getPfnFromVirtualAddress(memory, processID, virtualAddress);
     const offset = virtualAddress % 8;
-
-    console.log("pageTable: ", pageTable);
-    console.log("vpn: ", vpn);
-    console.log("offset: ", offset);
-
-    const pfn = pageTable[vpn].pfn; 
     return memory[pfn * 8 + offset];
   }
 
@@ -199,6 +195,6 @@ export function decodeInstruction(instruction: number): { opcode: string, operan
 
 export function getProcessColorClasses(pid: number | null) {
     if (pid === null) return null;
-    return PROCESS_COLOR_CLASSES[Math.abs(pid) % PROCESS_COLOR_CLASSES.length];
+    return PROCESS_COLOR_CLASSES[pid];
 }
 

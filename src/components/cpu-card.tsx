@@ -25,7 +25,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
      
 
     return (
-    <Card size="default" className="w-75">
+    <Card size="default" className="w-75 bg-black">
         <CardHeader>
             <CardTitle >
                 <h1 className="text-4xl font-semibold">CPU</h1>

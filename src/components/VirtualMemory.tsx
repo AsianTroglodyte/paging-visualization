@@ -37,7 +37,7 @@ export function VirtualMemory(
 
 
     return (
-    <Card className="w-74">
+    <Card className="w-74 bg-black">
     <CardHeader>
         <CardTitle>
             <h1 className="text-4xl">Virtual Memory</h1>

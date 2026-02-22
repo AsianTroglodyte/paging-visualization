@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 
 export function MmuCard() {
     return (
-        <Card size="sm">
+        <Card size="sm" className="bg-black">
             <CardHeader>
                 <CardTitle className="text-center mb-2">
                     <h1 className="text-4xl font-semibold">MMU  </h1>
