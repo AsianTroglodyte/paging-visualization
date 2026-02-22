@@ -50,6 +50,8 @@ export const PROCESS_COLOR_CLASSES = [
         ring: "ring-process-0",
         runningBadge: "text-process-0 bg-process-0/15",
         hoverHighlight: "ring-1 ring-process-0/30 bg-process-0/10",
+        pcRow: "bg-process-0/20 hover:bg-process-0/25",
+        pcBadge: "bg-process-0/30",
     },
     {
         accent: "text-process-1",
@@ -60,6 +62,8 @@ export const PROCESS_COLOR_CLASSES = [
         ring: "ring-process-1",
         runningBadge: "text-process-1 bg-process-1/15",
         hoverHighlight: "ring-1 ring-process-1/30 bg-process-1/10",
+        pcRow: "bg-process-1/20 hover:bg-process-1/25",
+        pcBadge: "bg-process-1/30",
     },
     {
         accent: "text-process-2",
@@ -70,6 +74,8 @@ export const PROCESS_COLOR_CLASSES = [
         ring: "ring-process-2",
         runningBadge: "text-process-2 bg-process-2/15",
         hoverHighlight: "ring-1 ring-process-2/30 bg-process-2/10",
+        pcRow: "bg-process-2/20 hover:bg-process-2/25",
+        pcBadge: "bg-process-2/30",
     },
     {
         accent: "text-process-3",
@@ -80,6 +86,8 @@ export const PROCESS_COLOR_CLASSES = [
         ring: "ring-process-3",
         runningBadge: "text-process-3 bg-process-3/15",
         hoverHighlight: "ring-1 ring-process-3/30 bg-process-3/10",
+        pcRow: "bg-process-3/20 hover:bg-process-3/25",
+        pcBadge: "bg-process-3/30 text-process-3",
     },
   ];
 

@@ -1,7 +1,8 @@
 import {CpuCard}  from "./components/cpu-card";
 import MmuCard from "./components/mmu-card";
 import { MemoryCard } from "./components/memory-card";
-import { useMemo, useReducer, useState} from "react";
+import { useMemo, useReducer, useState, useEffect } from "react";
+import { Toaster, toast } from "sonner";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { machineReducer } from "./simulation/machine-reducer";
@@ -23,7 +24,8 @@ export function App() {
                 virtualPageNumber: 0,
                 pageFrameNumber: 0,
                 offset: 0,
-            }
+            },
+            pageFault: null,
         };
     });
 
@@ -52,10 +54,18 @@ export function App() {
 
     const [selectedVirtualAddress, setSelectedVirtualAddress] = useState<number | null>(null);
 
-
+    useEffect(() => {
+        const fault = machineState.pageFault;
+        if (fault) {
+            const detail = fault.virtualAddress != null ? ` (address ${fault.virtualAddress})` : "";
+            toast.error(`Page fault${detail}`, { description: fault.message });
+            machineStateDispatch({ type: "CLEAR_PAGE_FAULT" });
+        }
+    }, [machineState.pageFault]);
 
     return (
         <SidebarProvider>
+            <Toaster richColors position="top-center" />
             <AppSidebar 
                 machineStateDispatch={machineStateDispatch}
                 processControlBlocks={processControlBlocks}
