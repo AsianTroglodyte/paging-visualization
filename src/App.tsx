@@ -79,6 +79,13 @@ export function App() {
                 machineStateDispatch={machineStateDispatch} 
                 selectedVirtualAddress={selectedVirtualAddress}
                 setSelectedVirtualAddress={setSelectedVirtualAddress}/>
+                
+                <VirtualMemory 
+                memory={memory} 
+                processControlBlocks={processControlBlocks}
+                selectedVirtualAddress={selectedVirtualAddress}
+                setSelectedVirtualAddress={setSelectedVirtualAddress}
+                cpu={cpu} />
 
                 <MmuCard mmu={mmu}/>
 
@@ -88,12 +95,6 @@ export function App() {
                 memory={memory}
                 runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
 
-                <VirtualMemory 
-                memory={memory} 
-                processControlBlocks={processControlBlocks}
-                selectedVirtualAddress={selectedVirtualAddress}
-                setSelectedVirtualAddress={setSelectedVirtualAddress}
-                cpu={cpu} />
             </div>
         </SidebarProvider>
     )

@@ -120,8 +120,6 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
             </ButtonGroup>
             </>}
         </CardContent>
-        <CardFooter className="mt-4"> 
-        </CardFooter>
     </Card>
     )
 }

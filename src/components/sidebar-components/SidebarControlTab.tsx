@@ -43,11 +43,11 @@ export function SidebarControlTab({
                 <div
                   key={pcb.processID}
                   className={`flex items-center justify-between p-2 rounded cursor-pointer
-                    transition-colors border
+                    transition-colors 
                     ${processColors?.border ?? "border-transparent"}
                     ${isRunning && processColors
                       ? `${processColors.trigger ?? ""} text-white`
-                      : `${processColors?.table ?? "bg-secondary"} ${processColors?.accent ?? ""} hover:opacity-90`
+                      : `${processColors?.cellStrong} ${processColors?.accent} hover:opacity-90 `
                     }`}
                   onMouseDown={() => {
                     machineStateDispatch({ type: "CONTEXT_SWITCH", payload: { processID: pcb.processID } });
