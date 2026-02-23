@@ -126,6 +126,13 @@ export function App() {
                 selectedVirtualAddress={selectedVirtualAddress}
                 setSelectedVirtualAddress={setSelectedVirtualAddress}
                 className="" />
+                
+                <VirtualMemory 
+                memory={memory} 
+                processControlBlocks={processControlBlocks}
+                selectedVirtualAddress={selectedVirtualAddress}
+                setSelectedVirtualAddress={setSelectedVirtualAddress}
+                cpu={cpu} />
 
                 <MmuCard mmu={mmu} className="" />
 
@@ -135,13 +142,15 @@ export function App() {
                 memory={memory}
                 runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
 
-                <VirtualMemory 
-                memory={memory} 
-                processControlBlocks={processControlBlocks}
-                selectedVirtualAddress={selectedVirtualAddress}
-                setSelectedVirtualAddress={setSelectedVirtualAddress}
-                cpu={cpu} />
                 </div>
+            </div>
+
+
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 font-bold
+            flex items-center justify-center bg-black text-white rounded-b-[16px] primary-color"
+            style={{ clipPath: "url(#paging-bar-clip)" }}
+            >
+                <h1 className="text-base">Paging</h1>
             </div>
         </SidebarProvider>
     )

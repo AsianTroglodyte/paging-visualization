@@ -80,6 +80,20 @@
     --sidebar-ring: oklch(0.553 0.013 58.071);
 }
 
+@theme {
+    --animate-accordion-down-21: accordion-down-21 200ms ease-out;
+    --animate-accordion-up-21: accordion-up-21 200ms ease-out;
+
+    @keyframes accordion-down-21 {
+        from { height: 0; }
+        to { height: 21rem; }
+    }
+    @keyframes accordion-up-21 {
+        from { height: 21rem; }
+        to { height: 0; }
+    }
+}
+
 @theme inline {
     --font-sans: 'JetBrains Mono Variable', monospace;
     --color-sidebar-ring: var(--sidebar-ring);

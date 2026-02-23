@@ -61,14 +61,14 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="data-open:animate-accordion-down data-closed:animate-accordion-up text-xs overflow-hidden"
+      className={cn(
+        "data-open:animate-accordion-down data-closed:animate-accordion-up text-xs overflow-hidden",
+        className
+      )}
       {...props}
     >
       <div
-        className={cn(
-          "pt-0 pb-2.5 [&_a]:hover:text-foreground h-(--radix-accordion-content-height) [&_a]:underline [&_a]:underline-offset-3 [&_p:not(:last-child)]:mb-4",
-          className
-        )}
+        className="pt-0 pb-2.5 [&_a]:hover:text-foreground h-(--radix-accordion-content-height) [&_a]:underline [&_a]:underline-offset-3 [&_p:not(:last-child)]:mb-4"
       >
         {children}
       </div>
@@ -77,3 +77,8 @@ function AccordionContent({
 }
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+
+// 
+
+
+// "data-open:animate-accordion-down data-closed:animate-accordion-up text-xs overflow-hidden",

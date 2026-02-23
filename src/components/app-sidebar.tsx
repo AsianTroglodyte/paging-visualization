@@ -20,7 +20,7 @@ export function AppSidebar({
   runningPid: number | null;
 }) {
   return (
-    <Sidebar variant="floating" collapsible="offcanvas" className="z-50 ">
+    <Sidebar variant="floating" collapsible="offcanvas">
       <SidebarHeader />
       <SidebarContent className="">
         <Tabs defaultValue="Control" className="w-full">
@@ -48,7 +48,7 @@ export function AppSidebar({
         </Tabs>
       </SidebarContent>
       <SidebarFooter />
-      <SidebarTrigger className="absolute top-0 right-[-35px] cursor-pointer" size="lg" />
+      <SidebarTrigger className="absolute top-[-3px] right-[-37px] cursor-pointer bg-black" size="lg" />
     </Sidebar>
   )
 }

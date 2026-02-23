@@ -77,7 +77,7 @@ export function MemoryCard({
                         </span>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem]">
+                    <MemoryAccordionContent className="text-sm ">
                         <Table
                             className={`text-sm w-full`}
                         >
@@ -114,7 +114,7 @@ export function MemoryCard({
                         })}
                         </TableBody>
                         </Table>
-                    </AccordionContent>
+                    </MemoryAccordionContent>
                 </AccordionItem>
                 );
                 })}
@@ -174,7 +174,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
             <span className="text-muted-foreground text-sm">OS: PTs + Free List</span>
         </div>
         </AccordionTrigger>
-        <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem]">
+        <MemoryAccordionContent className="text-sm">
             <Table className="text-sm w-full">
             <TableHeader>
                 <TableRow>
@@ -229,7 +229,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                 })}
                 </TableBody>
             </Table>
-        </AccordionContent>
+        </MemoryAccordionContent>
     </AccordionItem>
     )
 }
@@ -243,7 +243,7 @@ function osPage1Accordion(memory: number[]) {
             <span className="text-muted-foreground text-sm">OS: PCBs</span>
         </div>
         </AccordionTrigger>
-        <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem]">
+        <MemoryAccordionContent className="text-sm">
             <Table className="text-sm w-full">
                 <TableHeader>
                     <TableRow>
@@ -295,7 +295,7 @@ function osPage1Accordion(memory: number[]) {
                 })}
                 </TableBody>
             </Table>
-        </AccordionContent>
+        </MemoryAccordionContent>
     </AccordionItem>
     )
 }

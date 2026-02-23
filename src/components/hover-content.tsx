@@ -205,7 +205,7 @@ export function PteHoverContent({ byte, processID }: { byte: number; processID?:
 }
 
 const PCB_BYTE0_FIELD_LIST: { bits: string; name: string; desc: string; cellIndices: number[] }[] = [
-  { bits: "7..5", name: "pageTableBase", desc: "PT offset in page 0", cellIndices: [0, 1, 2] },
+  { bits: "7..5", name: "pageTableBase", desc: "Address of page table", cellIndices: [0, 1, 2] },
   { bits: "4..1", name: "programCounter", desc: "Current instruction (4-bit)", cellIndices: [3, 4, 5, 6] },
   { bits: "0", name: "valid", desc: "PCB slot in use", cellIndices: [7] },
 ];
@@ -246,12 +246,12 @@ export function PcbByte0HoverContent({
         {cellLayout.map((cell, cellIdx) => (
           <div
             key={cellIdx}
-            className={`${cell.span === 3 ? "col-span-3" : cell.span === 4 ? "col-span-4" : "col-span-1"} border border-border/60 rounded px-0.5 py-0.5 cursor-default transition-colors ${
+            className={`${cell.span === 3 ? "col-span-3" : cell.span === 4 ? "col-span-4" : "col-span-1"} 
+            border border-border/60 rounded px-0.5 py-0.5 cursor-default transition-colors ${
               cellIdx === 0 ? "bg-muted/30" : ""
             } ${isCellHighlighted(cell.bitIndices) ? highlightClass : ""}`}
             onMouseEnter={() => setHoveredCellIndex(cell.bitIndices[0])}
-            onMouseLeave={() => setHoveredCellIndex(null)}
-          >
+            onMouseLeave={() => setHoveredCellIndex(null)}>
             {cellIdx === 0 ? "PT base" : cellIdx === 1 ? "PC" : "v"}
           </div>
         ))}
@@ -266,12 +266,12 @@ export function PcbByte0HoverContent({
         {cellLayout.map((cell, cellIdx) => (
           <div
             key={cellIdx}
-            className={`${cell.span === 3 ? "col-span-3" : cell.span === 4 ? "col-span-4" : "col-span-1"} font-medium rounded px-0.5 py-0.5 cursor-default transition-colors ${
+            className={`${cell.span === 3 ? "col-span-3" : cell.span === 4 ? "col-span-4" : "col-span-1"} 
+            font-medium rounded px-0.5 py-0.5 cursor-default transition-colors ${
               isCellHighlighted(cell.bitIndices) ? highlightClass : ""
             }`}
             onMouseEnter={() => setHoveredCellIndex(cell.bitIndices[0])}
-            onMouseLeave={() => setHoveredCellIndex(null)}
-          >
+            onMouseLeave={() => setHoveredCellIndex(null)}>
             {cell.value}
           </div>
         ))}
