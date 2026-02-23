@@ -10,6 +10,7 @@ import {
 import { getProcessColorClasses, getProcessControlBlock } from "@/simulation/selectors";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverContent, FreeListHoverContent } from "./hover-content";
+import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 
 import type { ProcessControlBlocks, Pages } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
@@ -76,9 +77,9 @@ export function MemoryCard({
                         </span>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-sm min-h-[17rem]">
+                    <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem]">
                         <Table
-                            className={`text-sm w-full table-fixed`}
+                            className={`text-sm w-full`}
                         >
                         <TableHeader className={`${processColors?.cellStrong ?? ""}`}>
                             <TableRow>
@@ -173,8 +174,8 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
             <span className="text-muted-foreground text-sm">OS: PTs + Free List</span>
         </div>
         </AccordionTrigger>
-        <AccordionContent className="text-sm min-h-[17rem]">
-            <Table className="text-sm w-full table-fixed">
+        <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem]">
+            <Table className="text-sm w-full">
             <TableHeader>
                 <TableRow>
                     <TableHead className="w-[100px]">Phys. Addr.</TableHead>
@@ -242,8 +243,8 @@ function osPage1Accordion(memory: number[]) {
             <span className="text-muted-foreground text-sm">OS: PCBs</span>
         </div>
         </AccordionTrigger>
-        <AccordionContent className="text-sm min-h-[17rem]">
-            <Table className="text-sm w-full table-fixed">
+        <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem]">
+            <Table className="text-sm w-full">
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-[100px]">Phys. Addr.</TableHead>

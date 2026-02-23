@@ -138,3 +138,21 @@
     @apply font-sans;
     }
 }
+
+@keyframes accordion-down-21 {
+  from {
+    height: 0;
+  }
+  to {
+    height: 21rem;
+  }
+}
+
+@keyframes accordion-up-21 {
+  from {
+    height: 21rem;
+  }
+  to {
+    height: 0;
+  }
+}

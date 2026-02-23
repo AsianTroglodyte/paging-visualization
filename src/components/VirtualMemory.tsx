@@ -3,6 +3,7 @@ import { OPCODE_NAMES } from "@/simulation/isa";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent } from "./hover-content";
+import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 import type { ProcessControlBlocks, VirtualPage, CpuState } from "@/simulation/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
@@ -65,8 +66,8 @@ export function VirtualMemory(
                         </div>
                     </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-sm">
-                    <Table className={`text-sm w-full table-fixed`}>
+                <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem] ">
+                    <Table className={`text-sm w-full`}>
                     <TableHeader className={`${processColorClasses?.cellStrong ?? ""}`}>
                         <TableRow>
                             <TableHead className="w-[100px]">Virt. Addr.</TableHead>
