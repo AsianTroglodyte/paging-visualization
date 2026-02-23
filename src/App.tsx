@@ -5,7 +5,7 @@ import { useMemo, useReducer, useState, useEffect, useRef } from "react";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { select } from "d3-selection";
 import { Toaster, toast } from "sonner";
-import { SidebarProvider } from "./components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { machineReducer } from "./simulation/machine-reducer";
 import { getProcessControlBlocks, getAllPageTables, getAllProcessPages, getFreeList } from "./simulation/selectors";
@@ -14,6 +14,86 @@ import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE } from "./simulation/types";
 import { ControlBar } from "./components/control-bar";
 
+
+function ControlBarDock({
+    isOpen,
+    toggle,
+    machineStateDispatch,
+    processControlBlocks,
+    runningPid,
+}: {
+    isOpen: boolean;
+    toggle: () => void;
+    machineStateDispatch: any;
+    processControlBlocks: any;
+    runningPid: number | null;
+}) {
+    const { state, isMobile } = useSidebar();
+
+    const translateX =
+        !isMobile && state === "expanded"
+            ? "calc(-50% + var(--sidebar-width)/2)"
+            : "-50%";
+    const translateY = isOpen ? "0" : "calc(100% - 2.25rem)";
+
+    return (
+        <div
+            className="flex flex-col items-center fixed bottom-0 left-1/2 z-50 transform-gpu transition-transform duration-300 ease-out will-change-transform"
+            style={{ transform: `translate(${translateX}, ${translateY})` }}
+        >
+            <button
+                type="button"
+                onClick={toggle}
+                className="flex h-10 w-30 items-center justify-center gap-2 rounded-t-md border border-b-0 bg-primary px-3 text-primary-foreground"
+            >
+                <svg
+                    className={`h-5 w-5 transition-transform duration-300 ${
+                        isOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M17 18L12 13L7 18M17 11L12 6L7 11"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </svg>
+                <span className="text-base font-semibold font-mono">Control</span>
+            </button>
+            <ControlBar
+                machineStateDispatch={machineStateDispatch}
+                processControlBlocks={processControlBlocks}
+                runningPid={runningPid}
+                className="rounded-t-none"
+            />
+        </div>
+    );
+}
+
+function PagingTitle() {
+    const { state, isMobile } = useSidebar();
+
+    const translateX =
+        !isMobile && state === "expanded"
+            ? "calc(-50% + var(--sidebar-width)/2)"
+            : "-50%";
+
+    return (
+        <div
+            className="fixed top-0 left-1/2 z-40 flex items-center justify-center px-4 py-1 font-bold bg-black text-white rounded-b-[16px] primary-color transform-gpu transition-transform duration-200"
+            style={{
+                clipPath: "url(#paging-bar-clip)",
+                transform: `translateX(${translateX})`,
+            }}
+        >
+            <h1 className="text-base">Paging</h1>
+        </div>
+    );
+}
 
 export function App() {
 
@@ -114,11 +194,7 @@ export function App() {
     return (
         <SidebarProvider defaultOpen={false}>
             <Toaster richColors position="top-center" />
-            <AppSidebar 
-                machineStateDispatch={machineStateDispatch}
-                processControlBlocks={processControlBlocks}
-                runningPid={cpu.kind === "running" ? cpu.runningPid : null}
-            />
+            <AppSidebar />
             <div
                 ref={zoomContainerRef}
                 className="py-10 pl-1 w-full min-h-screen max-h-screen overflow-hidden bg-black/30"
@@ -129,81 +205,46 @@ export function App() {
                     style={{
                         transformOrigin: "0 0",
                         willChange: "transform",
-                    }}
-                >
-                <div className="flex flex-col gap-3 justify-center items-center absolute left-[2rem] top-0">
-                    <CpuCard cpu={cpu} 
-                    machineStateDispatch={machineStateDispatch} 
-                    selectedVirtualAddress={selectedVirtualAddress}
-                    setSelectedVirtualAddress={setSelectedVirtualAddress}
-                    className="" />
+                    }}>
+                    <div className="flex flex-col gap-3 justify-center items-center absolute left-[2rem] top-0">
+                        <CpuCard cpu={cpu} 
+                        machineStateDispatch={machineStateDispatch} 
+                        selectedVirtualAddress={selectedVirtualAddress}
+                        setSelectedVirtualAddress={setSelectedVirtualAddress}
+                        className="" />
 
-                    <VirtualMemory 
-                    memory={memory} 
-                    processControlBlocks={processControlBlocks}
-                    selectedVirtualAddress={selectedVirtualAddress}
-                    setSelectedVirtualAddress={setSelectedVirtualAddress}
-                    cpu={cpu} 
-                    className=""/>
-                </div>
+                        <VirtualMemory 
+                        memory={memory} 
+                        processControlBlocks={processControlBlocks}
+                        selectedVirtualAddress={selectedVirtualAddress}
+                        setSelectedVirtualAddress={setSelectedVirtualAddress}
+                        cpu={cpu} 
+                        className=""/>
+                    </div>
 
-                <MmuCard mmu={mmu} 
-                className="absolute top-0 left-1/2 -translate-x-1/2 "/>
+                    <MmuCard mmu={mmu} 
+                    className="absolute top-0 left-1/2 -translate-x-1/2 "/>
 
-                <MemoryCard className="row-span-2 absolute right-[2rem] top-0" 
-                processControlBlocks={processControlBlocks} 
-                allProcessPages={allProcessPages} 
-                memory={memory}
-                runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
+                    <MemoryCard className="row-span-2 absolute right-[2rem] top-0" 
+                    processControlBlocks={processControlBlocks} 
+                    allProcessPages={allProcessPages} 
+                    memory={memory}
+                    runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
 
                 </div>
             </div>
 
             {/* Title */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 font-bold
-            flex items-center justify-center bg-black text-white rounded-b-[16px] primary-color"
-            style={{ clipPath: "url(#paging-bar-clip)" }} >
-                <h1 className="text-base">Paging</h1>
-            </div>
+            <PagingTitle />
 
             {/* Control Bar */}
-            <div
-                className={`
-                    flex flex-col items-center 
-                    fixed bottom-0 left-1/2 z-50 
-                    -translate-x-1/2 transform-gpu transition-transform duration-300 
-                    ease-out will-change-transform ${
-                    isControlBarOpen
-                        ? "translate-y-0"
-                        : "translate-y-[calc(100%-2.25rem)]"
-                }`}>
-                <button
-                    type="button"
-                    onClick={() => setIsControlBarOpen((prev) => !prev)}
-                    className="flex h-10 w-30 items-center justify-center gap-2 
-                    rounded-t-md border border-b-0 bg-primary px-3 text-primary-foreground">
-                    <svg
-                        className={`h-5 w-5 transition-transform duration-300 ${
-                            isControlBarOpen ? "rotate-180" : "rotate-0"
-                        }`}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M17 18L12 13L7 18M17 11L12 6L7 11"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"/>
-                    </svg>
-                    <span className="text-base font-semibold font-mono">Control</span>
-                </button>
-                <ControlBar
-                    machineStateDispatch={machineStateDispatch}
-                    processControlBlocks={processControlBlocks}
-                    runningPid={cpu.kind === "running" ? cpu.runningPid : null}
-                    className="rounded-t-none"/>
-            </div>
+            <ControlBarDock
+                isOpen={isControlBarOpen}
+                toggle={() => setIsControlBarOpen((prev) => !prev)}
+                machineStateDispatch={machineStateDispatch}
+                processControlBlocks={processControlBlocks}
+                runningPid={cpu.kind === "running" ? cpu.runningPid : null}
+            />
 
         </SidebarProvider>
     )

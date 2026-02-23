@@ -24,7 +24,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
     const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
     return (
-    <Card size="default" className={`flex flex-col gap-4 min-w-76 w-115 max-w-115 bg-black ${className}`}>
+    <Card size="default" className={`flex flex-col gap-4 min-w-76 w-105 max-w-105 bg-black ${className}`}>
         <CardHeader>
             <CardTitle >
                 <h1 className="text-3xl text-center font-semibold">CPU</h1>
@@ -34,7 +34,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
 
         <CardContent className="flex-[1_1_auto] flex flex-row gap-2 ">
             {/* Registers */}
-            <div className={`flex-[1] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
+            <div className={`flex-[55] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
                 <h2 className="text-base font-semibold">PID {isIdle ? "—" : cpu.runningPid} Registers:</h2>
                 <ul className="text-base font-mono list-disc list-inside space-y-0.5">
                     <li>Program Counter: {isIdle ? "-" : cpu.programCounter}</li>
@@ -51,7 +51,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
 
             
             {isIdle ? "" : 
-            <div className="flex-[1] min-w-0 flex flex-col gap-2 p-2">
+            <div className="flex-[45] min-w-0 flex flex-col gap-2 p-2">
             <Field orientation="horizontal" className="flex flex-shrink-1 font-semibold ">
                 <span className="text-lg whitespace-nowrap ">
                     {OPCODE_NAMES[(cpu.currentInstructionRaw >> 5)]}
@@ -116,7 +116,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
             </ButtonGroup>
             
             <p className="text-sm text-muted-foreground italic mt-1">
-                Operand must be between 0 and 31. because it is an unsigned 5-bit number.
+                Operand must be between 0 and 31. 
             </p>
 
             </div>}

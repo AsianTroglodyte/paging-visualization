@@ -117,6 +117,8 @@
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
     --color-muted: var(--muted);
+    /* Solid muted background (no opacity), matches #1B1917 */
+    --color-muted-solid: #1B1917;
     --color-secondary-foreground: var(--secondary-foreground);
     --color-secondary: var(--secondary);
     --color-primary-foreground: var(--primary-foreground);

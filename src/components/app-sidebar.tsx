@@ -7,13 +7,10 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "./ui/tabs"
-import type { ProcessControlBlocks, MemoryAction } from "@/simulation/types";
 import { SidebarHelpTab, SidebarSettingsTab } from "./sidebar-components";
 
 
-export function AppSidebar({
-}: {
-}) {
+export function AppSidebar() {
   return (
     <Sidebar variant="floating" collapsible="offcanvas">
       <SidebarHeader />

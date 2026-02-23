@@ -10,7 +10,7 @@ export function ControlBar({ machineStateDispatch, processControlBlocks, running
   runningPid: number | null, className: string 
 }) {
 return (
-<Card className={`bg-muted/50 px-3 w-100 ${className}`}>
+<Card className={`bg-card px-3 w-100 ${className}`}>
 
   <CardContent className="w-full p-2 flex flex-row gap-4 justify-center">
     <div className="flex flex-col gap-4 align-center">
@@ -32,8 +32,8 @@ return (
     {processControlBlocks.length === 0 ? (
       <p className="text-sm text-muted-foreground text-center">No active processes</p>
     ) : (
-      <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-        Press a process to context switch
+      <div className="flex flex-col gap-2 text-sm text-muted-foreground text-center">
+        Press to context switch
         {processControlBlocks.map((pcb) => {
           const isRunning = runningPid === pcb.processID;
           const processColors = getProcessColorClasses(pcb.processID);

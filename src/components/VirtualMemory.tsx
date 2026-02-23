@@ -40,16 +40,18 @@ export function VirtualMemory(
 
 
     return (
-    <Card className={`w-90 min-w-80 bg-black ${className}`}>
+    <Card className={`w-80 min-w-80 bg-black ${className}`}>
     <CardHeader>
         <CardTitle>
             <h1 className="text-3xl text-center">Virtual Memory</h1>
         </CardTitle>
     </CardHeader>
     <CardContent>
-        <h2 className="text-lg">
-            {cpu.kind === "running" ? `Process ${cpu.runningPid}` : "No process selected"}
-        </h2>
+        <CardTitle>
+            <h2 className="text-lg">
+                {cpu.kind === "running" ? `Process ${cpu.runningPid}` : "No process selected"}
+            </h2>
+        </CardTitle>
         <Accordion type="single" collapsible className="w-full">
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
             <AccordionItem key={vpn} value={`vpn-${vpn}`} >
