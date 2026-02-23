@@ -20,10 +20,10 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
     const offsetString = offset.toString(2).padStart(3, "0");
 
     return (
-        <Card size="sm" className={`bg-black ${className}`}>
+        <Card size="sm" className={`bg-black w-85 min-w-85 ${className}`}>
             <CardHeader>
                 <CardTitle className="text-center mb-2">
-                    <h1 className="text-4xl font-semibold">MMU  </h1>
+                    <h1 className="text-3xl font-semibold">MMU  </h1>
                 </CardTitle>
                 <CardDescription >
                     <h2 className="text-lg"> Address Translation Process </h2>
@@ -32,30 +32,30 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
             <CardContent className="">
                 <div className="grid grid-cols-[2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem] grid-rows-[auto_1.5rem_3rem_3rem_3rem_1.5rem] items-start">
                     <div className="flex flex-col h-full justify-between items-center h-7 col-span-2 row-span-7">
-                        <div className="text-sm text-muted-foreground 
+                        <p className="text-sm text-muted-foreground 
                         font-medium flex items-center pr-2 justify-end pt-5">
                             Virtual address
-                        </div>
-                        <div className="text-sm text-muted-foreground 
+                        </p>
+                        <p className="text-sm text-muted-foreground 
                         font-medium flex items-center pr-2 justify-end pb-5">
                             Physical address
-                        </div>
+                        </p>
                     </div>
                     <div className="text-base flex justify-center font-semibold h-7 col-span-3">VPN</div>
                     <div className="text-base flex justify-center font-semibold h-7 col-span-3">offset</div>
 
                     {vpnArray.map((bit, index) => {
-                        return (<div key={index} 
+                        return (<p key={index} 
                             className={
                             bit === "" 
                             ? "invisible" 
                             :`text-base flex justify-center items-center font-semibold border`}>
                                 {bit}
-                            </div>)
+                            </p>)
                     })}
 
                     {offsetString.split("").map((bit, index) => {
-                        return (<div key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</div>)
+                        return (<p key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</p>)
                     })}
 
                     {/* VPN Arrow Divs. created based on vpnArray*/}
@@ -93,8 +93,8 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
                         </svg>
                     </div>
 
-                    <div className={`text-base text-center flex justify-center font-semibold 
-                    col-span-3 row border`}>Address Translation</div>
+                    <p className={`text-base text-center flex justify-center font-semibold 
+                    col-span-3 row border`}>Address Translation</p>
 
 
                     <div className="flex justify-center items-center ">
@@ -117,15 +117,15 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
                     </div>
 
                     {pfnString.split("").map((bit, index) => {
-                        return (<div key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</div>)
+                        return (<p key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</p>)
                     })}
 
                     {offsetString.split("").map((bit, index) => {
-                        return (<div key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</div>)
+                        return (<p key={index} className="text-base flex justify-center items-center font-semibold border">{bit}</p>)
                     })}
 
-                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">PFN</div>
-                    <div className="text-base flex justify-center font-semibold h-7 col-span-3">offset</div>
+                    <p className="text-base flex justify-center font-semibold h-7 col-span-3">PFN</p>
+                    <p className="text-base flex justify-center font-semibold h-7 col-span-3">offset</p>
                 </div>
             </CardContent>
         </Card>

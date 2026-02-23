@@ -33,10 +33,10 @@ export function MemoryCard({
     }: MemoryCardProps) {
 
     return (
-    <Card className={`w-74 bg-black ${className}`}>
+    <Card className={`w-74 min-w-74 bg-black ${className}`}>
         <CardHeader>
             <CardTitle>
-                <h1 className="text-4xl"> Memory </h1>
+                <h1 className="text-4xl text-center"> Memory </h1>
             </CardTitle>
             <CardDescription>
 
@@ -168,10 +168,10 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 
     return (
     <AccordionItem value="pfn-0">
-        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary/15">
+        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span className="font-mono text-sm">PFN 0</span>
-            <span className="text-muted-foreground text-sm">OS: PTs + Free List</span>
+            <span className="text-white text-sm">OS: PTs + Free List</span>
         </div>
         </AccordionTrigger>
         <MemoryAccordionContent className="text-sm">
@@ -237,10 +237,10 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 function osPage1Accordion(memory: number[]) {
     return (
     <AccordionItem value="pfn-1">
-        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary/15">
+        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span className="font-mono text-sm">PFN 1</span>
-            <span className="text-muted-foreground text-sm">OS: PCBs</span>
+            <span className="text-white text-sm">OS: PCBs</span>
         </div>
         </AccordionTrigger>
         <MemoryAccordionContent className="text-sm">

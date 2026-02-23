@@ -5,7 +5,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent } from "./hover-content";
 import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 import type { ProcessControlBlocks, VirtualPage, CpuState } from "@/simulation/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { Accordion, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 export function VirtualMemory(
@@ -15,12 +15,14 @@ export function VirtualMemory(
     selectedVirtualAddress,
     setSelectedVirtualAddress,
     cpu,
+    className,
 } : {
     memory: number[],
     processControlBlocks: ProcessControlBlocks,
     selectedVirtualAddress: number | null,
     setSelectedVirtualAddress: React.Dispatch<React.SetStateAction<number | null>>,
     cpu: CpuState,
+    className: string,
 }) {
 
     const allVirtualMemory: VirtualPage[][] = processControlBlocks.map(pcb =>
@@ -38,10 +40,10 @@ export function VirtualMemory(
 
 
     return (
-    <Card className="w-74 bg-black">
+    <Card className={`w-90 min-w-80 bg-black ${className}`}>
     <CardHeader>
         <CardTitle>
-            <h1 className="text-4xl">Virtual Memory</h1>
+            <h1 className="text-3xl text-center">Virtual Memory</h1>
         </CardTitle>
     </CardHeader>
     <CardContent>
@@ -66,7 +68,7 @@ export function VirtualMemory(
                         </div>
                     </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-sm min-h-[21rem] max-h-[21rem] ">
+                <MemoryAccordionContent className="text-sm h-[21rem]">
                     <Table className={`text-sm w-full`}>
                     <TableHeader className={`${processColorClasses?.cellStrong ?? ""}`}>
                         <TableRow>
@@ -82,10 +84,12 @@ export function VirtualMemory(
                         return (
                         <TableRow
                         key={index_offset}
+                        data-no-zoom
                         onMouseDown={() => {
                             if (isProgramCounter) {
                                 return;
                             }
+                            console.log("selected virtual address", virtualAddress);
                             setSelectedVirtualAddress(virtualAddress);
                         }}
                         className={`border-l-2 ${
@@ -137,7 +141,7 @@ export function VirtualMemory(
                     )})}
                     </TableBody>
                     </Table>
-                </AccordionContent>
+                </MemoryAccordionContent>
             </AccordionItem>
         ))}
         </Accordion>

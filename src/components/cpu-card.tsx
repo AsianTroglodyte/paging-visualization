@@ -24,24 +24,23 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
     const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
     return (
-    <Card size="default" className={`w-75 bg-black ${className}`}>
+    <Card size="default" className={`flex flex-col gap-4 min-w-76 w-115 max-w-115 bg-black ${className}`}>
         <CardHeader>
             <CardTitle >
-                <h1 className="text-4xl font-semibold">CPU</h1>
+                <h1 className="text-3xl text-center font-semibold">CPU</h1>
             </CardTitle>
-            <CardDescription >
-                <h2 className="text-lg">Running instructions 
-                    <span> </span>
-                </h2>
-            </CardDescription>
+
+        </CardHeader>
+
+        <CardContent className="flex-[1_1_auto] flex flex-row gap-2 ">
             {/* Registers */}
-            <div className={`rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
+            <div className={`flex-[1] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
                 <h2 className="text-base font-semibold">PID {isIdle ? "—" : cpu.runningPid} Registers:</h2>
                 <ul className="text-base font-mono list-disc list-inside space-y-0.5">
                     <li>Program Counter: {isIdle ? "-" : cpu.programCounter}</li>
                     <li>Page Table Base: {isIdle ? "-" : cpu.pageTableBase}</li>
                     <li>Accumulator: {isIdle ? "-" : cpu.accumulator}</li>
-                    <li>Current Instruction: {isIdle ? "-" : cpu.currentInstructionRaw}</li>
+                    <li>Instruction Raw: {isIdle ? "-" : cpu.currentInstructionRaw}</li>
                 </ul>
                 {isIdle && (
                     <p className="text-xs text-muted-foreground italic mt-1">
@@ -49,11 +48,10 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                     </p>
                 )}
             </div>
-        </CardHeader>
 
-        <CardContent className="flex flex-col gap-2">
+            
             {isIdle ? "" : 
-            <>
+            <div className="flex-[1] min-w-0 flex flex-col gap-2 p-2">
             <Field orientation="horizontal" className="flex flex-shrink-1 font-semibold ">
                 <span className="text-lg whitespace-nowrap ">
                     {OPCODE_NAMES[(cpu.currentInstructionRaw >> 5)]}
@@ -85,9 +83,6 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                 </ButtonGroup>
             </Field>
 
-            <p className="text-sm text-muted-foreground italic mt-1">
-                Operand must be between 0 and 31. because it is an unsigned 5-bit number.
-            </p>
 
             <ButtonGroup orientation="horizontal" className="flex gap-3">
                 <Button
@@ -119,7 +114,12 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                     Fetch
                 </Button>
             </ButtonGroup>
-            </>}
+            
+            <p className="text-sm text-muted-foreground italic mt-1">
+                Operand must be between 0 and 31. because it is an unsigned 5-bit number.
+            </p>
+
+            </div>}
         </CardContent>
     </Card>
     )
