@@ -2,7 +2,7 @@ import type { MmuState } from "@/simulation/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"    
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 
-export function MmuCard({mmu}: {mmu: MmuState}) {
+export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
 
     const { virtualPageNumber, pageFrameNumber, offset } = mmu;
 
@@ -20,7 +20,7 @@ export function MmuCard({mmu}: {mmu: MmuState}) {
     const offsetString = offset.toString(2).padStart(3, "0");
 
     return (
-        <Card size="sm" className="bg-black">
+        <Card size="sm" className={`bg-black ${className}`}>
             <CardHeader>
                 <CardTitle className="text-center mb-2">
                     <h1 className="text-4xl font-semibold">MMU  </h1>

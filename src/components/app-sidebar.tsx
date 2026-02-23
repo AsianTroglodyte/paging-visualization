@@ -3,6 +3,8 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarRail,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "./ui/tabs"
 import type { ProcessControlBlocks, MemoryAction } from "@/simulation/types";
@@ -18,9 +20,9 @@ export function AppSidebar({
   runningPid: number | null;
 }) {
   return (
-    <Sidebar>
+    <Sidebar variant="floating" collapsible="offcanvas" className="z-50 ">
       <SidebarHeader />
-      <SidebarContent>
+      <SidebarContent className="">
         <Tabs defaultValue="Control" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="Control">Control</TabsTrigger>
@@ -46,6 +48,7 @@ export function AppSidebar({
         </Tabs>
       </SidebarContent>
       <SidebarFooter />
+      <SidebarTrigger className="absolute top-0 right-[-35px] cursor-pointer" size="lg" />
     </Sidebar>
   )
 }

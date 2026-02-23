@@ -10,12 +10,13 @@ import type { CpuState, MemoryAction } from "@/simulation/types";
 import { getProcessColorClasses } from "@/simulation/selectors"
 
 
-export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, setSelectedVirtualAddress }: 
+export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, setSelectedVirtualAddress, className }: 
 { 
     cpu: CpuState; 
     machineStateDispatch: React.Dispatch<MemoryAction>; 
     selectedVirtualAddress: number | null ;
     setSelectedVirtualAddress: React.Dispatch<React.SetStateAction<number | null>>;
+    className: string;
 }) {
 
     const [operand, setOperand] = useState(12);
@@ -23,7 +24,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
     const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
     return (
-    <Card size="default" className="w-75 bg-black">
+    <Card size="default" className={`w-75 bg-black ${className}`}>
         <CardHeader>
             <CardTitle >
                 <h1 className="text-4xl font-semibold">CPU</h1>
@@ -34,7 +35,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                 </h2>
             </CardDescription>
             {/* Registers */}
-            <div className={`rounded-md border p-3 ${processColors ? processColors.trigger : "bg-muted/50"}`}>
+            <div className={`rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
                 <h2 className="text-base font-semibold">PID {isIdle ? "—" : cpu.runningPid} Registers:</h2>
                 <ul className="text-base font-mono list-disc list-inside space-y-0.5">
                     <li>Program Counter: {isIdle ? "-" : cpu.programCounter}</li>
