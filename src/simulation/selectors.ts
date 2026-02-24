@@ -183,7 +183,9 @@ export function getByteAtVirtualAddress(
 
     const pfn = getPfnFromVirtualAddress(memory, processID, virtualAddress);
     const offset = virtualAddress % 8;
-    return memory[pfn * 8 + offset];
+    const physicalAddress = pfn * 8 + offset;
+    
+    return memory[physicalAddress];
   }
 
 export function decodeInstruction(instruction: number): { opcode: string, operand: number } {
@@ -192,9 +194,31 @@ export function decodeInstruction(instruction: number): { opcode: string, operan
     return { opcode: OPCODE_NAMES[opcode], operand: operand};
 }
 
+export function getPhysicalAddressFromVirtualAddress(virtualAddress: number, memory: number[], processID: number): number {
+    const pfn = getPfnFromVirtualAddress(memory, processID, virtualAddress);
+    const offset = virtualAddress % 8;
+    const physicalAddress = pfn * 8 + offset;
+    return physicalAddress;
+}
+
 
 export function getProcessColorClasses(pid: number | null) {
     if (pid === null) return null;
     return PROCESS_COLOR_CLASSES[pid];
+}
+
+
+export function changeOperandOfInstruction(
+    memory: number[], 
+    operand: number, 
+    virtualAddress: number, 
+    processID: number): number[] {
+
+    const newMemory = [...memory];
+    const newPhysicalAddress = getPhysicalAddressFromVirtualAddress(virtualAddress, memory, processID);
+
+    newMemory[newPhysicalAddress] = operand;
+
+    return newMemory;
 }
 

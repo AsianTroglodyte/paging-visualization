@@ -11,7 +11,9 @@ import {
     getFreeList, 
     getPageTable,
     getByteAtVirtualAddress, 
-    getPfnFromVirtualAddress} from "./selectors";
+    getPfnFromVirtualAddress,
+    changeOperandOfInstruction,
+    getPhysicalAddressFromVirtualAddress} from "./selectors";
 import { MAX_PAGES_ALLOCATABLE, START_OF_PCBS, BYTES_PER_PCB } from "./constants";
 import type { MachineAction, MachineState, CpuState, MmuState } from "./types";
 import { IDLE_CPU_STATE } from "./types";
@@ -37,13 +39,17 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             if (!pcb) {
                 return { ...state, cpu: IDLE_CPU_STATE };
             }
+
+
+            const currentInstructionRaw = getByteAtVirtualAddress(memory, action.payload.processID, pcb.programCounter);
+            
             const newCpu: CpuState = {
                 kind: "running",
                 runningPid: action.payload.processID,
                 programCounter: pcb.programCounter,
                 pageTableBase: pcb.pageTableBase,
                 accumulator: pcb.accumulator,
-                currentInstructionRaw: 0, // TODO: load from memory at PC
+                currentInstructionRaw: currentInstructionRaw,
             };
 
             // don't need to write to memory is idle. This is because cpu doesn't 
@@ -159,12 +165,13 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 const freeList = getFreeList(memory);
                 newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
                 // Keep page-table slots contiguous after process deletion.
-                newMemory = compactPagetables(newMemory).newMemory;
+                // newMemory = compactPagetables(newMemory).newMemory;
 
                 const newCpu: CpuState =
                     cpu.kind === "running" && cpu.runningPid === action.payload.processID
                         ? IDLE_CPU_STATE
-                        : cpu;
+                        : cpu
+              
                 return { ...state, memory: newMemory, cpu: newCpu, mmu: mmu };
             })();
         case "FETCH_INSTRUCTION":
@@ -326,6 +333,22 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 default:
                     throw new Error(`Invalid opcode: ${action.payload.opcode}`);
             }
+        case "CHANGE_OPERAND_OF_INSTRUCTION": {
+            if (cpu.kind === "idle") {
+                throw new Error("Cannot change operand of instruction when CPU is idle.");
+            }
+
+            const newMemory = [...memory];
+            const newPhysicalAddress = getPhysicalAddressFromVirtualAddress(action.payload.virtualAddress, memory, cpu.runningPid);
+        
+            newMemory[newPhysicalAddress] = action.payload.operand;
+
+            console.log("newMemory[newPhysicalAddress] =", newMemory[newPhysicalAddress]);
+            console.log("action.payload.operand =", action.payload.operand);
+
+
+            return { ...state, memory: newMemory, cpu: { ...cpu, currentInstructionRaw: action.payload.operand}};
+        }
         default:
             return state;
     }

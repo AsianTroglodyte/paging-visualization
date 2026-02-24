@@ -13,7 +13,7 @@ import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverC
 import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 
 import type { ProcessControlBlocks, Pages } from "@/simulation/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { Accordion, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";

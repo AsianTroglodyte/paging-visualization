@@ -12,9 +12,9 @@ import { SidebarHelpTab, SidebarSettingsTab } from "./sidebar-components";
 
 export function AppSidebar() {
   return (
-    <Sidebar variant="floating" collapsible="offcanvas">
+    <Sidebar variant="floating"  collapsible="offcanvas">
       <SidebarHeader />
-      <SidebarContent className="">
+      <SidebarContent >
         <Tabs defaultValue="Help" className="w-full">
           <TabsList className="w-full flex justify-center">
             <TabsTrigger value="Help">Learn</TabsTrigger>
@@ -32,7 +32,7 @@ export function AppSidebar() {
         </Tabs>
       </SidebarContent>
       <SidebarFooter />
-      <SidebarTrigger className="absolute top-[-3px] right-[-36px] cursor-pointer bg-black" size="lg" />
+      <SidebarTrigger className="absolute top-[6px] right-[-36px] cursor-pointer" size="lg" />
     </Sidebar>
   )
 }

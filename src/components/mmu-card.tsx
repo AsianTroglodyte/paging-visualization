@@ -73,23 +73,23 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
                         </div>)
                     })}
                     
-                    {/* VPN Arrow Divs */}
+                    {/* Offset Arrow Divs */}
                     <div className="flex justify-center items-center row-span-3">
-                        <svg viewBox="0 0 24 80" className="text-foreground" fill="currentColor">
-                            <line x1="12" y1="4" x2="12" y2="70" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                            <path d="M12 77 L9 70 L15 70 Z" />
+                        <svg viewBox="0 0 24 84" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 81 L9 74 L15 74 Z" />
                         </svg>
                     </div>
                     <div className="flex justify-center items-center row-span-3">
-                        <svg viewBox="0 0 24 80" className="text-foreground" fill="currentColor">
-                            <line x1="12" y1="4" x2="12" y2="70" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                            <path d="M12 77 L9 70 L15 70 Z" />
+                        <svg viewBox="0 0 24 84" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 81 L9 74 L15 74 Z" />
                         </svg>
                     </div>                    
                     <div className="flex justify-center items-center row-span-3">
-                        <svg viewBox="0 0 24 80" className="text-foreground" fill="currentColor">
-                            <line x1="12" y1="4" x2="12" y2="70" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                            <path d="M12 77 L9 70 L15 70 Z" />
+                        <svg viewBox="0 0 24 84" className="text-foreground" fill="currentColor">
+                            <line x1="12" y1="4" x2="12" y2="75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12 81 L9 74 L15 74 Z" />
                         </svg>
                     </div>
 

@@ -8,6 +8,7 @@ import App from "./App.tsx"
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
       <main className="w-full">
+        <link rel="icon" href="/src/assets/page.png" />
         <App />     
       </main>
   </StrictMode>
