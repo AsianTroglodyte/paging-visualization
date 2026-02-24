@@ -46,9 +46,11 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
         const incrementedOperand =  currentOperand + 1;
         const clampedIncrementedOperand = Math.min(31, incrementedOperand);
 
+        const finalInstructionRaw = (cpu.currentInstructionRaw & 0b11100000) | clampedIncrementedOperand;
+
         machineStateDispatch({
             type: "CHANGE_OPERAND_OF_INSTRUCTION",
-            payload: { virtualAddress: cpu.programCounter, processID: cpu.runningPid, operand: clampedIncrementedOperand }
+            payload: { virtualAddress: cpu.programCounter, processID: cpu.runningPid, operand: finalInstructionRaw }
         });
     }
 
@@ -61,9 +63,11 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
         const incrementedOperand =  currentOperand - 1;
         const clampedIncrementedOperand = Math.max(0, incrementedOperand);
 
+        const finalInstructionRaw = (cpu.currentInstructionRaw & 0b11100000) | clampedIncrementedOperand;
+
         machineStateDispatch({
             type: "CHANGE_OPERAND_OF_INSTRUCTION",
-            payload: { virtualAddress: cpu.programCounter, processID: cpu.runningPid, operand: clampedIncrementedOperand }
+            payload: { virtualAddress: cpu.programCounter, processID: cpu.runningPid, operand: finalInstructionRaw }
         });
     }
 

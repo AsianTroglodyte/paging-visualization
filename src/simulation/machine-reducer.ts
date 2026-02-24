@@ -346,8 +346,12 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             console.log("newMemory[newPhysicalAddress] =", newMemory[newPhysicalAddress]);
             console.log("action.payload.operand =", action.payload.operand);
 
+            
 
-            return { ...state, memory: newMemory, cpu: { ...cpu, currentInstructionRaw: action.payload.operand}};
+            const currentInstructionRaw = (cpu.currentInstructionRaw & 0b11100000)  | action.payload.operand;
+
+
+            return { ...state, memory: newMemory, cpu: { ...cpu, currentInstructionRaw: currentInstructionRaw}};
         }
         default:
             return state;
