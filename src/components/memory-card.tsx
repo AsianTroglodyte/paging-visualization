@@ -10,9 +10,10 @@ import {
 import { getProcessColorClasses, getProcessControlBlock } from "@/simulation/selectors";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverContent, FreeListHoverContent } from "./hover-content";
+import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 
 import type { ProcessControlBlocks, Pages } from "@/simulation/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { Accordion, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
@@ -20,6 +21,7 @@ interface MemoryCardProps extends React.ComponentProps<"div"> {
   allProcessPages: Pages;
   memory: number[];
   runningPid?: number | null;
+  className: string;
 }
 
 export function MemoryCard({
@@ -27,13 +29,14 @@ export function MemoryCard({
     memory,
     allProcessPages,
     runningPid = null,
+    className,
     }: MemoryCardProps) {
 
     return (
-    <Card className="w-74 bg-black">
+    <Card className={`w-74 min-w-74 bg-black ${className}`}>
         <CardHeader>
             <CardTitle>
-                <h1 className="text-4xl"> Memory </h1>
+                <h1 className="text-4xl text-center"> Memory </h1>
             </CardTitle>
             <CardDescription>
 
@@ -58,7 +61,7 @@ export function MemoryCard({
                     value={`pfn-${pfn}`}
                     className={`${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
                     <AccordionTrigger
-                        className={`hover:no-underline text-sm px-2 
+                        className={`hover:no-underline text-sm px-2 cursor-pointer 
                         ${isRunning && processColors ? `${processColors.trigger} 
                         text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColors?.cellStrong ?? processColors?.cell ?? "")}
                         ${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
@@ -74,9 +77,9 @@ export function MemoryCard({
                         </span>
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-sm">
+                    <MemoryAccordionContent className="text-sm ">
                         <Table
-                            className={`text-sm w-full table-fixed min-h-[17rem]`}
+                            className={`text-sm w-full`}
                         >
                         <TableHeader className={`${processColors?.cellStrong ?? ""}`}>
                             <TableRow>
@@ -111,7 +114,7 @@ export function MemoryCard({
                         })}
                         </TableBody>
                         </Table>
-                    </AccordionContent>
+                    </MemoryAccordionContent>
                 </AccordionItem>
                 );
                 })}
@@ -165,15 +168,14 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 
     return (
     <AccordionItem value="pfn-0">
-        <AccordionTrigger className="hover:no-underline text-sm px-2">
+        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span className="font-mono text-sm">PFN 0</span>
-            <span className="text-muted-foreground text-sm">OS: PTs + Free List</span>
+            <span className="text-white text-sm">OS: PTs + Free List</span>
         </div>
         </AccordionTrigger>
-        <AccordionContent className="text-sm">
-            <div className="min-h-[17rem]">
-            <Table className="text-sm w-full table-fixed">
+        <MemoryAccordionContent className="text-sm">
+            <Table className="text-sm w-full">
             <TableHeader>
                 <TableRow>
                     <TableHead className="w-[100px]">Phys. Addr.</TableHead>
@@ -227,8 +229,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                 })}
                 </TableBody>
             </Table>
-            </div>
-        </AccordionContent>
+        </MemoryAccordionContent>
     </AccordionItem>
     )
 }
@@ -236,15 +237,14 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 function osPage1Accordion(memory: number[]) {
     return (
     <AccordionItem value="pfn-1">
-        <AccordionTrigger className="hover:no-underline text-sm px-2">
+        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span className="font-mono text-sm">PFN 1</span>
-            <span className="text-muted-foreground text-sm">OS: PCBs</span>
+            <span className="text-white text-sm">OS: PCBs</span>
         </div>
         </AccordionTrigger>
-        <AccordionContent className="text-sm">
-        <div className="min-h-[17rem]">
-            <Table className="text-sm w-full table-fixed">
+        <MemoryAccordionContent className="text-sm">
+            <Table className="text-sm w-full">
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-[100px]">Phys. Addr.</TableHead>
@@ -295,8 +295,7 @@ function osPage1Accordion(memory: number[]) {
                 })}
                 </TableBody>
             </Table>
-        </div>
-        </AccordionContent>
+        </MemoryAccordionContent>
     </AccordionItem>
     )
 }

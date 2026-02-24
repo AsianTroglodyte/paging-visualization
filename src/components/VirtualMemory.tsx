@@ -3,8 +3,9 @@ import { OPCODE_NAMES } from "@/simulation/isa";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent } from "./hover-content";
+import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 import type { ProcessControlBlocks, VirtualPage, CpuState } from "@/simulation/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { Accordion, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 
 export function VirtualMemory(
@@ -14,12 +15,14 @@ export function VirtualMemory(
     selectedVirtualAddress,
     setSelectedVirtualAddress,
     cpu,
+    className,
 } : {
     memory: number[],
     processControlBlocks: ProcessControlBlocks,
     selectedVirtualAddress: number | null,
     setSelectedVirtualAddress: React.Dispatch<React.SetStateAction<number | null>>,
     cpu: CpuState,
+    className: string,
 }) {
 
     const allVirtualMemory: VirtualPage[][] = processControlBlocks.map(pcb =>
@@ -37,23 +40,25 @@ export function VirtualMemory(
 
 
     return (
-    <Card className="w-74 bg-black">
+    <Card className={`w-80 min-w-80 bg-black ${className}`}>
     <CardHeader>
         <CardTitle>
-            <h1 className="text-4xl">Virtual Memory</h1>
+            <h1 className="text-3xl text-center">Virtual Memory</h1>
         </CardTitle>
     </CardHeader>
     <CardContent>
-        <h2 className="text-lg">
-            {cpu.kind === "running" ? `Process ${cpu.runningPid}` : "No process selected"}
-        </h2>
+        <CardTitle>
+            <h2 className="text-lg">
+                {cpu.kind === "running" ? `Process ${cpu.runningPid}` : "No process selected"}
+            </h2>
+        </CardTitle>
         <Accordion type="single" collapsible className="w-full">
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
             <AccordionItem key={vpn} value={`vpn-${vpn}`} >
-                <AccordionTrigger className={`hover:no-underline text-sm px-2 
+                <AccordionTrigger className={`hover:no-underline text-sm px-2 cursor-pointer 
                     ${isRunning && processColorClasses ? `
                     ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : ""}`}>
-                    <div className="flex justify-between w-full pr-4 items-center gap-2">
+                    <div className="flex justify-between w-full pr-4 items-center gap-2 ">
                         <div className={`font-mono ${isRunning && processColorClasses ? "text-white" : ""}`}>VPN {vpn}</div>
                         <div className={`flex items-center gap-2 ${isRunning && processColorClasses ? "text-white" : (processColorClasses?.accent ?? "text-muted-foreground")}`}>
                         {`PFN ${pfn} ${ vpn === 0 ? "Code" : "Heap"}`}
@@ -65,8 +70,8 @@ export function VirtualMemory(
                         </div>
                     </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-sm">
-                    <Table className={`text-sm w-full table-fixed`}>
+                <MemoryAccordionContent className="text-sm h-[21rem]">
+                    <Table className={`text-sm w-full`}>
                     <TableHeader className={`${processColorClasses?.cellStrong ?? ""}`}>
                         <TableRow>
                             <TableHead className="w-[100px]">Virt. Addr.</TableHead>
@@ -81,10 +86,12 @@ export function VirtualMemory(
                         return (
                         <TableRow
                         key={index_offset}
+                        data-no-zoom
                         onMouseDown={() => {
                             if (isProgramCounter) {
                                 return;
                             }
+                            console.log("selected virtual address", virtualAddress);
                             setSelectedVirtualAddress(virtualAddress);
                         }}
                         className={`border-l-2 ${
@@ -136,7 +143,7 @@ export function VirtualMemory(
                     )})}
                     </TableBody>
                     </Table>
-                </AccordionContent>
+                </MemoryAccordionContent>
             </AccordionItem>
         ))}
         </Accordion>

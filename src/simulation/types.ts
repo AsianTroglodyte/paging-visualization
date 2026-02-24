@@ -110,6 +110,10 @@ export type MachineAction =
     type: "CLEAR_PAGE_FAULT";
     payload?: never;
   }
+  | {
+    type: "CHANGE_OPERAND_OF_INSTRUCTION";
+    payload: { virtualAddress: number, processID: number, operand: number }
+  }
 
 export type MemoryAction = MachineAction;
 

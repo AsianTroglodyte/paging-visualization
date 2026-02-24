@@ -80,6 +80,20 @@
     --sidebar-ring: oklch(0.553 0.013 58.071);
 }
 
+@theme {
+    --animate-accordion-down-21: accordion-down-21 200ms ease-out;
+    --animate-accordion-up-21: accordion-up-21 200ms ease-out;
+
+    @keyframes accordion-down-21 {
+        from { height: 0; }
+        to { height: 21rem; }
+    }
+    @keyframes accordion-up-21 {
+        from { height: 21rem; }
+        to { height: 0; }
+    }
+}
+
 @theme inline {
     --font-sans: 'JetBrains Mono Variable', monospace;
     --color-sidebar-ring: var(--sidebar-ring);
@@ -103,6 +117,8 @@
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
     --color-muted: var(--muted);
+    /* Solid muted background (no opacity), matches #1B1917 */
+    --color-muted-solid: #1B1917;
     --color-secondary-foreground: var(--secondary-foreground);
     --color-secondary: var(--secondary);
     --color-primary-foreground: var(--primary-foreground);
@@ -137,4 +153,22 @@
   html {
     @apply font-sans;
     }
+}
+
+@keyframes accordion-down-21 {
+  from {
+    height: 0;
+  }
+  to {
+    height: 21rem;
+  }
+}
+
+@keyframes accordion-up-21 {
+  from {
+    height: 21rem;
+  }
+  to {
+    height: 0;
+  }
 }

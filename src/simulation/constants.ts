@@ -52,6 +52,7 @@ export const PROCESS_COLOR_CLASSES = [
         pcRow: "bg-process-0/20 hover:bg-process-0/25",
         pcBadge: "bg-process-0/30",
         selectedBadge: "bg-primary/25",
+        border: "border-process-0",
     },
     {
         accent: "text-process-1",
@@ -64,6 +65,7 @@ export const PROCESS_COLOR_CLASSES = [
         pcRow: "bg-process-1/20 hover:bg-process-1/25",
         pcBadge: "bg-process-1/30",
         selectedBadge: "bg-primary/25",
+        border: "border-process-1",
     },
     {
         accent: "text-process-2",
@@ -76,6 +78,7 @@ export const PROCESS_COLOR_CLASSES = [
         pcRow: "bg-process-2/20 hover:bg-process-2/25",
         pcBadge: "bg-process-2/30",
         selectedBadge: "bg-primary/25",
+        border: "border-process-2",
     },
     {
         accent: "text-process-3",
@@ -88,6 +91,7 @@ export const PROCESS_COLOR_CLASSES = [
         pcRow: "bg-process-3/20 hover:bg-process-3/25",
         pcBadge: "bg-process-3/30 text-process-3",
         selectedBadge: "bg-primary/25",
+        border: "border-process-3",
     },
   ];
 
