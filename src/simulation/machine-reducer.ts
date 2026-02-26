@@ -338,20 +338,19 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 throw new Error("Cannot change operand of instruction when CPU is idle.");
             }
 
+            if (action.payload.operand < 0 || action.payload.operand > 31) {
+                throw new Error(`Operand ${action.payload.operand} does not fit in 5 bits.`);
+            }
+
             const newMemory = [...memory];
             const newPhysicalAddress = getPhysicalAddressFromVirtualAddress(action.payload.virtualAddress, memory, cpu.runningPid);
         
-            newMemory[newPhysicalAddress] = action.payload.operand;
+            const newInstructionRaw = (cpu.currentInstructionRaw & 0b11100000)  | action.payload.operand;
 
-            console.log("newMemory[newPhysicalAddress] =", newMemory[newPhysicalAddress]);
-            console.log("action.payload.operand =", action.payload.operand);
-
-            
-
-            const currentInstructionRaw = (cpu.currentInstructionRaw & 0b11100000)  | action.payload.operand;
+            newMemory[newPhysicalAddress] = newInstructionRaw;
 
 
-            return { ...state, memory: newMemory, cpu: { ...cpu, currentInstructionRaw: currentInstructionRaw}};
+            return { ...state, memory: newMemory, cpu: { ...cpu, currentInstructionRaw: newInstructionRaw}};
         }
         default:
             return state;

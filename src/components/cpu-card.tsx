@@ -46,11 +46,11 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
         const incrementedOperand =  currentOperand + 1;
         const clampedIncrementedOperand = Math.min(31, incrementedOperand);
 
-        const finalInstructionRaw = (cpu.currentInstructionRaw & 0b11100000) | clampedIncrementedOperand;
+        // const finalInstructionRaw = (cpu.currentInstructionRaw & 0b11100000) | clampedIncrementedOperand;
 
         machineStateDispatch({
             type: "CHANGE_OPERAND_OF_INSTRUCTION",
-            payload: { virtualAddress: cpu.programCounter, processID: cpu.runningPid, operand: finalInstructionRaw }
+            payload: { virtualAddress: cpu.programCounter, processID: cpu.runningPid, operand: clampedIncrementedOperand }
         });
     }
 
@@ -170,7 +170,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
             </ButtonGroup>
             
             <p className="text-sm text-muted-foreground italic mt-1">
-                Operand must be between 0 and 31. 
+                NOTE: operands are 0-31 and numbers wrap on overflow and underflow.
             </p>
 
             </div>}
