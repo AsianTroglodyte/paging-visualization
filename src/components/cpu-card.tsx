@@ -85,7 +85,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
 
         <CardContent className="flex-[1_1_auto] flex flex-row gap-2 ">
             {/* Registers */}
-            <div className={`flex-[35] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
+            <div className={`flex-[38] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
                 <h2 className="text-base font-semibold">Registers:</h2>
                 <ul className="text-base font-mono list-disc list-inside space-y-0.5">
                     <li>
@@ -146,7 +146,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
 
             
             {isIdle ? "" : 
-            <div className="flex-[75] min-w-0 flex flex-col gap-2 p-2">
+            <div className="flex-[62] min-w-0 flex flex-col gap-2 p-2">
             <Field orientation="horizontal" className="flex flex-shrink-1 font-semibold ">
                 <span className="text-lg whitespace-nowrap ">
                     {OPCODE_NAMES[(cpu.currentInstructionRaw >> 5)]}
