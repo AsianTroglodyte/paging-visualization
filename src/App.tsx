@@ -14,8 +14,6 @@ import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
-import { ArcherContainer, ArcherElement } from 'react-archer';
-
 export function App() {
 
     const [machineState, machineStateDispatch] = useReducer(machineReducer, undefined, () => {
@@ -131,29 +129,13 @@ export function App() {
                         transformOrigin: "0 0",
                         willChange: "transform",
                     }}>
-                    <ArcherContainer
-                        strokeColor="white"
-                        strokeWidth={2}
-                        offset={8}
-                        lineStyle="curve"
-                        className="h-screen min-h-[40rem] w-full min-w-[90rem] max-w-[110rem] mx-auto relative">
+                    <div className="h-screen min-h-[40rem] w-full min-w-[90rem] max-w-[110rem] mx-auto relative">
                         <div className="flex flex-col gap-3 justify-center items-center absolute left-[2rem] top-0">
-                            <ArcherElement
-                                id="cpu"
-                                relations={[{
-                                    targetId: 'mmu',
-                                    sourceAnchor: 'right',
-                                    targetAnchor: 'left',
-                                    label: <span className="text-xs relative top-[-55px] ">Virtual address & PTB</span>,
-                                }]}>
-                                <div>
-                                    <CpuCard cpu={cpu}
-                                        machineStateDispatch={machineStateDispatch}
-                                        selectedVirtualAddress={selectedVirtualAddress}
-                                        setSelectedVirtualAddress={setSelectedVirtualAddress}
-                                        className="" />
-                                </div>
-                            </ArcherElement>
+                            <CpuCard cpu={cpu}
+                                machineStateDispatch={machineStateDispatch}
+                                selectedVirtualAddress={selectedVirtualAddress}
+                                setSelectedVirtualAddress={setSelectedVirtualAddress}
+                                className="" />
 
                             <VirtualMemory
                                 memory={memory}
@@ -164,41 +146,19 @@ export function App() {
                                 className="" />
                         </div>
 
-                        <ArcherElement id="mmu"
-                        relations={[
-                            {
-                                targetId: 'page-table',
-                                sourceAnchor: 'right',
-                                targetAnchor: 'left',
-                                label: <span className="text-xs relative top-[-50px]">Queries PT using PTB to get PFN from VPN</span>,
-                                order: 1,
-                                style: { startMarker: true, endMarker: true}
-                            }, {
-                                targetId: 'memory',
-                                sourceAnchor: 'right',
-                                targetAnchor: 'left',
-                                label: <span className="text-xs relative top-[35px]">Uses physical address to access memory</span>,
-                                order: 1,
-                                style: { startMarker: false, endMarker: true}
-                            }
-                        ]}>
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2">
-                                <MmuCard mmu={mmu} className="" />
-                            </div>
-                        </ArcherElement>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2">
+                            <MmuCard mmu={mmu} className="" />
+                        </div>
 
-
-                        <ArcherElement id="memory">
-                            <div className="absolute top-0 right-[2rem]">
-                                <MemoryCard
-                                    className="row-span-2"
-                                    processControlBlocks={processControlBlocks}
-                                    allProcessPages={allProcessPages}
-                                    memory={memory}
-                                    runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
-                            </div>
-                        </ArcherElement>
-                    </ArcherContainer>
+                        <div className="absolute top-0 right-[2rem]">
+                            <MemoryCard
+                                className="row-span-2"
+                                processControlBlocks={processControlBlocks}
+                                allProcessPages={allProcessPages}
+                                memory={memory}
+                                runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
+                        </div>
+                    </div>
                 </div>
             </div>
 

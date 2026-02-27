@@ -14,7 +14,6 @@ import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 
 import type { ProcessControlBlocks, Pages } from "@/simulation/types";
 import { Accordion, AccordionItem, AccordionTrigger } from "./ui/accordion";
-import { ArcherElement } from "react-archer";
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
@@ -48,10 +47,7 @@ export function MemoryCard({
             <Accordion type="single" collapsible className="w-full">
 
                 {/* The OS, pages 0-1: */}
-                <ArcherElement
-                    id="page-table">
-                    {osPage0Accordion(memory, processControlBlocks)}
-                </ArcherElement>
+                {osPage0Accordion(memory, processControlBlocks)}
 
                 {osPage1Accordion(memory)}
 
