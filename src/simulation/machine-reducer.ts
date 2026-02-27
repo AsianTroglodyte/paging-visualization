@@ -12,7 +12,6 @@ import {
     getPageTable,
     getByteAtVirtualAddress, 
     getPfnFromVirtualAddress,
-    changeOperandOfInstruction,
     getPhysicalAddressFromVirtualAddress} from "./selectors";
 import { MAX_PAGES_ALLOCATABLE, START_OF_PCBS, BYTES_PER_PCB } from "./constants";
 import type { MachineAction, MachineState, CpuState, MmuState } from "./types";

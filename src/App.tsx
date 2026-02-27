@@ -53,7 +53,7 @@ export function App() {
     const zoomContainerRef = useRef<HTMLDivElement>(null);
     const zoomLayerRef = useRef<HTMLDivElement>(null);
     const frameRef = useRef<number | null>(null);
-    const archerContainerRef = useRef<HTMLDivElement>(null);
+    // const archerContainerRef = useRef<HTMLDivElement>(null);
 
     // setup zoom and panning
     useEffect(() => {

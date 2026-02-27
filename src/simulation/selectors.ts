@@ -16,7 +16,7 @@ import {
     PROCESS_COLOR_CLASSES,
 } from "./constants";
 import { OPCODE_NAMES } from "./isa";
-import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks, CpuState } from "./types";
+import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks } from "./types";
 
 export function getFreeList(mem: number[]): number[] {
     const bitmap = mem[FREE_LIST_ADDRESS];
@@ -145,23 +145,10 @@ export function getPage(memory: number[], pfn: number): number[] {
     return memory.slice(pfn * 8, pfn * 8 + 8);
 }
 
-export function getProcessVirtualMemory(memory: number[], processID: number): VirtualPage[] {
-
-    const processVirtualAddressSpace = getProcessVirtualAddressSpace(memory, processID);
-
-    const processVirtualMemory = processVirtualAddressSpace.map((virtualPage) => {
-        return {
-            pfn: virtualPage.pfn,
-            bytes: virtualPage.bytes,
-        }
-    });
-
-    return processVirtualMemory;
-}
 
 export function getAllProcessVirtualMemory(memory: number[]): VirtualPage[][] {
     const processControlBlocks = getProcessControlBlocks(memory);
-    return processControlBlocks.map(pcb => getProcessVirtualMemory(memory, pcb.processID));
+    return processControlBlocks.map(pcb => getProcessVirtualAddressSpace(memory, pcb.processID));
 }
 
 /** Maps virtual address to physical frame number for a process. */

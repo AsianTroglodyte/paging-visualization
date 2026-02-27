@@ -16,8 +16,8 @@ import {
     WRITABLE_PAGE_PROBABILITY,
     START_OF_PCBS
 } from "./constants";
-import { getProcessControlBlocks, getProcessControlBlock, getPageTable } from "./selectors";
-import type {ProcessControlBlock, ProcessControlBlocks } from "./types";
+import { getProcessControlBlocks, getPageTable } from "./selectors";
+import type {ProcessControlBlocks } from "./types";
 import { SAMPLE_PROGRAM } from "./isa";
 
 // First page (VPN 0): 8 instructions. Second page (VPN 1): 8 bytes of data.
@@ -96,7 +96,7 @@ export function setFreeList(newFreePages: number[], memory: number[]): number[] 
 export function writePageTable(AllocatedPagesPFN: {pfn: number, vpn: number}[], pageTableBase: number, memory: number[]): number[] {
     const newMemory: number[] = [...memory];
 
-    AllocatedPagesPFN.forEach(({pfn, vpn}, index) => {
+    AllocatedPagesPFN.forEach(({pfn, vpn}) => {
         // create page table entry
         // PFN (3 bit) | valid (1 bit) | Present (1 bit) | Referenced (1 bit) | Dirty (1 bit) | Writable (1 bit) 
             // valid = 1; present = 1; referenced = 0; dirty = 0; writable = random 0/1;
