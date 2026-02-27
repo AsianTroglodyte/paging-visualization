@@ -108,7 +108,7 @@ export function App() {
     }, [machineState.pageFault]);
 
     return (
-        <SidebarProvider defaultOpen={false}>
+        <SidebarProvider defaultOpen={false} className="flex flex-1 flex-col items-center justify-center">
             <Toaster richColors position="top-center" toastOptions={{
                 classNames: {
                     description: "!text-white !font-mono",
@@ -117,9 +117,10 @@ export function App() {
                 }
             }}/>
             <AppSidebar />
+
             <div
                 ref={zoomContainerRef}
-                className="py-10 pl-1 w-full min-h-screen max-h-screen overflow-hidden bg-black/30"
+                className="py-10 pl-1 w-full h-screen  overflow-hidden  bg-black/30"
                 style={{ touchAction: "none" }}>
                 <div
                     ref={zoomLayerRef}
@@ -128,6 +129,9 @@ export function App() {
                         transformOrigin: "0 0",
                         willChange: "transform",
                     }}>
+                    <div className="w-full h-screen max-w-[110rem] mx-auto static relative">
+
+
                     <div className="flex flex-col gap-3 justify-center items-center absolute left-[2rem] top-0">
                         <CpuCard cpu={cpu} 
                         machineStateDispatch={machineStateDispatch} 
@@ -152,6 +156,7 @@ export function App() {
                     allProcessPages={allProcessPages} 
                     memory={memory}
                     runningPid={cpu.kind === "running" ? cpu.runningPid : null} />
+                    </div>
 
                 </div>
             </div>

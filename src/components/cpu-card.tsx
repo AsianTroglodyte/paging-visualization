@@ -169,8 +169,8 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                 </Button>
             </ButtonGroup>
             
-            <p className="text-sm text-muted-foreground italic mt-1">
-                NOTE: operands are 0-31 and numbers wrap on overflow and underflow.
+            <p className="text-xs text-muted-foreground italic mt-1">
+                Operands limited to 0-31 and accumulator wraps on overflow and underflow.
             </p>
 
             </div>}
