@@ -14,6 +14,7 @@ import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 
 import type { ProcessControlBlocks, Pages } from "@/simulation/types";
 import { Accordion, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { ArcherElement } from "react-archer";
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
   size?: "default" | "sm";
@@ -47,7 +48,10 @@ export function MemoryCard({
             <Accordion type="single" collapsible className="w-full">
 
                 {/* The OS, pages 0-1: */}
-                {osPage0Accordion(memory, processControlBlocks)}
+                <ArcherElement
+                    id="page-table">
+                    {osPage0Accordion(memory, processControlBlocks)}
+                </ArcherElement>
 
                 {osPage1Accordion(memory)}
 
@@ -63,7 +67,7 @@ export function MemoryCard({
                     <AccordionTrigger
                         className={`hover:no-underline text-sm px-2 cursor-pointer 
                         ${isRunning && processColors ? `${processColors.trigger} 
-                        text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColors?.cellStrong ?? processColors?.cell ?? "")}
+                            text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColors?.cellStrong ?? processColors?.cell ?? "")}
                         ${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
                         <div className="flex justify-between w-full pr-4 items-center gap-2">
                         <span className={isRunning && processColors ? "text-white" : ""}>PFN {pfn}</span>
@@ -80,7 +84,7 @@ export function MemoryCard({
                     <MemoryAccordionContent className="text-sm ">
                         <Table
                             className={`text-sm w-full`}
-                        >
+                            >
                         <TableHeader className={`${processColors?.cellStrong ?? ""}`}>
                             <TableRow>
                                 <TableHead className="w-[100px]">Phys. Addr.</TableHead>
@@ -116,7 +120,7 @@ export function MemoryCard({
                         </Table>
                     </MemoryAccordionContent>
                 </AccordionItem>
-                );
+                    );
                 })}
             </Accordion>
 

@@ -1,15 +1,14 @@
 import { MinusIcon, PlusIcon } from "lucide-react"
 import { Button} from "./ui/button"
 import { ButtonGroup } from "./ui/button-group"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card"    
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"    
 import { Field} from "./ui/field"
 import { Input } from "./ui/input"
-import { useState } from "react"
 import { OPCODE_NAMES } from "@/simulation/isa";
 import type { CpuState, MemoryAction } from "@/simulation/types";
 import { getProcessColorClasses } from "@/simulation/selectors"
-import { computePosition } from "node_modules/@base-ui/react/esm/floating-ui-react"
-
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { PcHoverContent, PtbHoverContent, AccHoverContent, IrHoverContent } from "./cpu-hover-card";
 
 export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, setSelectedVirtualAddress, className }: 
 { 
@@ -76,23 +75,67 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
     const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
     return (
-    <Card size="default" className={`flex flex-col gap-4 min-w-76 w-110 max-w-110 bg-black ${className}`}>
+    <Card size="default" className={`flex flex-col gap-4 w-90 bg-black ${className}`}>
         <CardHeader>
             <CardTitle >
-                <h1 className="text-3xl text-center font-semibold">CPU</h1>
+                <h1 className="text-3xl text-center font-semibold">CPU: PID {isIdle ? "—" : cpu.runningPid} </h1>
             </CardTitle>
 
         </CardHeader>
 
         <CardContent className="flex-[1_1_auto] flex flex-row gap-2 ">
             {/* Registers */}
-            <div className={`flex-[52] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
-                <h2 className="text-base font-semibold">PID {isIdle ? "—" : cpu.runningPid} Registers:</h2>
+            <div className={`flex-[35] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
+                <h2 className="text-base font-semibold">Registers:</h2>
                 <ul className="text-base font-mono list-disc list-inside space-y-0.5">
-                    <li>Program Counter: {isIdle ? "-" : cpu.programCounter}</li>
-                    <li>Page Table Base: {isIdle ? "-" : cpu.pageTableBase}</li>
-                    <li>Accumulator: {isIdle ? "-" : cpu.accumulator}</li>
-                    <li>Instr. Raw: {isIdle ? "-" : cpu.currentInstructionRaw}</li>
+                    <li>
+                        <HoverCard openDelay={100} closeDelay={100}>
+                            <HoverCardTrigger asChild>
+                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                    PC: {isIdle ? "-" : cpu.programCounter}
+                                </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-64">
+                                <PcHoverContent />
+                            </HoverCardContent>
+                        </HoverCard>
+                    </li>
+                    <li>
+                        <HoverCard openDelay={100} closeDelay={100}>
+                            <HoverCardTrigger asChild>
+                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                    PTB: {isIdle ? "-" : cpu.pageTableBase}
+                                </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-64">
+                                <PtbHoverContent />
+                            </HoverCardContent>
+                        </HoverCard>
+                    </li>
+                    <li>
+                        <HoverCard openDelay={100} closeDelay={100}>
+                            <HoverCardTrigger asChild>
+                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                    ACC: {isIdle ? "-" : cpu.accumulator}
+                                </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-64">
+                                <AccHoverContent />
+                            </HoverCardContent>
+                        </HoverCard>
+                    </li>
+                    <li>
+                        <HoverCard openDelay={100} closeDelay={100}>
+                            <HoverCardTrigger asChild>
+                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                    IR: {isIdle ? "-" : cpu.currentInstructionRaw}
+                                </span>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-64">
+                                <IrHoverContent />
+                            </HoverCardContent>
+                        </HoverCard>
+                    </li>
                 </ul>
                 {isIdle && (
                 <p className="text-xs text-muted-foreground italic mt-1">
@@ -103,7 +146,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
 
             
             {isIdle ? "" : 
-            <div className="flex-[48] min-w-0 flex flex-col gap-2 p-2">
+            <div className="flex-[75] min-w-0 flex flex-col gap-2 p-2">
             <Field orientation="horizontal" className="flex flex-shrink-1 font-semibold ">
                 <span className="text-lg whitespace-nowrap ">
                     {OPCODE_NAMES[(cpu.currentInstructionRaw >> 5)]}

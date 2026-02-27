@@ -1,6 +1,7 @@
 import type { MmuState } from "@/simulation/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"    
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
+import { ArcherElement } from "react-archer";
 
 export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
 
@@ -95,6 +96,7 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
 
                     <p className={`text-base text-center flex justify-center font-semibold 
                     col-span-3 row border`}>Address Translation</p>
+
 
 
                     <div className="flex justify-center items-center ">
