@@ -52,14 +52,14 @@ export function VirtualMemory(
                 {cpu.kind === "running" ? `Process ${cpu.runningPid}` : "No process selected"}
             </h2>
         </CardTitle>
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full" >
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
-            <AccordionItem key={vpn} value={`vpn-${vpn}`} >
+            <AccordionItem key={vpn} value={`vpn-${vpn}`} id={`virtual-memory-${vpn}`}>
                 <AccordionTrigger className={`hover:no-underline text-sm px-2 cursor-pointer 
                     ${isRunning && processColorClasses ? `
                     ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : ""}`}>
                     <div className="flex justify-between w-full pr-4 items-center gap-2 ">
-                        <div className={`font-mono ${isRunning && processColorClasses ? "text-white" : ""}`}>VPN {vpn}</div>
+                        <div className={`${isRunning && processColorClasses ? "text-white" : ""}`}>VPN {vpn}</div>
                         <div className={`flex items-center gap-2 ${isRunning && processColorClasses ? "text-white" : (processColorClasses?.accent ?? "text-muted-foreground")}`}>
                         {`PFN ${pfn} ${ vpn === 0 ? "Code" : "Heap"}`}
                         {isRunning && processColorClasses && (

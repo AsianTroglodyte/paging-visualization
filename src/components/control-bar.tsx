@@ -128,7 +128,7 @@ export function ControlBarDock({
     >
       <button
         type="button"
-        onClick={toggle}
+        onMouseDown={toggle}
         className="flex h-10 w-30 items-center justify-center gap-2 rounded-t-md 
         bg-primary px-3 text-primary-foreground cursor-pointer"
       >

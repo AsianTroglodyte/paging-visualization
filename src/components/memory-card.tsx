@@ -37,7 +37,7 @@ export function MemoryCard({
 }: MemoryCardProps) {
 
     return (
-    <Card className={`w-74 min-w-74 bg-black ${className}`} id="memory-card">
+    <Card className={`w-80 min-w-80 bg-black ${className}`} id="memory-card">
         <CardHeader>
             <CardTitle>
                 <h1 className="text-4xl text-center"> Memory </h1>
@@ -58,11 +58,12 @@ export function MemoryCard({
                 {/* The processes, pages 2-7: */}
 
                 <span id="process-mem">
-                {allProcessPages.map(({ pfn, ownerPid, vpn: _vpn, bytes }) => {
+                {allProcessPages.map(({ pfn, ownerPid, vpn: vpn, bytes }) => {
                     const isRunning = runningPid !== null && ownerPid === runningPid;
                 const processColors = getProcessColorClasses(ownerPid);
                 return (
                     <AccordionItem
+                    id={isRunning ? `physical-memory-${vpn}` : undefined}
                     key={pfn}
                     value={`pfn-${pfn}`}
                     className={`${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
@@ -73,16 +74,18 @@ export function MemoryCard({
                             : (processColors?.cellStrong ?? processColors?.cell ?? "")}
                         ${isRunning && processColors ? ` ${processColors.ring}` : ""}`
                         }>
+                    
                         <div className="flex justify-between w-full pr-4 items-center gap-2">
-                        <span className={isRunning && processColors ? "text-white" : ""}>PFN {pfn}</span>
-                        <span className={`flex items-center gap-2 ${isRunning && processColors ? "text-white" : (processColors?.accent ?? "text-muted-foreground")}`}>
-                            {ownerPid !== null ? `Process ${ownerPid}` : "Free"}
-                            {isRunning && processColors && (
-                                <span className="text-[10px] font-medium uppercase px-1.5 py-0.5 rounded text-white bg-white/20">
-                                    Running
-                                </span>
-                            )}
-                        </span>
+                            <span className={isRunning && processColors ? "text-white" : ""}>PFN {pfn}{isRunning ? `; VPN ${vpn}` : ""}</span>
+
+                            <span className={`flex items-center gap-2 ${isRunning && processColors ? "text-white" : (processColors?.accent ?? "text-muted-foreground")}`}>
+                                {ownerPid !== null ? `PID ${ownerPid}` : "Free"}
+                                {isRunning && processColors && (
+                                    <span className="text-[10px] font-medium uppercase px-1.5 py-0.5 rounded text-white bg-white/20">
+                                        Running
+                                    </span>
+                                )}
+                            </span>
                         </div>
                     </AccordionTrigger>
                     <MemoryAccordionContent className="text-sm ">

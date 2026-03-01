@@ -8,13 +8,15 @@ import { Toaster, toast } from "sonner";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { machineReducer } from "./simulation/machine-reducer";
-import { getProcessControlBlocks, getAllProcessPages } from "./simulation/selectors";
+import { getProcessControlBlocks, getAllProcessPages, getPfnFromVirtualAddress, getProcessControlBlock } from "./simulation/selectors";
 import VirtualMemory from "./components/VirtualMemory";
 import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { buildArrowPaths, curveGen, updateArrowPathsFromProcessMem as updateArrowPathsFromProcessMemFn } from "./lib/arrow-paths";
+import { line } from "d3-shape";
+
 
 export function App() {
 
@@ -66,8 +68,7 @@ export function App() {
             viewBoxWidth: VIEWBOX_WIDTH,
             viewBoxHeight: VIEWBOX_HEIGHT,
             setProcessMemPoint: (p) => { processMemPointRef.current = p; },
-            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,
-        });
+            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,});
     }, []);
 
     // On load: measure arrow targets and start an rAF loop that updates arrow paths every frame.
@@ -103,8 +104,18 @@ export function App() {
                 arrowLoopRafIdRef.current = null;
             }
         };
-    }, [updateArrowPathsFromProcessMem]);
+    }, []);
 
+        // hide os page paths when cpu is idle
+        useEffect(() => {
+            if (cpu.kind === "idle") {
+                const osPage0Path = document.getElementById("os-page-0-path");
+                const osPage1Path = document.getElementById("os-page-1-path");
+                if (!osPage0Path || !osPage1Path) return;
+                osPage0Path.classList.add("invisible");
+                osPage1Path.classList.add("invisible");
+            }
+        }, [cpu.kind]);
 
     // setup zoom and panning
     useEffect(() => {
@@ -220,27 +231,7 @@ export function App() {
                             />
                     </div>
 
-
-                    <p className="absolute top-[6rem] left-[26rem] text-[0.6rem] text-muted-foreground">
-                        1. Send Virtual <br /> Address and PTB <br />  address to MMU
-                    </p>
-
-                    <p className="absolute top-[6rem] left-[59rem] text-[0.6rem] text-muted-foreground">
-                        2. Use PTB to find PT. <br/> use VPN to index PTE
-                    </p>
-
-                    <p className="absolute top-[15rem] left-[56rem] text-[0.6rem] text-muted-foreground">
-                        3. Extract PFN from PTE. <br/>MMU gets PFN.
-                    </p>
-
-
-                    <p className="absolute top-[21.5rem] left-[56rem] text-[0.6rem] text-muted-foreground">
-                        4. Use PFN to get <br/> page frame. Use <br/> offset to get byte.
-                    </p>
-
-                    <p className="absolute top-[29.5rem] left-[45rem] text-[0.6rem] text-muted-foreground">
-                        5. Write back to CPU.
-                    </p>
+                    {diagramLabels()}
 
                     {/* Single SVG overlay for all arrows - spans entire diagram */}
                     {/* viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} */}
@@ -278,6 +269,11 @@ export function App() {
                                     <path id="write-back-path" d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
                                     <path d="M385 190 L400 184 L400 196 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
                                     <path id="process-bracket-path" d={ip.processBracketPoints} fill="none" stroke="currentColor" strokeWidth="1"/>
+
+                                    <path id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
+                                    className="invisible" fill="white" opacity="0.05" stroke="currentColor" strokeWidth="1" />
+                                    <path id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
+                                    className="invisible" fill="white" opacity="0.05" stroke="currentColor" strokeWidth="1" />
                                 </>
                             );
                         })()}
@@ -306,3 +302,30 @@ export function App() {
 export default App;
 
 
+
+function diagramLabels() {
+    return (
+    <>
+    <p className="absolute top-[6rem] left-[26rem] text-[0.6rem] text-muted-foreground">
+        1. Send Virtual <br /> Address and PTB <br />  address to MMU
+    </p>
+
+    <p className="absolute top-[6rem] left-[59rem] text-[0.6rem] text-muted-foreground">
+        2. Use PTB to find PT. <br/> use VPN to index PTE
+    </p>
+
+    <p className="absolute top-[15rem] left-[56rem] text-[0.6rem] text-muted-foreground">
+        3. Extract PFN from PTE. <br/>MMU gets PFN.
+    </p>
+
+    <p className="absolute top-[21.5rem] left-[56rem] text-[0.6rem] text-muted-foreground">
+        4. Use PFN to get <br/> page frame. Use <br/> offset to get <br/> byte.
+    </p>
+
+    <p className="absolute top-[29.5rem] left-[45rem] text-[0.6rem] text-muted-foreground">
+        5. Write back to CPU.
+    </p>
+
+    </>
+    )
+}
