@@ -264,7 +264,7 @@ export function App() {
                             className="" />
                     </div>
 
-                    <div className="absolute top-[40px] left-1/2 -translate-x-1/2 ">
+                    <div className="absolute top-[40px] left-1/2 -translate-x-1/2 z-10">
                         <MmuCard mmu={mmu} className="" />
                     </div>
 
@@ -285,7 +285,7 @@ export function App() {
                     {/* Single SVG overlay for all arrows - spans entire diagram */}
                     {/* viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} */}
                     <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        className="absolute inset-0 w-full h-full pointer-events-none z-0"
                         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                         preserveAspectRatio="none">
                         <path
