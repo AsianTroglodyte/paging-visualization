@@ -11,7 +11,7 @@ import { SidebarHelpTab, SidebarSettingsTab, SidebarTutorialTab } from "./sideba
 
 export function AppSidebar() {
   return (
-    <Sidebar variant="floating"  collapsible="offcanvas">
+    <Sidebar variant="floating"  collapsible="offcanvas" className="select-text">
       <SidebarHeader />
       <SidebarContent >
         <Tabs defaultValue="Tutorial" className="w-full">

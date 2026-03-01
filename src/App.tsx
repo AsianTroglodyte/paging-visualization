@@ -213,14 +213,18 @@ export function App() {
             } else {
                 title = "Cannot create process";
             }
-            toast(title, { description: err.message });
+            const toastId = toast(title, {
+                description: err.message,
+                duration: 3000,
+            });
             machineStateDispatch({ type: "CLEAR_ERROR" });
         }
     }, [machineState.error]);
 
     return (
-    <SidebarProvider defaultOpen={false} className="flex flex-1 flex-col items-center justify-center">
-        <Toaster richColors position="top-center" toastOptions={{
+    <SidebarProvider defaultOpen={false} className="flex flex-1 flex-col items-center justify-center select-none">
+        <Toaster richColors closeButton position="top-center" toastOptions={{
+            duration: 3000,
             classNames: {
                 description: "!text-white !font-mono",
                 title: "!text-white !font-mono !text-base",
@@ -316,9 +320,9 @@ export function App() {
                                     <path id="process-bracket-path" d={ip.processBracketPoints} fill="none" stroke="currentColor" strokeWidth="1"/>
 
                                     <path id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
-                                    className="invisible" fill="white" fillOpacity="0.05" strokeWidth="1" />
+                                    className="invisible" fill="white" opacity="0.05" strokeWidth="1" />
                                     <path id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
-                                    className="invisible" fill="white" fillOpacity="0.05" strokeWidth="1" />
+                                    className="invisible" fill="white" opacity="0.05" strokeWidth="1" />
                                 </>
                             );
                         })()}

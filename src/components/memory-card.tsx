@@ -68,7 +68,7 @@ export function MemoryCard({
                     value={`pfn-${pfn}`}
                     className={`${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
                     <AccordionTrigger
-                        className={`hover:no-underline text-sm px-2 cursor-pointer 
+                        className={`hover:no-underline text-base font-mono px-2 cursor-pointer 
                         ${isRunning && processColors ? `${processColors.trigger} 
                             text-white [&_[data-slot=accordion-trigger-icon]]:text-white` 
                             : (processColors?.cellStrong ?? processColors?.cell ?? "")}
@@ -184,10 +184,10 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
     <AccordionItem value="pfn-0" id={ mmu.kind === "idle" ? "page-table" : undefined }>
         <AccordionTrigger 
         id={mmu.kind === "translated" ? "page-table" : undefined}
-        className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
+        className="hover:no-underline font-mono text-base px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
-            <span className="font-mono text-sm">PFN 0</span>
-            <span className="text-white text-sm">OS: PTs + Free List</span>
+            <span >PFN 0</span>
+            <span >OS: PTs + Free List</span>
         </div>
         </AccordionTrigger>
         <MemoryAccordionContent className="text-sm">
@@ -260,10 +260,10 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 function osPage1Accordion(memory: number[]) {
     return (
     <AccordionItem value="pfn-1">
-        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
+        <AccordionTrigger className="hover:no-underline text-base font-mono px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
-            <span className="font-mono text-sm">PFN 1</span>
-            <span className="text-white text-sm">OS: PCBs</span>
+            <span>PFN 1</span>
+            <span className="text-white">OS: PCBs</span>
         </div>
         </AccordionTrigger>
         <MemoryAccordionContent className="text-sm">

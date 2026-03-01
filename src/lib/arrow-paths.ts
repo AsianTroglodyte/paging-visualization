@@ -108,8 +108,8 @@ export function updateArrowPathsFromProcessMem(
 
         const path = lineGen([
             [virtualMemoryPfn0Point[0], virtualMemoryPfn0Point[1]], 
-            [virtualMemoryPfn0Point[0], virtualMemoryPfn0Point[1] + virtualMemoryPfn0Height],
-            [physicalMemoryPfn0Point[0], physicalMemoryPfn0Point[1] + physicalMemoryPfn0Height],
+            [virtualMemoryPfn0Point[0], virtualMemoryPfn0Point[1] + virtualMemoryPfn0Height + 2],
+            [physicalMemoryPfn0Point[0], physicalMemoryPfn0Point[1] + physicalMemoryPfn0Height + 2],
             [physicalMemoryPfn0Point[0], physicalMemoryPfn0Point[1]]]);
 
         osPage0Path.setAttribute("d", path ?? "");
@@ -143,8 +143,8 @@ export function updateArrowPathsFromProcessMem(
 
         const path = lineGen([
             [virtualMemoryPfn1Point[0], virtualMemoryPfn1Point[1]], 
-            [virtualMemoryPfn1Point[0], virtualMemoryPfn1Point[1] + virtualMemoryPfn1Height],
-            [physicalMemoryPfn1Point[0], physicalMemoryPfn1Point[1] + physicalMemoryPfn1Height],
+            [virtualMemoryPfn1Point[0], virtualMemoryPfn1Point[1] + virtualMemoryPfn1Height - 2],
+            [physicalMemoryPfn1Point[0], physicalMemoryPfn1Point[1] + physicalMemoryPfn1Height - 2],
             [physicalMemoryPfn1Point[0], physicalMemoryPfn1Point[1]]]);
 
         osPage1Path.setAttribute("d", path ?? "");

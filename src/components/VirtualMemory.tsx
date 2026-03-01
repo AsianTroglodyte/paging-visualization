@@ -55,7 +55,7 @@ export function VirtualMemory(
         <Accordion type="single" collapsible className="w-full" >
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
             <AccordionItem key={vpn} value={`vpn-${vpn}`} id={`virtual-memory-${vpn}`}>
-                <AccordionTrigger className={`hover:no-underline text-sm px-2 cursor-pointer 
+                <AccordionTrigger className={`hover:no-underline text-base font-mono px-2 cursor-pointer 
                     ${isRunning && processColorClasses ? `
                     ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : ""}`}>
                     <div className="flex justify-between w-full pr-4 items-center gap-2 ">
