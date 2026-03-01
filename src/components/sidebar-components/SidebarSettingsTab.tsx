@@ -1,4 +1,5 @@
 import { SidebarGroup, SidebarHeader } from "@/components/ui/sidebar";
+import rickrollMeme from "@/assets/rickroll-meme.gif";
 
 export function SidebarSettingsTab() {
   return (
@@ -8,7 +9,7 @@ export function SidebarSettingsTab() {
         <p className="text-sm text-muted-foreground">
           Nothing to see here yet, but enjoy this rickroll in the meantime
         </p>
-        <img className="w-full" src="/src/assets/rickroll-meme.gif" alt="Rick Roll" />
+        <img className="w-full" src={rickrollMeme} alt="Rick Roll" />
       </div>
     </SidebarGroup>
   );
