@@ -4,7 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 
 export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
 
-    const { virtualPageNumber, pageFrameNumber, offset } = mmu;
+    // if mmu is translated, use the virtual page number, page frame number, and offset
+    // if mmu is idle, use 0 for all values
+    let virtualPageNumber = mmu.kind === "translated" ? mmu.virtualPageNumber : 0;
+    let pageFrameNumber = mmu.kind === "translated" ? mmu.pageFrameNumber : 0;
+    let offset = mmu.kind === "translated" ? mmu.offset : 0;
 
     // vpnArray is specially formatted if thre 
     const vpnArray = new Array(3).fill("");
@@ -96,7 +100,7 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
                         </svg>
                     </div>
 
-                    <p className={`text-base text-center flex justify-center font-semibold 
+                    <p className={`text-sm text-center flex justify-center font-semibold 
                     col-span-3 row border`}>Address Translation</p>
 
 

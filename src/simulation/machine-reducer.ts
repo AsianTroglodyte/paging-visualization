@@ -191,7 +191,8 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 ...cpu, 
                 programCounter: action.payload.newProgramCounter,
                 currentInstructionRaw: newCurrentInstructionRaw
-            }, mmu: { ...mmu, 
+            }, mmu: { 
+                kind: "translated",
                 virtualPageNumber: newVirtualPageNumber, 
                 pageFrameNumber: newPfn,
                 offset: newOffset}};
@@ -236,7 +237,9 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     return {
                         ...state,
                         cpu: { ...cpu, accumulator: byte },
-                        mmu: { virtualPageNumber: Math.floor(virtualAddress / 8), 
+                        mmu: { 
+                            kind: "translated",
+                            virtualPageNumber: Math.floor(virtualAddress / 8), 
                             pageFrameNumber: getPfnFromVirtualAddress(memory, cpu.runningPid, virtualAddress), 
                             offset: virtualAddress % 8 }
                     };
@@ -250,7 +253,9 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     const newMemory = writeByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress, cpu.accumulator);
                     return { ...state, 
                         memory: newMemory, cpu: { ...cpu},
-                        mmu: { ...mmu, virtualPageNumber: Math.floor(virtualAddress / 8), 
+                        mmu: { 
+                            kind: "translated",
+                            virtualPageNumber: Math.floor(virtualAddress / 8), 
                             pageFrameNumber: getPfnFromVirtualAddress(memory, cpu.runningPid, virtualAddress), 
                             offset: virtualAddress % 8 }};
                 }
@@ -267,7 +272,9 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     
                     return { ...state, 
                         cpu: { ...cpu, accumulator: result},
-                        mmu: { ...mmu, virtualPageNumber: Math.floor(virtualAddress / 8), 
+                        mmu: { 
+                            kind: "translated",
+                            virtualPageNumber: Math.floor(virtualAddress / 8), 
                             pageFrameNumber: getPfnFromVirtualAddress(memory, cpu.runningPid, virtualAddress), 
                             offset: virtualAddress % 8}};
                 }
@@ -290,7 +297,9 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     const result = (cpu.accumulator - valueFromVirtualAddress) & 0xFF;
                     return { ...state, 
                         cpu: { ...cpu, accumulator: result },
-                        mmu: { ...mmu, virtualPageNumber: Math.floor(virtualAddress / 8), 
+                        mmu: { 
+                            kind: "translated",
+                            virtualPageNumber: Math.floor(virtualAddress / 8), 
                             pageFrameNumber: getPfnFromVirtualAddress(memory, cpu.runningPid, virtualAddress), 
                             offset: virtualAddress % 8 } };
                 }

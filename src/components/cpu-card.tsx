@@ -24,8 +24,6 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
         const number = Number(e.target.value);
         const clamped = Number.isNaN(number) ? 0 : Math.min(31, Math.max(0, Math.floor(number)));
         
-        console.log("clamped: operand =", clamped);
-
         if (cpu.kind === "idle") {
             throw new Error("Cannot change operand of instruction when CPU is idle.");
         }
@@ -75,7 +73,8 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
     const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
     return (
-    <Card size="default" className={`flex flex-col gap-4 w-90 bg-black ${className}`}>
+    <Card size="default" className={`flex flex-col gap-4 w-90 bg-black ${className} relative `}>
+
         <CardHeader>
             <CardTitle >
                 <h1 className="text-3xl text-center font-semibold">CPU: PID {isIdle ? "—" : cpu.runningPid} </h1>
@@ -159,8 +158,6 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                         max={31}
                         step={1}
                         value={(() => {
-                            console.log("cpu.currentInstructionRaw:", cpu.currentInstructionRaw);
-                            console.log("cpu.currentInstructionRaw & 0b00011111:", cpu.currentInstructionRaw & 0b00011111);
                             return (cpu.currentInstructionRaw & 0b00011111).toString();
                         })()}
                         onChange={handleOperandChange}
