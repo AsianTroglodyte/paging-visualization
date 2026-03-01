@@ -54,9 +54,12 @@ export function updateArrowPathsFromProcessMem(
     const processMemoryAccessPath = getPathElement("process-memory-access-path");
     if (processMemoryAccessPath) processMemoryAccessPath.setAttribute("d", curveGen([pt, [1000, 340], [850, 340]]) ?? "");
 
-    // update process memory access head path
+    // update process memory access head path (triangle: base, tip-top, tip-bottom, close)
     const processMemoryAccessHeadPath = getPathElement("process-memory-access-head-path");
-    if (processMemoryAccessHeadPath) processMemoryAccessHeadPath.setAttribute("d", `M${pt[0] + 15} ${pt[1]} L${pt[0]} ${pt[1] - 6} L${pt[0]} ${pt[1] + 6} Z`);
+    if (processMemoryAccessHeadPath) {
+        const headPoints: [number, number][] = [[pt[0] + 15, pt[1]], [pt[0], pt[1] - 6], [pt[0], pt[1] + 6], [pt[0] + 15, pt[1]]];
+        processMemoryAccessHeadPath.setAttribute("d", (curveGen(headPoints) ?? "") + " Z");
+    }
 
 
     const topBracketPoint = (processMemRect.top - diagramRect.top) / diagramRect.height * viewBoxHeight;

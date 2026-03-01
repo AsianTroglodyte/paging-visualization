@@ -138,6 +138,8 @@ export function App() {
         const containerSelection = select(container);
         containerSelection.call(zoomBehavior).call(zoomBehavior.transform, zoomIdentity);
         layer.style.transform = "translate(0px, 0px) scale(1)";
+
+
         return () => {
             containerSelection.on(".zoom", null);
             if (frameRef.current != null) {
@@ -233,7 +235,7 @@ export function App() {
 
 
                     <p className="absolute top-[21.5rem] left-[56rem] text-[0.6rem] text-muted-foreground">
-                        4. Wse PFN to get <br/> page frame. Use <br/> offset to get byte.
+                        4. Use PFN to get <br/> page frame. Use <br/> offset to get byte.
                     </p>
 
                     <p className="absolute top-[29.5rem] left-[45rem] text-[0.6rem] text-muted-foreground">
