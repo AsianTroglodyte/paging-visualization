@@ -235,11 +235,11 @@ export function App() {
 
 
                     <p className="absolute top-[21.5rem] left-[56rem] text-[0.6rem] text-muted-foreground">
-                        4. use PFN to get <br/> page frame. Use <br/> offset to get byte.
+                        4. Wse PFN to get <br/> page frame. Use <br/> offset to get byte.
                     </p>
 
                     <p className="absolute top-[29.5rem] left-[45rem] text-[0.6rem] text-muted-foreground">
-                        5. write back to CPU.
+                        5. Write back to CPU.
                     </p>
 
                     {/* Single SVG overlay for all arrows - spans entire diagram */}
