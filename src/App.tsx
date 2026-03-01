@@ -213,7 +213,7 @@ export function App() {
             } else {
                 title = "Cannot create process";
             }
-            const toastId = toast(title, {
+            toast(title, {
                 description: err.message,
                 duration: 3000,
             });
