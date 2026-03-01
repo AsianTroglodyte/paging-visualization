@@ -61,7 +61,6 @@ export function updateArrowPathsFromProcessMem(
 
     const topBracketPoint = (processMemRect.top - diagramRect.top) / diagramRect.height * viewBoxHeight;
     const bottomBracketPoint = (processMemRect.top + processMemRect.height - diagramRect.top) / diagramRect.height * viewBoxHeight;
-    const bracketheight = processMemRect.height / diagramRect.height * viewBoxHeight;
 
     // update process bracket path
     const processBracketPath = getPathElement("process-bracket-path");
