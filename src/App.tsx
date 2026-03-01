@@ -129,9 +129,51 @@ export function App() {
             layer.style.transform = `translate(${nextTransform.x}px, ${nextTransform.y}px) scale(${nextTransform.k})`;
         };
 
+        const panFraction = 0.35;
+
         // TODO: maybe unset selection on outside when zooming 
         const zoomBehavior = zoom<HTMLDivElement, unknown>()
             .scaleExtent([0.8, 1.4])
+            .constrain((transform) => {
+                const rect = container.getBoundingClientRect();
+                const k = transform.k;
+                if (k <= 0) return transform;
+
+                const clamp = (value: number, min: number, max: number) =>
+                    Math.max(min, Math.min(max, value));
+
+                // Clamp the viewport center in world coordinates so bounds remain
+                // consistent across zoom levels.
+                const centerWorldX = (rect.width / 2 - transform.x) / k;
+                const centerWorldY = (rect.height / 2 - transform.y) / k;
+
+                const centerBaseX = rect.width / 2;
+                const centerBaseY = rect.height / 2;
+                const maxOffsetWorldX = rect.width * panFraction;
+                const maxOffsetWorldY = rect.height * panFraction;
+
+                const clampedCenterWorldX = clamp(
+                    centerWorldX,
+                    centerBaseX - maxOffsetWorldX,
+                    centerBaseX + maxOffsetWorldX
+                );
+                const clampedCenterWorldY = clamp(
+                    centerWorldY,
+                    centerBaseY - maxOffsetWorldY,
+                    centerBaseY + maxOffsetWorldY
+                );
+
+                const clampedX = rect.width / 2 - clampedCenterWorldX * k;
+                const clampedY = rect.height / 2 - clampedCenterWorldY * k;
+
+                if (
+                    clampedX === transform.x &&
+                    clampedY === transform.y
+                ) {
+                    return transform;
+                }
+                return zoomIdentity.translate(clampedX, clampedY).scale(k);
+            })
             .filter((event) => {
                 const target = event?.target as HTMLElement | null;
                 if (!target?.closest) return true;
