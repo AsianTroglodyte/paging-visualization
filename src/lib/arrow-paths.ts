@@ -1,5 +1,3 @@
-import { getProcessControlBlock } from "@/simulation/selectors";
-import type { CpuState } from "@/simulation/types";
 import { line, curveCatmullRom } from "d3-shape";
 
 export const curveGen = line<[number, number]>().curve(curveCatmullRom.alpha(0.5));

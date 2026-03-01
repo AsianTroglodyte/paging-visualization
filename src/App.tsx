@@ -8,14 +8,13 @@ import { Toaster, toast } from "sonner";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { machineReducer } from "./simulation/machine-reducer";
-import { getProcessControlBlocks, getAllProcessPages, getPfnFromVirtualAddress, getProcessControlBlock } from "./simulation/selectors";
+import { getProcessControlBlocks, getAllProcessPages} from "./simulation/selectors";
 import VirtualMemory from "./components/VirtualMemory";
 import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { buildArrowPaths, curveGen, updateArrowPathsFromProcessMem as updateArrowPathsFromProcessMemFn } from "./lib/arrow-paths";
-import { line } from "d3-shape";
 
 
 export function App() {
