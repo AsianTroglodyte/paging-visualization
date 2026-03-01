@@ -11,22 +11,20 @@ import { machineReducer } from "./simulation/machine-reducer";
 import { getProcessControlBlocks, getAllProcessPages } from "./simulation/selectors";
 import VirtualMemory from "./components/VirtualMemory";
 import { FREE_LIST_ADDRESS } from "./simulation/constants";
-import { IDLE_CPU_STATE } from "./simulation/types";
+import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { buildArrowPaths, curveGen, updateArrowPathsFromProcessMem as updateArrowPathsFromProcessMemFn } from "./lib/arrow-paths";
 
 export function App() {
 
-    const [machineState, machineStateDispatch] = useReducer(machineReducer, undefined, () => {
+    const [machineState, machineStateDispatch] = useReducer(machineReducer, undefined, (): MachineState => {
         const initialMemory = new Array(64).fill(0);
         initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
         return {
             memory: initialMemory,
             cpu: IDLE_CPU_STATE,
-            mmu: {
-                kind: "idle",
-            },
+            mmu: { kind: "idle" },
             pageFault: null,
         };
     });
