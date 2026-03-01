@@ -63,7 +63,12 @@ export type CpuState =
 export const IDLE_CPU_STATE: CpuState = { kind: "idle" };
 
 
-export type MmuState = {
+export type MmuState = 
+| {
+  kind: "idle";
+}
+| {
+  kind: "translated";
   virtualPageNumber: number;
   pageFrameNumber: number;
   offset: number;

@@ -91,7 +91,6 @@ export function VirtualMemory(
                             if (isProgramCounter) {
                                 return;
                             }
-                            console.log("selected virtual address", virtualAddress);
                             setSelectedVirtualAddress(virtualAddress);
                         }}
                         className={`border-l-2 ${

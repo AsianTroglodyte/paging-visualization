@@ -12,7 +12,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent, PteHoverContent, PcbByte0HoverContent, PcbByte1HoverContent, FreeListHoverContent } from "./hover-content";
 import { MemoryAccordionContent } from "./ui/memory-accordion-content";
 
-import type { ProcessControlBlocks, Pages } from "@/simulation/types";
+import type { ProcessControlBlocks, Pages, MmuState, CpuState } from "@/simulation/types";
 import { Accordion, AccordionItem, AccordionTrigger } from "./ui/accordion";
 
 interface MemoryCardProps extends React.ComponentProps<"div"> {
@@ -22,6 +22,8 @@ interface MemoryCardProps extends React.ComponentProps<"div"> {
   memory: number[];
   runningPid?: number | null;
   className: string;
+  mmu: MmuState;
+  cpu: CpuState;
 }
 
 export function MemoryCard({
@@ -30,10 +32,12 @@ export function MemoryCard({
     allProcessPages,
     runningPid = null,
     className,
-    }: MemoryCardProps) {
+    mmu,
+    cpu,
+}: MemoryCardProps) {
 
     return (
-    <Card className={`w-74 min-w-74 bg-black ${className}`}>
+    <Card className={`w-74 min-w-74 bg-black ${className}`} id="memory-card">
         <CardHeader>
             <CardTitle>
                 <h1 className="text-4xl text-center"> Memory </h1>
@@ -47,24 +51,28 @@ export function MemoryCard({
             <Accordion type="single" collapsible className="w-full">
 
                 {/* The OS, pages 0-1: */}
-                {osPage0Accordion(memory, processControlBlocks)}
+                {osPage0Accordion(memory, processControlBlocks, mmu, cpu)}
 
                 {osPage1Accordion(memory)}
 
                 {/* The processes, pages 2-7: */}
+
+                <span id="process-mem">
                 {allProcessPages.map(({ pfn, ownerPid, vpn: _vpn, bytes }) => {
-                const isRunning = runningPid !== null && ownerPid === runningPid;
+                    const isRunning = runningPid !== null && ownerPid === runningPid;
                 const processColors = getProcessColorClasses(ownerPid);
                 return (
-                <AccordionItem
+                    <AccordionItem
                     key={pfn}
                     value={`pfn-${pfn}`}
                     className={`${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
                     <AccordionTrigger
                         className={`hover:no-underline text-sm px-2 cursor-pointer 
                         ${isRunning && processColors ? `${processColors.trigger} 
-                            text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : (processColors?.cellStrong ?? processColors?.cell ?? "")}
-                        ${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
+                            text-white [&_[data-slot=accordion-trigger-icon]]:text-white` 
+                            : (processColors?.cellStrong ?? processColors?.cell ?? "")}
+                        ${isRunning && processColors ? ` ${processColors.ring}` : ""}`
+                        }>
                         <div className="flex justify-between w-full pr-4 items-center gap-2">
                         <span className={isRunning && processColors ? "text-white" : ""}>PFN {pfn}</span>
                         <span className={`flex items-center gap-2 ${isRunning && processColors ? "text-white" : (processColors?.accent ?? "text-muted-foreground")}`}>
@@ -92,7 +100,7 @@ export function MemoryCard({
                             const isOwned = ownerPid !== null;
                             const processColorClasses = getProcessColorClasses(ownerPid);
                             return (
-                            <TableRow key={index}>
+                                <TableRow key={index}>
                                 <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>{pfn * 8 + index}</TableCell>
                                 <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
                                 <HoverCard openDelay={100} closeDelay={100}>
@@ -118,6 +126,7 @@ export function MemoryCard({
                 </AccordionItem>
                     );
                 })}
+                </span>
             </Accordion>
 
             {/* <Table className="text-base">
@@ -153,7 +162,9 @@ export default MemoryCard
 
 
 
-function osPage0Accordion(memory: number[], processControlBlocks: ProcessControlBlocks) {
+function osPage0Accordion(memory: number[], processControlBlocks: ProcessControlBlocks, mmu: MmuState, cpu: CpuState) {
+    
+
     const pteIndicesInUse = new Set(
         processControlBlocks.flatMap(pcb => [pcb.pageTableBase, pcb.pageTableBase + 1])
     );
@@ -167,8 +178,10 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
     };
 
     return (
-    <AccordionItem value="pfn-0">
-        <AccordionTrigger className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
+    <AccordionItem value="pfn-0" id={ mmu.kind === "idle" ? "page-table" : undefined }>
+        <AccordionTrigger 
+        id={mmu.kind === "translated" ? "page-table" : undefined}
+        className="hover:no-underline text-sm px-2 cursor-pointer bg-primary">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span className="font-mono text-sm">PFN 0</span>
             <span className="text-white text-sm">OS: PTs + Free List</span>
@@ -193,7 +206,14 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                     processCellClass = "bg-primary/30";
                 }
                 return (
-                <TableRow key={index}>
+                <TableRow key={index} 
+                id={ 
+                    (() => {
+                        if (mmu.kind === "idle") return undefined;
+                        if (cpu.kind === "idle") return undefined;
+                        if (index === cpu.pageTableBase) return "page-table";
+                        else return undefined;
+                    })()}>
                     <TableCell className={`font-mono ${processCellClass}`}>
                         {index}
                     </TableCell>
