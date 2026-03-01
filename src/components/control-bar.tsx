@@ -85,7 +85,7 @@ export function ControlBar({
                           payload: { processID: pcb.processID },
                         });
                       }}
-                      className="h-6 w-6 p-0"
+                      className="h-6 w-6 p-0 cursor-pointer"
                     >
                       ✕
                     </Button>
