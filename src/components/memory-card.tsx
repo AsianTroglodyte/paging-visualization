@@ -34,7 +34,7 @@ export function MemoryCard({
     className,
     mmu,
     cpu,
-    }: MemoryCardProps) {
+}: MemoryCardProps) {
 
     return (
     <Card className={`w-74 min-w-74 bg-black ${className}`} id="memory-card">
@@ -57,7 +57,7 @@ export function MemoryCard({
 
                 {/* The processes, pages 2-7: */}
 
-                <span  id="process-mem">
+                <span id="process-mem">
                 {allProcessPages.map(({ pfn, ownerPid, vpn: _vpn, bytes }) => {
                     const isRunning = runningPid !== null && ownerPid === runningPid;
                 const processColors = getProcessColorClasses(ownerPid);

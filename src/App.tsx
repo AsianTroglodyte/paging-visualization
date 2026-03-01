@@ -1,7 +1,7 @@
 import {CpuCard}  from "./components/cpu-card";
 import MmuCard from "./components/mmu-card";
 import { MemoryCard } from "./components/memory-card";
-import { useMemo, useReducer, useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useMemo, useReducer, useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { select } from "d3-selection";
 import { Toaster, toast } from "sonner";
@@ -14,30 +14,7 @@ import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
-import { line, curveCatmullRom } from 'd3-shape';
-
-const curveGen = line<[number, number]>().curve(curveCatmullRom.alpha(0.5));
-
-function buildArrowPaths(
-    ptPoint: [number, number],
-    processMemPoint: [number, number],
-    mmuTranslated: boolean
-) {
-    const queryPT = mmuTranslated ? ptPoint : ([1110, 135] as [number, number]);
-    const queryPageTablePoints: [number, number][] = [[735, 245], [900, 220], queryPT];
-    const pageTableReturnPoints: [number, number][] = [[735, 265], [900, 240], queryPT];
-    const processMemoryAccessPoints: [number, number][] = [[850, 340], [1000, 340], processMemPoint];
-    const writeBackPoints: [number, number][] = [processMemPoint, [900, 440], [500, 440], [450, 200], [400, 190]];
-
-    return {
-        queryPageTable: curveGen(queryPageTablePoints) ?? "",
-        queryPageTableHead: `M${queryPT[0] + 15} ${queryPT[1]} L${queryPT[0]} ${queryPT[1] - 6} L${queryPT[0]} ${queryPT[1] + 6} Z`,
-        pageTableReturn: curveGen(pageTableReturnPoints) ?? "",
-        processMemoryAccess: curveGen(processMemoryAccessPoints) ?? "",
-        processMemoryAccessHead: `M${processMemPoint[0] + 15} ${processMemPoint[1]} L${processMemPoint[0]} ${processMemPoint[1] - 6} L${processMemPoint[0]} ${processMemPoint[1] + 6} Z`,
-        writeBack: curveGen(writeBackPoints) ?? "",
-    };
-}
+import { buildArrowPaths, curveGen, updateArrowPathsFromProcessMem as updateArrowPathsFromProcessMemFn } from "./lib/arrow-paths";
 
 export function App() {
 
@@ -84,70 +61,51 @@ export function App() {
     // const [processMemPoint, setProcessMemPoint] = useRef<[number, number] | null>(null);
     const ptPointRef = useRef<[number, number] | null>(null);
     const processMemPointRef = useRef<[number, number] | null>(null);
+    const arrowLoopRafIdRef = useRef<number | null>(null);
 
-    // One-time measurement of page table and process memory positions
+    const updateArrowPathsFromProcessMem = useCallback((el: HTMLElement, diagramRect: DOMRect) => {
+        updateArrowPathsFromProcessMemFn(el, diagramRect, {
+            viewBoxWidth: VIEWBOX_WIDTH,
+            viewBoxHeight: VIEWBOX_HEIGHT,
+            setProcessMemPoint: (p) => { processMemPointRef.current = p; },
+            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,
+        });
+    }, []);
+
+    // On load: measure arrow targets and start an rAF loop that updates arrow paths every frame.
     useLayoutEffect(() => {
         const diagramEl = diagramContainerRef.current;
         if (!diagramEl) return;
 
-        const diagramRect = diagramEl.getBoundingClientRect();
 
         const pageTableEl = document.querySelector("#page-table") as HTMLElement | null;
         const pageTableCallback = (pageTableEl: HTMLElement) => {
+            const diagramRect = diagramEl.getBoundingClientRect();
             const targetRect = pageTableEl.getBoundingClientRect();
             const relX = (targetRect.left - diagramRect.left) / diagramRect.width;
             const relY = (targetRect.top + targetRect.height / 2 - diagramRect.top) / diagramRect.height;
             ptPointRef.current = [relX * VIEWBOX_WIDTH - 20, relY * VIEWBOX_HEIGHT];
-        }
+        };
 
         if (pageTableEl) pageTableCallback(pageTableEl);
 
         const processMemEl = document.querySelector("#process-mem") as HTMLElement | null;
-        const processMemCallback = (processMemEl: HTMLElement) =>  {
-            console.log("callback called");
-            const processMemRect = processMemEl.getBoundingClientRect();
-            const relX = (processMemRect.left - diagramRect.left) / diagramRect.width;
-            const relY = (processMemRect.top + processMemRect.height / 2 - diagramRect.top) / diagramRect.height;
-            processMemPointRef.current = [relX * VIEWBOX_WIDTH - 60, relY * VIEWBOX_HEIGHT];
-            
+        if (!processMemEl) return;
 
-            // update write back path using querySelector and setAttribute
-            const writeBackPath = document.getElementById("write-back-path") as SVGPathElement | null;
-            if (writeBackPath) {
-                writeBackPath.setAttribute("d", curveGen([processMemPointRef.current, [900, 440], [500, 440], [450, 200], [400, 190]]) ?? "");
-            }
-            const writeBackHeadPath = document.getElementById("write-back-head-path") as SVGPathElement | null;
-            if (writeBackHeadPath) {
-                writeBackHeadPath.setAttribute("d", `M${processMemPointRef.current[0] + 15} ${processMemPointRef.current[1]} L${processMemPointRef.current[0]} ${processMemPointRef.current[1] - 6} L${processMemPointRef.current[0]} ${processMemPointRef.current[1] + 6} Z`);
-            }
-
-            // update process memory access path using querySelector and setAttribute
-            const processMemoryAccessPath = document.getElementById("process-memory-access-path") as SVGPathElement | null;
-            if (processMemoryAccessPath) {
-                processMemoryAccessPath.setAttribute("d", curveGen([processMemPointRef.current, [1000, 340], [850, 340]]) ?? "");
-            }
-            const processMemoryAccessHeadPath = document.getElementById("process-memory-access-head-path") as SVGPathElement | null;
-            if (processMemoryAccessHeadPath) {
-                processMemoryAccessHeadPath.setAttribute("d", `M${processMemPointRef.current[0] + 15} ${processMemPointRef.current[1]} L${processMemPointRef.current[0]} ${processMemPointRef.current[1] - 6} L${processMemPointRef.current[0]} ${processMemPointRef.current[1] + 6} Z`);
-            }
-        }
-
-        if (processMemEl) processMemCallback(processMemEl);
-
-        const memoryCardEl = document.querySelector("#memory-card") as HTMLElement | null;
-
-        const memoryResizeObserver = new ResizeObserver(() => {
-            if (processMemEl !== null) requestAnimationFrame(() => processMemCallback(processMemEl));
-        });
-
-        if (memoryCardEl) memoryResizeObserver.observe(memoryCardEl);
-        else throw new Error("Memory card element not found");
+        const tick = () => {
+            const diagramRect = diagramEl.getBoundingClientRect();
+            updateArrowPathsFromProcessMem(processMemEl, diagramRect);
+            arrowLoopRafIdRef.current = requestAnimationFrame(tick);
+        };
+        arrowLoopRafIdRef.current = requestAnimationFrame(tick);
 
         return () => {
-            memoryResizeObserver.disconnect();
+            if (arrowLoopRafIdRef.current !== null) {
+                cancelAnimationFrame(arrowLoopRafIdRef.current);
+                arrowLoopRafIdRef.current = null;
+            }
         };
-
-    }, []);
+    }, [updateArrowPathsFromProcessMem]);
 
 
     // setup zoom and panning
@@ -256,11 +214,33 @@ export function App() {
                             processControlBlocks={processControlBlocks}
                             allProcessPages={allProcessPages}
                             memory={memory}
-                            runningPid={cpu.kind === "running" ? cpu.runningPid : null} 
+                            runningPid={cpu.kind === "running" ? cpu.runningPid : null}
                             mmu={mmu}
                             cpu={cpu}
                             />
                     </div>
+
+
+                    <p className="absolute top-[6rem] left-[26rem] text-[0.6rem] text-muted-foreground">
+                        1. Send Virtual <br /> Address and PTB <br />  address to MMU
+                    </p>
+
+                    <p className="absolute top-[6rem] left-[59rem] text-[0.6rem] text-muted-foreground">
+                        2. Use PTB to find PT. <br/> use VPN to index PTE
+                    </p>
+
+                    <p className="absolute top-[15rem] left-[56rem] text-[0.6rem] text-muted-foreground">
+                        3. Extract PFN from PTE. <br/>MMU gets PFN.
+                    </p>
+
+
+                    <p className="absolute top-[21.5rem] left-[56rem] text-[0.6rem] text-muted-foreground">
+                        4. use PFN to get <br/> page frame. Use <br/> offset to get byte.
+                    </p>
+
+                    <p className="absolute top-[29.5rem] left-[45rem] text-[0.6rem] text-muted-foreground">
+                        5. write back to CPU.
+                    </p>
 
                     {/* Single SVG overlay for all arrows - spans entire diagram */}
                     {/* viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} */}
@@ -283,14 +263,21 @@ export function App() {
                             const ip = buildArrowPaths(pt, pm, mmu.kind === "translated");
                             return (
                                 <>
-                                    <path d={ip.queryPageTable} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.queryPageTableHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.pageTableReturn} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d="M730 265 L745 259 L745 271 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                                    <path id="query-page-table-path" d={ip.queryPageTable} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path d={ip.queryPageTableHead} 
+                                    id="query-page-table-head-path"
+                                    fill="currentColor" stroke="currentColor" strokeWidth="1"/>
+                                    <path d={ip.pageTableReturn} 
+                                    id="page-table-return-path"
+                                    fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path d="M730 265 L745 259 L745 271 Z" 
+                                    id="page-table-return-head-path"
+                                    fill="currentColor" stroke="currentColor" strokeWidth="1" />
                                     <path id="process-memory-access-path" d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
                                     <path id="process-memory-access-head-path" d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
                                     <path id="write-back-path" d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path id="write-back-head-path" d="M385 190 L400 184 L400 196 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                                    <path d="M385 190 L400 184 L400 196 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                                    <path id="process-bracket-path" d={ip.processBracketPoints} fill="none" stroke="currentColor" strokeWidth="1"/>
                                 </>
                             );
                         })()}
@@ -317,6 +304,5 @@ export function App() {
 }
 
 export default App;
-
 
 
