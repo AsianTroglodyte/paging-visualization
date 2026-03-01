@@ -26,7 +26,7 @@ export function App() {
             memory: initialMemory,
             cpu: IDLE_CPU_STATE,
             mmu: { kind: "idle" },
-            pageFault: null,
+            error: null,
         };
     });
 
@@ -159,18 +159,22 @@ export function App() {
         };
     }, []);
 
-    // show page fault toast
+    // show error toast (page fault, no space for process, etc.)
     useEffect(() => {
-        const fault = machineState.pageFault;
-        if (fault) {
-            const detail = fault.virtualAddress != null ? ` (address ${fault.virtualAddress})` : "";
-            // toast.error(`Page fault${detail}`, { description: fault.message });
-            toast(`Page fault${detail}`, { 
-                description: fault.message,
-            });
-            machineStateDispatch({ type: "CLEAR_PAGE_FAULT" });
+        const err = machineState.error;
+        if (err) {
+            let title: string;
+            if (err.kind === "page_fault" && err.virtualAddress != null) {
+                title = `Page fault (address ${err.virtualAddress})`;
+            } else if (err.kind === "page_fault") {
+                title = "Page fault";
+            } else {
+                title = "Cannot create process";
+            }
+            toast(title, { description: err.message });
+            machineStateDispatch({ type: "CLEAR_ERROR" });
         }
-    }, [machineState.pageFault]);
+    }, [machineState.error]);
 
     return (
     <SidebarProvider defaultOpen={false} className="flex flex-1 flex-col items-center justify-center">

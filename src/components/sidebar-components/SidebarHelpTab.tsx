@@ -3,7 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 export function SidebarHelpTab() {
   return (
-    <SidebarGroup>
+    <SidebarGroup className="px-4">
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="cpu" className="border-b-0">
           <AccordionTrigger className="py-2 text-base font-medium hover:no-underline">

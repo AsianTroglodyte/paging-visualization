@@ -6,7 +6,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "./ui/tabs"
-import { SidebarHelpTab, SidebarSettingsTab } from "./sidebar-components";
+import { SidebarHelpTab, SidebarSettingsTab, SidebarTutorialTab } from "./sidebar-components";
 
 
 export function AppSidebar() {
@@ -14,14 +14,19 @@ export function AppSidebar() {
     <Sidebar variant="floating"  collapsible="offcanvas">
       <SidebarHeader />
       <SidebarContent >
-        <Tabs defaultValue="Help" className="w-full">
+        <Tabs defaultValue="Tutorial" className="w-full">
           <TabsList className="w-full flex justify-center">
-            <TabsTrigger value="Help">Learn</TabsTrigger>
+            <TabsTrigger value="Tutorial">Tutorial</TabsTrigger>
+            <TabsTrigger value="Reference">Reference</TabsTrigger>
             <TabsTrigger value="Settings">Settings</TabsTrigger>
           </TabsList>
 
 
-          <TabsContent value="Help" className="mt-4">
+          <TabsContent value="Tutorial" className="mt-4">
+            <SidebarTutorialTab />
+          </TabsContent>
+
+          <TabsContent value="Reference" className="mt-4">
             <SidebarHelpTab />
           </TabsContent>
 

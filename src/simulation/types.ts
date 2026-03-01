@@ -74,16 +74,18 @@ export type MmuState =
   offset: number;
 }
 
-export type PageFault = {
-  message: string;
-  virtualAddress?: number;
-};
+/** Discriminated union of machine errors (page fault, no space for process, etc.). */
+export type MachineError =
+  | { kind: "page_fault"; message: string; virtualAddress?: number }
+  | { kind: "no_space_for_process"; message: string };
+
+export type PageFault = Extract<MachineError, { kind: "page_fault" }>;
 
 export type MachineState = {
   memory: number[];
   cpu: CpuState;
   mmu: MmuState;
-  pageFault: PageFault | null;
+  error: MachineError | null;
 };
 
 export type MachineAction =
@@ -112,7 +114,7 @@ export type MachineAction =
     payload: { opcode: number, operand: number };
   }
   | {
-    type: "CLEAR_PAGE_FAULT";
+    type: "CLEAR_ERROR";
     payload?: never;
   }
   | {

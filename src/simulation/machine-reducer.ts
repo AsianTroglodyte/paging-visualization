@@ -24,8 +24,8 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
     const mmu: MmuState = state.mmu;
 
     switch (action.type) {
-        case "CLEAR_PAGE_FAULT":
-            return { ...state, pageFault: null };
+        case "CLEAR_ERROR":
+            return { ...state, error: null };
 
         case "COMPACT_PAGE_TABLES":
             return { ...state, memory: compactPagetables(memory).newMemory };
@@ -73,8 +73,13 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 const freeList = getFreeList(memory);
 
                 if (freeList.length < numPages) {
-                    console.log(`Cannot allocate ${numPages} pages. Only ${freeList.length} free.`)
-                    return state;
+                    return {
+                        ...state,
+                        error: {
+                            kind: "no_space_for_process",
+                            message: "Not enough free pages to create a new process.",
+                        },
+                    };
                 }
 
                 // Inline: select random free pages
@@ -179,7 +184,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             }
             const fetchVa = action.payload.newProgramCounter;
             if (fetchVa < 0 || fetchVa > 15) {
-                return { ...state, pageFault: { message: "Page fault: virtual address out of range", virtualAddress: fetchVa } };
+                return { ...state, error: { kind: "page_fault", message: "Page fault: virtual address out of range", virtualAddress: fetchVa } };
             }
 
             const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, action.payload.newProgramCounter);
@@ -226,7 +231,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 case "lb":{
                     const virtualAddress = action.payload.operand;
                     if (virtualAddress > 15) {
-                        return { ...state, pageFault: { message: "Page fault: virtual address out of range", virtualAddress } };
+                        return { ...state, error: { kind: "page_fault", message: "Page fault: virtual address out of range", virtualAddress } };
                     }
                     const byte = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
 
@@ -248,7 +253,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 {
                     const virtualAddress = action.payload.operand;
                     if (virtualAddress > 15) {
-                        return { ...state, pageFault: { message: "Page fault: virtual address out of range", virtualAddress } };
+                        return { ...state, error: { kind: "page_fault", message: "Page fault: virtual address out of range", virtualAddress } };
                     }
                     const newMemory = writeByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress, cpu.accumulator);
                     return { ...state, 
@@ -262,7 +267,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 case "add": {
                     const virtualAddress = action.payload.operand;
                     if (virtualAddress > 15) {
-                        return { ...state, pageFault: { message: "Page fault: virtual address out of range", virtualAddress } };
+                        return { ...state, error: { kind: "page_fault", message: "Page fault: virtual address out of range", virtualAddress } };
                     }
                     const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
                     if (valueFromVirtualAddress < 0 || valueFromVirtualAddress > 255) {
@@ -286,7 +291,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 case "sub": {
                     const virtualAddress = action.payload.operand;
                     if (virtualAddress > 15) {
-                        return { ...state, pageFault: { message: "Page fault: virtual address out of range", virtualAddress } };
+                        return { ...state, error: { kind: "page_fault", message: "Page fault: virtual address out of range", virtualAddress } };
                     }
                     const valueFromVirtualAddress = getByteAtVirtualAddress(memory, cpu.runningPid, virtualAddress);
 
@@ -310,7 +315,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 }
                 case "branch": {
                     if (action.payload.operand > 15) {
-                        return { ...state, pageFault: { message: "Page fault: branch address out of range", virtualAddress: action.payload.operand } };
+                        return { ...state, error: { kind: "page_fault", message: "Page fault: branch address out of range", virtualAddress: action.payload.operand } };
                     }
 
                     if (cpu.accumulator === 0) {
@@ -328,7 +333,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 case "jump": {
                     const jumpVirtualAddress = action.payload.operand;
                     if (jumpVirtualAddress > 15) {
-                        return { ...state, pageFault: { message: "Page fault: jump address out of range", virtualAddress: jumpVirtualAddress } };
+                        return { ...state, error: { kind: "page_fault", message: "Page fault: jump address out of range", virtualAddress: jumpVirtualAddress } };
                     }
                     const newCurrentInstructionRaw = getByteAtVirtualAddress(memory, cpu.runningPid, jumpVirtualAddress);
 
