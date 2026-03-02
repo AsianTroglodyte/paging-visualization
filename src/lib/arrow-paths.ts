@@ -7,7 +7,7 @@ export function buildArrowPaths(
     processMemPoint: [number, number],
     mmuTranslated: boolean
 ) {
-    const queryPT = mmuTranslated ? ptPoint : ([1090, 135] as [number, number]);
+    const queryPT = mmuTranslated ? ptPoint : ([1070, 135] as [number, number]);
     const queryPageTablePoints: [number, number][] = [[735, 245], [900, 220], queryPT];
     const pageTableReturnPoints: [number, number][] = [[735, 265], [900, 240], queryPT];
     const processMemoryAccessPoints: [number, number][] = [[850, 340], [1000, 340], processMemPoint];
