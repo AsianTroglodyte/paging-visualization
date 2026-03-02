@@ -15,7 +15,6 @@ import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { buildArrowPaths, curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
-import GithubIcon from "./assets/github-icon.svg";
 import GithubLogoIcon from "./assets/github_logo_icon.png";
 
 export function App() {
