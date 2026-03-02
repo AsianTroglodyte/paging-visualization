@@ -27,10 +27,10 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
         <Card size="sm" className={`bg-black w-85 min-w-85 ${className}`}>
             <CardHeader>
                 <CardTitle className="text-center mb-2">
-                    <h1 className="text-3xl font-semibold">MMU  </h1>
+                    <h1 className="text-3xl font-semibold ">MMU  </h1>
                 </CardTitle>
                 <CardDescription >
-                    <h2 className="text-lg"> Address Translation Process </h2>
+                    <h2 className="text-lg text-center"> Address Translation Process </h2>
                 </CardDescription>
             </CardHeader>
             <CardContent className="">

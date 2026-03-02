@@ -1,6 +1,6 @@
 import { getProcessVirtualAddressSpace, getProcessColorClasses } from "@/simulation/selectors";
 import { OPCODE_NAMES } from "@/simulation/isa";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ByteHoverContent } from "./hover-content";
 import { MemoryAccordionContent } from "./ui/memory-accordion-content";
@@ -43,19 +43,19 @@ export function VirtualMemory(
     <Card className={`w-80 min-w-80 bg-black ${className}`}>
     <CardHeader>
         <CardTitle>
-            <h1 className="text-3xl text-center">Virtual Memory</h1>
+            <h1 className="text-3xl text-center font-semibold">Virtual Memory</h1>
         </CardTitle>
-    </CardHeader>
-    <CardContent>
-        <CardTitle>
-            <h2 className="text-lg">
+        <CardDescription>
+            <h2 className={`text-lg text-center`}>
                 {cpu.kind === "running" ? `Process ${cpu.runningPid}` : "No process selected"}
             </h2>
-        </CardTitle>
+        </CardDescription>
+    </CardHeader>
+    <CardContent>
         <Accordion type="single" collapsible className="w-full" >
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
             <AccordionItem key={vpn} value={`vpn-${vpn}`} id={`virtual-memory-${vpn}`}>
-                <AccordionTrigger className={`hover:no-underline text-base font-mono px-2 cursor-pointer 
+                <AccordionTrigger className={`hover:no-underline text-base  px-2 cursor-pointer 
                     ${isRunning && processColorClasses ? `
                     ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : ""}`}>
                     <div className="flex justify-between w-full pr-4 items-center gap-2 ">
@@ -98,7 +98,7 @@ export function VirtualMemory(
                                 ? "bg-primary/30 hover:bg-primary/30"
                                 : "border-l-transparent"
                         } ${isProgramCounter && processColorClasses ? processColorClasses.pcRow : isProgramCounter ? "bg-emerald-100/60 hover:bg-emerald-100/70" : "cursor-pointer"}`}>
-                        <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>
+                        <TableCell className={` ${processColorClasses?.cell ?? ""}`}>
                             <div className="flex items-center gap-2">
                                 <span>{virtualAddress}</span>
                                 {isSelected && (
@@ -115,7 +115,7 @@ export function VirtualMemory(
                                 )}
                             </div>
                         </TableCell>
-                        <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
+                        <TableCell className={` text-right ${processColorClasses?.cell ?? ""}`}>
                         {vpn === 0 && (
                         <>
                             <span className={`ml-2 ${isProgramCounter ? "text-white" : "text-muted-foreground"}`}>
@@ -163,7 +163,7 @@ export default VirtualMemory;
 //             <AccordionItem key={pfn} value={`pfn-${pfn}`}>
 //                 <AccordionTrigger className="hover:no-underline">
 //                     <div className="flex justify-between w-full pr-4">
-//                         <div className="font-mono">VPN {index_virtualPageNumber}</div>
+//                         <div className="">VPN {index_virtualPageNumber}</div>
 //                         <div className="text-muted-foreground">
 //                             {`PFN ${pfn}`}
 //                         </div>
@@ -180,11 +180,11 @@ export default VirtualMemory;
 //                     <TableBody>
 //                         {bytes.map((byte, index_offset) => (
 //                             <TableRow key={index_offset}>
-//                             <TableCell className="font-mono">
+//                             <TableCell className="">
 //                                 {/* virtual page number and offset determined by  */}
 //                                 {(index_virtualPageNumber * 8) + index_offset}
 //                             </TableCell>
-//                             <TableCell className="font-mono text-right">
+//                             <TableCell className=" text-right">
 //                             {byte.toString(2).padStart(8, "0")}
 //                             </TableCell>
 //                         </TableRow>

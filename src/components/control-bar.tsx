@@ -148,7 +148,7 @@ export function ControlBarDock({
             strokeLinejoin="round"
           />
         </svg>
-        <span className="text-base font-semibold font-mono">Control</span>
+        <span className="text-base font-semibold no">Control</span>
       </button>
       <ControlBar
         machineStateDispatch={machineStateDispatch}

@@ -37,10 +37,10 @@ export function MemoryCard({
 }: MemoryCardProps) {
 
     return (
-    <Card className={`w-80 min-w-80 bg-black ${className}`} id="memory-card">
+    <Card className={`w-80 min-w-80 bg-black  ${className}`} id="memory-card">
         <CardHeader>
             <CardTitle>
-                <h1 className="text-3xl text-center"> Memory </h1>
+                <h1 className="text-3xl text-center font-semibold"> Memory </h1>
             </CardTitle>
             <CardDescription>
 
@@ -68,7 +68,7 @@ export function MemoryCard({
                     value={`pfn-${pfn}`}
                     className={`${isRunning && processColors ? ` ${processColors.ring}` : ""}`}>
                     <AccordionTrigger
-                        className={`hover:no-underline text-base font-mono px-2 cursor-pointer 
+                        className={`hover:no-underline text-base  px-2 cursor-pointer 
                         ${isRunning && processColors ? `${processColors.trigger} 
                             text-white [&_[data-slot=accordion-trigger-icon]]:text-white` 
                             : (processColors?.cellStrong ?? processColors?.cell ?? "")}
@@ -104,12 +104,12 @@ export function MemoryCard({
                             const processColorClasses = getProcessColorClasses(ownerPid);
                             return (
                                 <TableRow key={index}>
-                                <TableCell className={`font-mono ${processColorClasses?.cell ?? ""}`}>{pfn * 8 + index}</TableCell>
-                                <TableCell className={`font-mono text-right ${processColorClasses?.cell ?? ""}`}>
+                                <TableCell className={` ${processColorClasses?.cell ?? ""}`}>{pfn * 8 + index}</TableCell>
+                                <TableCell className={` text-right ${processColorClasses?.cell ?? ""}`}>
                                 <HoverCard openDelay={100} closeDelay={100}>
                                     <HoverCardTrigger asChild>
                                         <span
-                                            className={`inline-block leading-4 cursor-default font-mono ${
+                                            className={`inline-block leading-4 cursor-default  ${
                                                 isOwned ? "underline decoration-dotted underline-offset-2" : ""
                                             }`}>
                                             {byte.toString(2).padStart(8, "0")}
@@ -144,11 +144,11 @@ export function MemoryCard({
                 {memory.map((byte, index) => {
                     return (
                     <TableRow key={index}>
-                        <TableCell className="font-mono">
+                        <TableCell className="">
                             {index}
                         </TableCell>
 
-                        <TableCell className="font-mono text-muted-foreground">
+                        <TableCell className=" text-muted-foreground">
                             {byte.toString(2).padStart(8, "0")}
                         </TableCell>
                     </TableRow>
@@ -184,7 +184,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
     <AccordionItem value="pfn-0" id={ mmu.kind === "idle" ? "page-table" : undefined }>
         <AccordionTrigger 
         id={mmu.kind === "translated" ? "page-table" : undefined}
-        className="hover:no-underline font-mono text-base px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
+        className="hover:no-underline  text-base px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span >PFN 0</span>
             <span >OS: PTs + Free List</span>
@@ -217,10 +217,10 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                         if (index === cpu.pageTableBase) return "page-table";
                         else return undefined;
                     })()}>
-                    <TableCell className={`font-mono ${processCellClass}`}>
+                    <TableCell className={` ${processCellClass}`}>
                         {index}
                     </TableCell>
-                    <TableCell className={`font-mono text-right ${processCellClass}`}>
+                    <TableCell className={` text-right ${processCellClass}`}>
                     {isFreeListByte && (
                         <span className="text-muted-foreground mr-2">Free List</span>
                     )}
@@ -230,7 +230,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                     <HoverCard openDelay={200} closeDelay={100}>
                         <HoverCardTrigger asChild>
                             <span
-                                className={`inline-block leading-4 cursor-default font-mono ${
+                                className={`inline-block leading-4 cursor-default  ${
                                     isOwned ? "underline decoration-dotted underline-offset-2" : ""
                                 }`}>
                                 {byte.toString(2).padStart(8, "0")}
@@ -260,7 +260,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 function osPage1Accordion(memory: number[]) {
     return (
     <AccordionItem value="pfn-1">
-        <AccordionTrigger className="hover:no-underline text-base font-mono px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
+        <AccordionTrigger className="hover:no-underline text-base  px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span>PFN 1</span>
             <span className="text-white">OS: PCBs</span>
@@ -283,17 +283,17 @@ function osPage1Accordion(memory: number[]) {
                     const processCellClass = getProcessColorClasses(isPcbValid ? slotIndex : null)?.cell ?? "";
                     return (
                     <TableRow key={index}>
-                        <TableCell className={`font-mono ${processCellClass}`}>
+                        <TableCell className={` ${processCellClass}`}>
                             {8 + index}
                         </TableCell>
-                        <TableCell className={`font-mono text-right ${processCellClass}`}>
+                        <TableCell className={` text-right ${processCellClass}`}>
                         {isPcbValid && (
                             <span className="text-muted-foreground mr-2">Process {slotIndex}</span>
                         )}
                         <HoverCard openDelay={200} closeDelay={100}>
                             <HoverCardTrigger asChild>
                                 <span
-                                    className={`inline-block leading-4 cursor-default font-mono ${
+                                    className={`inline-block leading-4 cursor-default  ${
                                         isPcbValid ? "underline decoration-dotted underline-offset-2" : ""
                                     }`}
                                 >

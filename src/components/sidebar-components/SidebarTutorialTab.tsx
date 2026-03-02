@@ -5,7 +5,7 @@ export function SidebarTutorialTab() {
   return (
     <SidebarGroup>
       <SidebarHeader className="text-xl px-2">
-        <h1 className="font-mono"> Basic Controls</h1>
+        <h1 className=""> Basic Controls</h1>
       </SidebarHeader>
       <div className="w-full p-2 flex flex-col gap-3 text-sm text-muted-foreground">
         <p className="text-sm text-muted-foreground">

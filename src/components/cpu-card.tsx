@@ -77,7 +77,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
     const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
     return (
-    <Card size="default" className={`flex flex-col gap-4 w-90 font-mono bg-black ${className} relative `}>
+    <Card size="default" className={`flex flex-col gap-4 w-90 bg-black ${className} relative `}>
 
         <CardHeader>
             <CardTitle >
@@ -90,7 +90,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
             {/* Registers */}
             <div className={`flex-[38] min-w-0 rounded-md border p-3 ${processColors ? processColors.trigger : " bg-muted/50"}`}>
                 <h2 className="text-base font-semibold">Registers:</h2>
-                <ul className="text-base font-mono list-disc list-inside space-y-0.5">
+                <ul className="text-base list-disc list-inside space-y-0.5">
                     <li>
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>

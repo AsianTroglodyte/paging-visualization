@@ -2,7 +2,7 @@
 
 export function PcHoverContent() {
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm">
+    <div className="space-y-2 min-w-0 text-sm">
       <div className="font-semibold text-sm">PC — Program Counter</div>
       <div className="text-muted-foreground">
         Holds the <strong className="text-foreground">virtual address</strong> of the next instruction to execute.
@@ -14,7 +14,7 @@ export function PcHoverContent() {
 
 export function PtbHoverContent() {
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm">
+    <div className="space-y-2 min-w-0 text-sm">
       <div className="font-semibold text-sm">PTB — Page Table Base</div>
       <div className="text-muted-foreground">
         The <strong className="text-foreground">physical address</strong> of the start of this process&apos;s page table in memory.
@@ -26,7 +26,7 @@ export function PtbHoverContent() {
 
 export function AccHoverContent() {
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm">
+    <div className="space-y-2 min-w-0 text-sm">
       <div className="font-semibold text-sm">ACC — Accumulator</div>
       <div className="text-muted-foreground">
         A <strong className="text-foreground">general-purpose register</strong> that stores the result of arithmetic operations
@@ -38,7 +38,7 @@ export function AccHoverContent() {
 
 export function IrHoverContent() {
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm">
+    <div className="space-y-2 min-w-0 text-sm">
       <div className="font-semibold text-sm">IR — Instruction Register</div>
       <div className="text-muted-foreground">
         Holds the <strong className="text-foreground">current instruction</strong> being executed.

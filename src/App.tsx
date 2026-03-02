@@ -287,8 +287,8 @@ export function App() {
         <Toaster richColors closeButton position="top-center" toastOptions={{
             duration: 3000,
             classNames: {
-                description: "!text-white !font-mono",
-                title: "!text-white !font-mono !text-base",
+                description: "!text-white !no",
+                title: "!text-white !text-base",
                 toast: "!bg-card !text-white !border-none",
             }
         }}/>

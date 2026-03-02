@@ -18,7 +18,7 @@ export function FreeListHoverContent({ byte }: { byte: number }) {
   const pfnsLeftToRight = [7, 6, 5, 4, 3, 2, 1, 0]; // strip order: PFN 7 .. PFN 0
 
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm">
+    <div className=" space-y-2 min-w-0 text-sm">
       {/* 1) Header: byte in multiple forms + free count */}
       <div className="font-semibold text-sm">Free List (bitmap)</div>
       <div className="text-sm text-muted-foreground">
@@ -96,7 +96,7 @@ export function FreeListHoverContent({ byte }: { byte: number }) {
 export function ByteHoverContent({ byte }: { byte: number }) {
   const instruction = OPCODE_NAMES[(byte & 0b11100000) >> 5] + " " + (byte & 0b00011111);
   return (
-    <div className="font-mono space-y-1">
+    <div className=" space-y-1">
       <div className="font-semibold">Data Interpretation</div>
       <div>Decimal: {byte}</div>
       <div>Instruction: {instruction}</div>
@@ -137,7 +137,7 @@ export function PteHoverContent({ byte, processID }: { byte: number; processID?:
   const highlightClass = processID != null ? (getProcessColorClasses(processID)?.hoverHighlight ?? DEFAULT_HIGHLIGHT_CLASS) : DEFAULT_HIGHLIGHT_CLASS;
 
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm" onMouseLeave={() => { setHoveredCellIndex(null); setHoveredFieldIndex(null); }}>
+    <div className=" space-y-2 min-w-0 text-sm" onMouseLeave={() => { setHoveredCellIndex(null); setHoveredFieldIndex(null); }}>
       <div className="font-semibold text-sm">Page Table Entry (PTE)</div>
       <div className="text-sm text-muted-foreground">Dec {byte}</div>
       {/* Row 1: group labels - hoverable */}
@@ -238,7 +238,7 @@ export function PcbByte0HoverContent({
   const highlightClass = getProcessColorClasses(slotIndex)?.hoverHighlight ?? DEFAULT_HIGHLIGHT_CLASS;
 
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm" onMouseLeave={() => { setHoveredCellIndex(null); setHoveredFieldIndex(null); }}>
+    <div className=" space-y-2 min-w-0 text-sm" onMouseLeave={() => { setHoveredCellIndex(null); setHoveredFieldIndex(null); }}>
       <div className="font-semibold text-sm">PCB (slot {slotIndex}) · Byte 0</div>
       <div className="text-sm text-muted-foreground">Dec {byte}</div>
       {/* Row 1: group labels - hoverable */}
@@ -315,7 +315,7 @@ export function PcbByte1HoverContent({
 }) {
   const bits = byte.toString(2).padStart(8, "0");
   return (
-    <div className="font-mono space-y-2 min-w-0 text-sm">
+    <div className=" space-y-2 min-w-0 text-sm">
       <div className="font-semibold text-sm">PCB (slot {slotIndex}) · Byte 1</div>
       <div className="text-sm text-muted-foreground">Dec {byte}</div>
       <div className="text-muted-foreground text-xs">accumulator</div>
