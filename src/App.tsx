@@ -137,29 +137,32 @@ export function App() {
                 const rect = container.getBoundingClientRect();
                 const k = transform.k;
                 if (k <= 0) return transform;
+                const diagram = diagramContainerRef.current;
+                if (!diagram) return transform;
 
                 const clamp = (value: number, min: number, max: number) =>
                     Math.max(min, Math.min(max, value));
 
-                // Clamp the viewport center in world coordinates so bounds remain
-                // consistent across zoom levels.
+                // Clamp viewport center in world coordinates to diagram bounds.
                 const centerWorldX = (rect.width / 2 - transform.x) / k;
                 const centerWorldY = (rect.height / 2 - transform.y) / k;
 
-                const centerBaseX = rect.width / 2;
-                const centerBaseY = rect.height / 2;
-                const maxOffsetWorldX = rect.width * panFraction;
-                const maxOffsetWorldY = rect.height * panFraction;
+                const diagramLeft = diagram.offsetLeft;
+                const diagramTop = diagram.offsetTop;
+                const diagramRight = diagramLeft + diagram.offsetWidth;
+                const diagramBottom = diagramTop + diagram.offsetHeight;
+                const marginWorldX = rect.width * panFraction;
+                const marginWorldY = rect.height * panFraction;
 
                 const clampedCenterWorldX = clamp(
                     centerWorldX,
-                    centerBaseX - maxOffsetWorldX,
-                    centerBaseX + maxOffsetWorldX
+                    diagramLeft - marginWorldX,
+                    diagramRight + marginWorldX
                 );
                 const clampedCenterWorldY = clamp(
                     centerWorldY,
-                    centerBaseY - maxOffsetWorldY,
-                    centerBaseY + maxOffsetWorldY
+                    diagramTop - marginWorldY,
+                    diagramBottom + marginWorldY
                 );
 
                 const clampedX = rect.width / 2 - clampedCenterWorldX * k;
