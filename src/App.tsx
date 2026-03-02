@@ -16,7 +16,6 @@ import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { buildArrowPaths, curveGen, updateArrowPathsFromProcessMem as updateArrowPathsFromProcessMemFn } from "./lib/arrow-paths";
 
-
 export function App() {
 
     const [machineState, machineStateDispatch] = useReducer(machineReducer, undefined, (): MachineState => {
@@ -303,26 +302,32 @@ export function App() {
                             const ip = buildArrowPaths(pt, pm, mmu.kind === "translated");
                             return (
                                 <>
-                                    <path id="query-page-table-path" d={ip.queryPageTable} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.queryPageTableHead} 
+                                    <path id="query-page-table-path" className={"z-11"} d={ip.queryPageTable} 
+                                    fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path d={ip.queryPageTableHead} className={"z-11"}
                                     id="query-page-table-head-path"
                                     fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.pageTableReturn} 
+                                    <path d={ip.pageTableReturn} className={"z-11"}
                                     id="page-table-return-path"
                                     fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d="M730 265 L745 259 L745 271 Z" 
+                                    <path d="M730 265 L745 259 L745 271 Z" className={"z-11"}
                                     id="page-table-return-head-path"
                                     fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path id="process-memory-access-path" d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path id="process-memory-access-head-path" d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path id="write-back-path" d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d="M385 190 L400 184 L400 196 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path id="process-bracket-path" d={ip.processBracketPoints} fill="none" stroke="currentColor" strokeWidth="1"/>
+                                    <path id="process-memory-access-path" className={"z-11"}
+                                    d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path id="process-memory-access-head-path" className={"z-11"} 
+                                    d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
+                                    <path id="write-back-path" className={"z-11"}
+                                    d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path d="M385 190 L400 184 L400 196 Z" 
+                                    className={"z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                                    <path id="process-bracket-path" className={"z-11"} d={ip.processBracketPoints} 
+                                    fill="none" stroke="currentColor" strokeWidth="1"/>
 
                                     <path id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
-                                    className="invisible" fill="white" opacity="0.1" strokeWidth="1" />
+                                    className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
                                     <path id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
-                                    className="invisible" fill="white" opacity="0.1" strokeWidth="1" />
+                                    className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
                                 </>
                             );
                         })()}
