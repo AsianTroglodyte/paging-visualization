@@ -36,7 +36,7 @@ export function AppSidebar() {
         </Tabs>
       </SidebarContent>
       <SidebarFooter />
-      <SidebarTrigger className="absolute top-[6px] right-[-36px] cursor-pointer" size="lg" />
+      <SidebarTrigger className="absolute top-[6px] right-[-36px] cursor-pointer bg-background " size="lg" />
     </Sidebar>
   )
 }

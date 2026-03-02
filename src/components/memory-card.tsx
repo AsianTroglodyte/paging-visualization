@@ -40,7 +40,7 @@ export function MemoryCard({
     <Card className={`w-80 min-w-80 bg-black ${className}`} id="memory-card">
         <CardHeader>
             <CardTitle>
-                <h1 className="text-4xl text-center"> Memory </h1>
+                <h1 className="text-3xl text-center"> Memory </h1>
             </CardTitle>
             <CardDescription>
 
