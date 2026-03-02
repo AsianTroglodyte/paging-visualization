@@ -33,7 +33,7 @@ export interface UpdateArrowPathsOptions {
 
 }
 
-export function updateArrowPathsFromProcessMem(
+export function updateArrowPaths(
     el: HTMLElement,
     diagramRect: DOMRect,
     options: UpdateArrowPathsOptions,

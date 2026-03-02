@@ -14,7 +14,7 @@ import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
-import { buildArrowPaths, curveGen, updateArrowPathsFromProcessMem as updateArrowPathsFromProcessMemFn } from "./lib/arrow-paths";
+import { buildArrowPaths, curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
 
 export function App() {
 
@@ -64,14 +64,6 @@ export function App() {
     const isArrowTrackingRef = useRef(false);
     const activeArrowMotionCountRef = useRef(0);
 
-    const updateArrowPathsFromProcessMem = useCallback((el: HTMLElement, diagramRect: DOMRect) => {
-        updateArrowPathsFromProcessMemFn(el, diagramRect, {
-            viewBoxWidth: VIEWBOX_WIDTH,
-            viewBoxHeight: VIEWBOX_HEIGHT,
-            setProcessMemPoint: (p) => { processMemPointRef.current = p; },
-            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,});
-    }, []);
-
     const runArrowUpdate = useCallback(() => {
         const diagramEl = diagramContainerRef.current;
         if (!diagramEl) return;
@@ -90,8 +82,13 @@ export function App() {
         }
         if (!processMemElRef.current) return;
 
-        updateArrowPathsFromProcessMem(processMemElRef.current, diagramRect);
-    }, [updateArrowPathsFromProcessMem]);
+        updateArrowPathsFn(processMemElRef.current, diagramRect, {
+            viewBoxWidth: VIEWBOX_WIDTH,
+            viewBoxHeight: VIEWBOX_HEIGHT,
+            setProcessMemPoint: (p) => { processMemPointRef.current = p; },
+            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,
+        });
+    }, []);
 
     const queueArrowFrame = useCallback(() => {
         if (arrowFrameRef.current != null) return;
