@@ -39,6 +39,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
             throw new Error("Cannot change operand of instruction when CPU is idle.");
         }
 
+        // input validation
         const currentOperand = cpu.currentInstructionRaw & 0b00011111;
         const incrementedOperand =  currentOperand + 1;
         const clampedIncrementedOperand = Math.min(31, incrementedOperand);
@@ -56,6 +57,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
             throw new Error("Cannot change operand of instruction when CPU is idle.");
         }
 
+        // input validation
         const currentOperand = cpu.currentInstructionRaw & 0b00011111;
         const decrementedOperand =  currentOperand - 1;
         console.log("decrementedOperand", decrementedOperand);
@@ -75,7 +77,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
     const processColors = !isIdle ? getProcessColorClasses(cpu.runningPid) : null;
 
     return (
-    <Card size="default" className={`flex flex-col gap-4 w-90 bg-black ${className} relative `}>
+    <Card size="default" className={`flex flex-col gap-4 w-90 font-mono bg-black ${className} relative `}>
 
         <CardHeader>
             <CardTitle >
@@ -105,7 +107,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
                                 <span className="cursor-default underline decoration-dotted underline-offset-2">
-                                    PTB: {isIdle ? "-" : cpu.pageTableBase}
+                                    PTBR: {isIdle ? "-" : cpu.pageTableBase}
                                 </span>
                             </HoverCardTrigger>
                             <HoverCardContent side="right" className="w-64">
@@ -117,7 +119,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
                                 <span className="cursor-default underline decoration-dotted underline-offset-2">
-                                    ACC: {isIdle ? "-" : cpu.accumulator}
+                                    Acc: {isIdle ? "-" : cpu.accumulator}
                                 </span>
                             </HoverCardTrigger>
                             <HoverCardContent side="right" className="w-64">

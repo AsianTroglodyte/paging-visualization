@@ -15,6 +15,8 @@ import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { buildArrowPaths, curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
+import GithubIcon from "./assets/github-icon.svg";
+import GithubLogoIcon from "./assets/github_logo_icon.png";
 
 export function App() {
 
@@ -293,13 +295,26 @@ export function App() {
         }}/>
         <AppSidebar />
 
+        {/* <a href="https://github.com/AsianTroglodyte/paging-visualization" 
+        target="_self" rel="noopener noreferrer"
+        className="absolute top-[10px] right-[10px] z-50 flex h-8 w-8 items-center bg-background rounded-full justify-center ">
+            <img src={GithubIcon} alt="Github Icon" className="block h-6 w-6" />
+        </a> */}
+
+        <a href="https://github.com/AsianTroglodyte/paging-visualization" 
+        target="_self" rel="noopener noreferrer"
+        className="absolute top-[10px] right-[10px] z-50">
+            <img src={GithubLogoIcon} alt="Github Logo Icon" className="block h-7 w-7" />
+        </a>
+
+        
         <div
             ref={zoomContainerRef}
-            className="pl-1 w-full h-screen bg-black/30 overflow-hidden"
+            className="pl-1 w-full h-screen overflow-hidden"
             style={{ touchAction: "none" }}>
             <div
                 ref={zoomLayerRef}
-                className="flex items-center justify-center h-[100rem] max-h-screen gap-4 min-w-0 inline-flex/w-max"
+                className="flex justify-center h-[100rem] max-h-screen gap-4 min-w-0 inline-flex/w-max"
                 style={{
                     transformOrigin: "0 0",
                     willChange: "transform",
