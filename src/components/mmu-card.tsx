@@ -6,9 +6,9 @@ export function MmuCard({mmu, className}: {mmu: MmuState, className: string}) {
 
     // if mmu is translated, use the virtual page number, page frame number, and offset
     // if mmu is idle, use 0 for all values
-    let virtualPageNumber = mmu.kind === "translated" ? mmu.virtualPageNumber : 0;
-    let pageFrameNumber = mmu.kind === "translated" ? mmu.pageFrameNumber : 0;
-    let offset = mmu.kind === "translated" ? mmu.offset : 0;
+    const virtualPageNumber = mmu.kind === "translated" ? mmu.virtualPageNumber : 0;
+    const pageFrameNumber = mmu.kind === "translated" ? mmu.pageFrameNumber : 0;
+    const offset = mmu.kind === "translated" ? mmu.offset : 0;
 
     // vpnArray is specially formatted if thre 
     const vpnArray = new Array(3).fill("");

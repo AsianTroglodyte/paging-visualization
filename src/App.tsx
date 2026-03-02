@@ -14,8 +14,8 @@ import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
-import { buildArrowPaths, curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
-import GithubLogoIcon from "./assets/github_logo_icon.png";
+import { buildArrowPaths, curveGen, updateArrowPaths as updateArrowPathsFromProcessMemFn } from "./lib/arrow-paths";
+
 
 export function App() {
 
@@ -60,118 +60,61 @@ export function App() {
     // const [processMemPoint, setProcessMemPoint] = useRef<[number, number] | null>(null);
     const ptPointRef = useRef<[number, number] | null>(null);
     const processMemPointRef = useRef<[number, number] | null>(null);
-    const processMemElRef = useRef<HTMLElement | null>(null);
-    const arrowFrameRef = useRef<number | null>(null);
-    const isArrowTrackingRef = useRef(false);
-    const activeArrowMotionCountRef = useRef(0);
+    const arrowLoopRafIdRef = useRef<number | null>(null);
 
-    const runArrowUpdate = useCallback(() => {
-        const diagramEl = diagramContainerRef.current;
-        if (!diagramEl) return;
-
-        const diagramRect = diagramEl.getBoundingClientRect();
-        const pageTableEl = document.getElementById("page-table") as HTMLElement | null;
-        if (pageTableEl) {
-            const targetRect = pageTableEl.getBoundingClientRect();
-            const relX = (targetRect.left - diagramRect.left) / diagramRect.width;
-            const relY = (targetRect.top + targetRect.height / 2 - diagramRect.top) / diagramRect.height;
-            ptPointRef.current = [relX * VIEWBOX_WIDTH - 20, relY * VIEWBOX_HEIGHT];
-        }
-
-        if (!processMemElRef.current || !processMemElRef.current.isConnected) {
-            processMemElRef.current = document.getElementById("process-mem") as HTMLElement | null;
-        }
-        if (!processMemElRef.current) return;
-
-        updateArrowPathsFn(processMemElRef.current, diagramRect, {
+    const updateArrowPathsFromProcessMem = useCallback((el: HTMLElement, diagramRect: DOMRect) => {
+        updateArrowPathsFromProcessMemFn(el, diagramRect, {
             viewBoxWidth: VIEWBOX_WIDTH,
             viewBoxHeight: VIEWBOX_HEIGHT,
             setProcessMemPoint: (p) => { processMemPointRef.current = p; },
-            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,
-        });
+            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,});
     }, []);
 
-    const queueArrowFrame = useCallback(() => {
-        if (arrowFrameRef.current != null) return;
-        arrowFrameRef.current = requestAnimationFrame(() => {
-            arrowFrameRef.current = null;
-            runArrowUpdate();
-            if (isArrowTrackingRef.current) {
-                queueArrowFrame();
-            }
-        });
-    }, [runArrowUpdate]);
-
-    const scheduleArrowUpdateOnce = useCallback(() => {
-        queueArrowFrame();
-    }, [queueArrowFrame]);
-
-    const startArrowTracking = useCallback(() => {
-        if (isArrowTrackingRef.current) return;
-        isArrowTrackingRef.current = true;
-        queueArrowFrame();
-    }, [queueArrowFrame]);
-
-    const stopArrowTracking = useCallback(() => {
-        isArrowTrackingRef.current = false;
-        if (arrowFrameRef.current != null) {
-            cancelAnimationFrame(arrowFrameRef.current);
-            arrowFrameRef.current = null;
-        }
-    }, []);
-
-    // On load: initialize arrow update scheduling and motion listeners.
+    // On load: measure arrow targets and start an rAF loop that updates arrow paths every frame.
     useLayoutEffect(() => {
         const diagramEl = diagramContainerRef.current;
         if (!diagramEl) return;
 
-        processMemElRef.current = document.getElementById("process-mem") as HTMLElement | null;
 
-        const onMotionStart = () => {
-            activeArrowMotionCountRef.current += 1;
-            startArrowTracking();
-        };
-        const onMotionEnd = () => {
-            activeArrowMotionCountRef.current = Math.max(0, activeArrowMotionCountRef.current - 1);
-            if (activeArrowMotionCountRef.current === 0) {
-                stopArrowTracking();
-                scheduleArrowUpdateOnce();
-            }
+        const pageTableEl = document.querySelector("#page-table") as HTMLElement | null;
+        const pageTableCallback = (pageTableEl: HTMLElement) => {
+            const diagramRect = diagramEl.getBoundingClientRect();
+            const targetRect = pageTableEl.getBoundingClientRect();
+            const relX = (targetRect.left - diagramRect.left) / diagramRect.width;
+            const relY = (targetRect.top + targetRect.height / 2 - diagramRect.top) / diagramRect.height;
+            ptPointRef.current = [relX * VIEWBOX_WIDTH - 20, relY * VIEWBOX_HEIGHT];
         };
 
-        diagramEl.addEventListener("transitionstart", onMotionStart, true);
-        diagramEl.addEventListener("animationstart", onMotionStart, true);
-        diagramEl.addEventListener("transitionend", onMotionEnd, true);
-        diagramEl.addEventListener("transitioncancel", onMotionEnd, true);
-        diagramEl.addEventListener("animationend", onMotionEnd, true);
-        diagramEl.addEventListener("animationcancel", onMotionEnd, true);
+        if (pageTableEl) pageTableCallback(pageTableEl);
 
-        window.addEventListener("resize", scheduleArrowUpdateOnce);
-        scheduleArrowUpdateOnce();
+        const processMemEl = document.querySelector("#process-mem") as HTMLElement | null;
+        if (!processMemEl) return;
+
+        const tick = () => {
+            const diagramRect = diagramEl.getBoundingClientRect();
+            updateArrowPathsFromProcessMem(processMemEl, diagramRect);
+            arrowLoopRafIdRef.current = requestAnimationFrame(tick);
+        };
+        arrowLoopRafIdRef.current = requestAnimationFrame(tick);
 
         return () => {
-            window.removeEventListener("resize", scheduleArrowUpdateOnce);
-            diagramEl.removeEventListener("transitionstart", onMotionStart, true);
-            diagramEl.removeEventListener("animationstart", onMotionStart, true);
-            diagramEl.removeEventListener("transitionend", onMotionEnd, true);
-            diagramEl.removeEventListener("transitioncancel", onMotionEnd, true);
-            diagramEl.removeEventListener("animationend", onMotionEnd, true);
-            diagramEl.removeEventListener("animationcancel", onMotionEnd, true);
-            activeArrowMotionCountRef.current = 0;
-            stopArrowTracking();
+            if (arrowLoopRafIdRef.current !== null) {
+                cancelAnimationFrame(arrowLoopRafIdRef.current);
+                arrowLoopRafIdRef.current = null;
+            }
         };
-    }, [scheduleArrowUpdateOnce, startArrowTracking, stopArrowTracking]);
+    }, []);
 
-    // hide os page paths when cpu is idle
-    useEffect(() => {
-        if (cpu.kind === "idle") {
-            const osPage0Path = document.getElementById("os-page-0-path");
-            const osPage1Path = document.getElementById("os-page-1-path");
-            if (!osPage0Path || !osPage1Path) return;
-            osPage0Path.classList.add("invisible");
-            osPage1Path.classList.add("invisible");
-        }
-    }, [cpu.kind]);
+        // hide os page paths when cpu is idle
+        useEffect(() => {
+            if (cpu.kind === "idle") {
+                const osPage0Path = document.getElementById("os-page-0-path");
+                const osPage1Path = document.getElementById("os-page-1-path");
+                if (!osPage0Path || !osPage1Path) return;
+                osPage0Path.classList.add("invisible");
+                osPage1Path.classList.add("invisible");
+            }
+        }, [cpu.kind]);
 
     // setup zoom and panning
     useEffect(() => {
@@ -195,32 +138,29 @@ export function App() {
                 const rect = container.getBoundingClientRect();
                 const k = transform.k;
                 if (k <= 0) return transform;
-                const diagram = diagramContainerRef.current;
-                if (!diagram) return transform;
 
                 const clamp = (value: number, min: number, max: number) =>
                     Math.max(min, Math.min(max, value));
 
-                // Clamp viewport center in world coordinates to diagram bounds.
+                // Clamp the viewport center in world coordinates so bounds remain
+                // consistent across zoom levels.
                 const centerWorldX = (rect.width / 2 - transform.x) / k;
                 const centerWorldY = (rect.height / 2 - transform.y) / k;
 
-                const diagramLeft = diagram.offsetLeft;
-                const diagramTop = diagram.offsetTop;
-                const diagramRight = diagramLeft + diagram.offsetWidth;
-                const diagramBottom = diagramTop + diagram.offsetHeight;
-                const marginWorldX = rect.width * panFraction;
-                const marginWorldY = rect.height * panFraction;
+                const centerBaseX = rect.width / 2;
+                const centerBaseY = rect.height / 2;
+                const maxOffsetWorldX = rect.width * panFraction;
+                const maxOffsetWorldY = rect.height * panFraction;
 
                 const clampedCenterWorldX = clamp(
                     centerWorldX,
-                    diagramLeft - marginWorldX,
-                    diagramRight + marginWorldX
+                    centerBaseX - maxOffsetWorldX,
+                    centerBaseX + maxOffsetWorldX
                 );
                 const clampedCenterWorldY = clamp(
                     centerWorldY,
-                    diagramTop - marginWorldY,
-                    diagramBottom + marginWorldY
+                    centerBaseY - maxOffsetWorldY,
+                    centerBaseY + maxOffsetWorldY
                 );
 
                 const clampedX = rect.width / 2 - clampedCenterWorldX * k;
@@ -246,7 +186,6 @@ export function App() {
                 if (frameRef.current == null) {
                     frameRef.current = requestAnimationFrame(applyTransform);
                 }
-                scheduleArrowUpdateOnce();
             })
         const containerSelection = select(container);
         containerSelection.call(zoomBehavior).call(zoomBehavior.transform, zoomIdentity);
@@ -260,7 +199,7 @@ export function App() {
                 frameRef.current = null;
             }
         };
-    }, [scheduleArrowUpdateOnce]);
+    }, []);
 
     // show error toast (page fault, no space for process, etc.)
     useEffect(() => {
@@ -287,33 +226,20 @@ export function App() {
         <Toaster richColors closeButton position="top-center" toastOptions={{
             duration: 3000,
             classNames: {
-                description: "!text-white !no",
-                title: "!text-white !text-base",
+                description: "!text-white !font-mono",
+                title: "!text-white !font-mono !text-base",
                 toast: "!bg-card !text-white !border-none",
             }
         }}/>
         <AppSidebar />
 
-        {/* <a href="https://github.com/AsianTroglodyte/paging-visualization" 
-        target="_self" rel="noopener noreferrer"
-        className="absolute top-[10px] right-[10px] z-50 flex h-8 w-8 items-center bg-background rounded-full justify-center ">
-            <img src={GithubIcon} alt="Github Icon" className="block h-6 w-6" />
-        </a> */}
-
-        <a href="https://github.com/AsianTroglodyte/paging-visualization" 
-        target="_self" rel="noopener noreferrer"
-        className="absolute top-[10px] right-[10px] z-50">
-            <img src={GithubLogoIcon} alt="Github Logo Icon" className="block h-7 w-7" />
-        </a>
-
-        
         <div
             ref={zoomContainerRef}
-            className="pl-1 w-full h-screen overflow-hidden"
+            className="pl-1 w-full h-screen bg-black/30 overflow-hidden"
             style={{ touchAction: "none" }}>
             <div
                 ref={zoomLayerRef}
-                className="flex justify-center h-[100rem] max-h-screen gap-4 min-w-0 inline-flex/w-max"
+                className="flex flex-3 flex items-start h-[100rem] max-h-screen gap-4 min-w-0 inline-flex/w-max"
                 style={{
                     transformOrigin: "0 0",
                     willChange: "transform",
@@ -354,13 +280,12 @@ export function App() {
                             />
                     </div>
 
-
                     {diagramLabels()}
 
                     {/* Single SVG overlay for all arrows - spans entire diagram */}
                     {/* viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} */}
                     <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                        className="absolute inset-0 w-full h-full pointer-events-none z-0"
                         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                         preserveAspectRatio="none">
                         <path
@@ -378,43 +303,26 @@ export function App() {
                             const ip = buildArrowPaths(pt, pm, mmu.kind === "translated");
                             return (
                                 <>
-                                    <path id="query-page-table-path" className={"absolute inset z-11"} d={ip.queryPageTable} 
-                                    fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.queryPageTableHead} className={"absolute inset z-11"}
+                                    <path id="query-page-table-path" d={ip.queryPageTable} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path d={ip.queryPageTableHead} 
                                     id="query-page-table-head-path"
                                     fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.pageTableReturn} className={"z-11"}
+                                    <path d={ip.pageTableReturn} 
                                     id="page-table-return-path"
                                     fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d="M730 265 L745 259 L745 271 Z" className={"z-11"}
+                                    <path d="M730 265 L745 259 L745 271 Z" 
                                     id="page-table-return-head-path"
                                     fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path id="process-memory-access-path" className={"absolute z-11"}
-                                    d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path id="process-memory-access-head-path" className={"z-11"} 
-                                    d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path id="write-back-path" className={"z-11"}
-                                    d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d="M385 190 L400 184 L400 196 Z" 
-                                    className={"absolute z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path id="process-bracket-path" className={"z-11"} d={ip.processBracketPoints} 
-                                    fill="none" stroke="currentColor" strokeWidth="1"/>
-                                </>
-                            );
-                        })()}
+                                    <path id="process-memory-access-path" d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path id="process-memory-access-head-path" d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
+                                    <path id="write-back-path" d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                                    <path d="M385 190 L400 184 L400 196 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                                    <path id="process-bracket-path" d={ip.processBracketPoints} fill="none" stroke="currentColor" strokeWidth="1"/>
 
-                    </svg>
-                    <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none z-0"
-                        viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-                        preserveAspectRatio="none">
-                        {(() => {
-                            return (
-                                <>
                                     <path id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
-                                    className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
+                                    className="invisible" fill="white" opacity="0.1" strokeWidth="1" />
                                     <path id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
-                                    className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
+                                    className="invisible" fill="white" opacity="0.1" strokeWidth="1" />
                                 </>
                             );
                         })()}
@@ -437,7 +345,8 @@ export function App() {
 
 
     </SidebarProvider>
-)}
+)
+}
 
 export default App;
 
