@@ -37,7 +37,7 @@ export function MemoryCard({
 }: MemoryCardProps) {
 
     return (
-    <Card className={`w-80 min-w-80 bg-black  ${className}`} id="memory-card">
+    <Card className={`w-82 min-w-82 bg-black  ${className}`} id="memory-card">
         <CardHeader>
             <CardTitle>
                 <h1 className="text-3xl text-center font-semibold"> Memory </h1>
