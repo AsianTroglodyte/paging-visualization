@@ -38,6 +38,7 @@ export function updateArrowPaths(
     diagramRect: DOMRect,
     options: UpdateArrowPathsOptions,
 ) {
+    console.log("updateArrowPaths");
     const { viewBoxWidth, viewBoxHeight, setProcessMemPoint, getPathElement } = options;
     const processMemRect = el.getBoundingClientRect();
     const relX = (processMemRect.left - diagramRect.left) / diagramRect.width;
@@ -63,7 +64,7 @@ export function updateArrowPaths(
     const processMemoryAccessHeadPath = getPathElement("process-memory-access-head-path");
     if (processMemoryAccessHeadPath) {
         // Match buildArrowPaths() head geometry exactly for stable positioning.
-        processMemoryAccessHeadPath.setAttribute("d", `M${pt[0] + 15} ${pt[1]} L${pt[0]} ${pt[1] - 6} L${pt[0]} ${pt[1] + 6} Z`);
+        processMemoryAccessHeadPath.setAttribute("d", `M${pt[0] + 20} ${pt[1]} L${pt[0]} ${pt[1] - 6} L${pt[0]} ${pt[1] + 6} Z`);
     }
 
 
