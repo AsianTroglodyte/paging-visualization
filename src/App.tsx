@@ -238,7 +238,7 @@ export function App() {
             style={{ touchAction: "none" }}>
             <div
                 ref={zoomLayerRef}
-                className="flex flex-3 flex items-start h-[100rem] max-h-screen gap-4 min-w-0 inline-flex/w-max"
+                className="flex items-center justify-center h-[100rem] max-h-screen gap-4 min-w-0 inline-flex/w-max"
                 style={{
                     transformOrigin: "0 0",
                     willChange: "transform",
@@ -279,12 +279,13 @@ export function App() {
                             />
                     </div>
 
+
                     {diagramLabels()}
 
                     {/* Single SVG overlay for all arrows - spans entire diagram */}
                     {/* viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} */}
                     <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none z-0"
+                        className="absolute inset-0 w-full h-full pointer-events-none z-30"
                         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                         preserveAspectRatio="none">
                         <path
@@ -302,9 +303,9 @@ export function App() {
                             const ip = buildArrowPaths(pt, pm, mmu.kind === "translated");
                             return (
                                 <>
-                                    <path id="query-page-table-path" className={"z-11"} d={ip.queryPageTable} 
+                                    <path id="query-page-table-path" className={"absolute inset z-11"} d={ip.queryPageTable} 
                                     fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.queryPageTableHead} className={"z-11"}
+                                    <path d={ip.queryPageTableHead} className={"absolute inset z-11"}
                                     id="query-page-table-head-path"
                                     fill="currentColor" stroke="currentColor" strokeWidth="1"/>
                                     <path d={ip.pageTableReturn} className={"z-11"}
@@ -313,17 +314,28 @@ export function App() {
                                     <path d="M730 265 L745 259 L745 271 Z" className={"z-11"}
                                     id="page-table-return-head-path"
                                     fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path id="process-memory-access-path" className={"z-11"}
+                                    <path id="process-memory-access-path" className={"absolute z-11"}
                                     d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
                                     <path id="process-memory-access-head-path" className={"z-11"} 
                                     d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
                                     <path id="write-back-path" className={"z-11"}
                                     d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
                                     <path d="M385 190 L400 184 L400 196 Z" 
-                                    className={"z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                                    className={"absolute z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
                                     <path id="process-bracket-path" className={"z-11"} d={ip.processBracketPoints} 
                                     fill="none" stroke="currentColor" strokeWidth="1"/>
+                                </>
+                            );
+                        })()}
 
+                    </svg>
+                    <svg
+                        className="absolute inset-0 w-full h-full pointer-events-none z-0"
+                        viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+                        preserveAspectRatio="none">
+                        {(() => {
+                            return (
+                                <>
                                     <path id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
                                     className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
                                     <path id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
@@ -350,8 +362,7 @@ export function App() {
 
 
     </SidebarProvider>
-)
-}
+)}
 
 export default App;
 
