@@ -59,7 +59,10 @@ export function App() {
     // const [processMemPoint, setProcessMemPoint] = useRef<[number, number] | null>(null);
     const ptPointRef = useRef<[number, number] | null>(null);
     const processMemPointRef = useRef<[number, number] | null>(null);
-    const arrowLoopRafIdRef = useRef<number | null>(null);
+    const processMemElRef = useRef<HTMLElement | null>(null);
+    const arrowFrameRef = useRef<number | null>(null);
+    const isArrowTrackingRef = useRef(false);
+    const activeArrowMotionCountRef = useRef(0);
 
     const updateArrowPathsFromProcessMem = useCallback((el: HTMLElement, diagramRect: DOMRect) => {
         updateArrowPathsFromProcessMemFn(el, diagramRect, {
@@ -69,51 +72,108 @@ export function App() {
             getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,});
     }, []);
 
-    // On load: measure arrow targets and start an rAF loop that updates arrow paths every frame.
-    useLayoutEffect(() => {
+    const runArrowUpdate = useCallback(() => {
         const diagramEl = diagramContainerRef.current;
         if (!diagramEl) return;
 
-
-        const pageTableEl = document.querySelector("#page-table") as HTMLElement | null;
-        const pageTableCallback = (pageTableEl: HTMLElement) => {
-            const diagramRect = diagramEl.getBoundingClientRect();
+        const diagramRect = diagramEl.getBoundingClientRect();
+        const pageTableEl = document.getElementById("page-table") as HTMLElement | null;
+        if (pageTableEl) {
             const targetRect = pageTableEl.getBoundingClientRect();
             const relX = (targetRect.left - diagramRect.left) / diagramRect.width;
             const relY = (targetRect.top + targetRect.height / 2 - diagramRect.top) / diagramRect.height;
             ptPointRef.current = [relX * VIEWBOX_WIDTH - 20, relY * VIEWBOX_HEIGHT];
-        };
+        }
 
-        if (pageTableEl) pageTableCallback(pageTableEl);
+        if (!processMemElRef.current || !processMemElRef.current.isConnected) {
+            processMemElRef.current = document.getElementById("process-mem") as HTMLElement | null;
+        }
+        if (!processMemElRef.current) return;
 
-        const processMemEl = document.querySelector("#process-mem") as HTMLElement | null;
-        if (!processMemEl) return;
+        updateArrowPathsFromProcessMem(processMemElRef.current, diagramRect);
+    }, [updateArrowPathsFromProcessMem]);
 
-        const tick = () => {
-            const diagramRect = diagramEl.getBoundingClientRect();
-            updateArrowPathsFromProcessMem(processMemEl, diagramRect);
-            arrowLoopRafIdRef.current = requestAnimationFrame(tick);
-        };
-        arrowLoopRafIdRef.current = requestAnimationFrame(tick);
-
-        return () => {
-            if (arrowLoopRafIdRef.current !== null) {
-                cancelAnimationFrame(arrowLoopRafIdRef.current);
-                arrowLoopRafIdRef.current = null;
+    const queueArrowFrame = useCallback(() => {
+        if (arrowFrameRef.current != null) return;
+        arrowFrameRef.current = requestAnimationFrame(() => {
+            arrowFrameRef.current = null;
+            runArrowUpdate();
+            if (isArrowTrackingRef.current) {
+                queueArrowFrame();
             }
-        };
+        });
+    }, [runArrowUpdate]);
+
+    const scheduleArrowUpdateOnce = useCallback(() => {
+        queueArrowFrame();
+    }, [queueArrowFrame]);
+
+    const startArrowTracking = useCallback(() => {
+        if (isArrowTrackingRef.current) return;
+        isArrowTrackingRef.current = true;
+        queueArrowFrame();
+    }, [queueArrowFrame]);
+
+    const stopArrowTracking = useCallback(() => {
+        isArrowTrackingRef.current = false;
+        if (arrowFrameRef.current != null) {
+            cancelAnimationFrame(arrowFrameRef.current);
+            arrowFrameRef.current = null;
+        }
     }, []);
 
-        // hide os page paths when cpu is idle
-        useEffect(() => {
-            if (cpu.kind === "idle") {
-                const osPage0Path = document.getElementById("os-page-0-path");
-                const osPage1Path = document.getElementById("os-page-1-path");
-                if (!osPage0Path || !osPage1Path) return;
-                osPage0Path.classList.add("invisible");
-                osPage1Path.classList.add("invisible");
+    // On load: initialize arrow update scheduling and motion listeners.
+    useLayoutEffect(() => {
+        const diagramEl = diagramContainerRef.current;
+        if (!diagramEl) return;
+
+        processMemElRef.current = document.getElementById("process-mem") as HTMLElement | null;
+
+        const onMotionStart = () => {
+            activeArrowMotionCountRef.current += 1;
+            startArrowTracking();
+        };
+        const onMotionEnd = () => {
+            activeArrowMotionCountRef.current = Math.max(0, activeArrowMotionCountRef.current - 1);
+            if (activeArrowMotionCountRef.current === 0) {
+                stopArrowTracking();
+                scheduleArrowUpdateOnce();
             }
-        }, [cpu.kind]);
+        };
+
+        diagramEl.addEventListener("transitionstart", onMotionStart, true);
+        diagramEl.addEventListener("animationstart", onMotionStart, true);
+        diagramEl.addEventListener("transitionend", onMotionEnd, true);
+        diagramEl.addEventListener("transitioncancel", onMotionEnd, true);
+        diagramEl.addEventListener("animationend", onMotionEnd, true);
+        diagramEl.addEventListener("animationcancel", onMotionEnd, true);
+
+        window.addEventListener("resize", scheduleArrowUpdateOnce);
+        scheduleArrowUpdateOnce();
+
+        return () => {
+            window.removeEventListener("resize", scheduleArrowUpdateOnce);
+            diagramEl.removeEventListener("transitionstart", onMotionStart, true);
+            diagramEl.removeEventListener("animationstart", onMotionStart, true);
+            diagramEl.removeEventListener("transitionend", onMotionEnd, true);
+            diagramEl.removeEventListener("transitioncancel", onMotionEnd, true);
+            diagramEl.removeEventListener("animationend", onMotionEnd, true);
+            diagramEl.removeEventListener("animationcancel", onMotionEnd, true);
+            activeArrowMotionCountRef.current = 0;
+            stopArrowTracking();
+        };
+    }, [scheduleArrowUpdateOnce, startArrowTracking, stopArrowTracking]);
+
+    // hide os page paths when cpu is idle
+    useEffect(() => {
+        if (cpu.kind === "idle") {
+            const osPage0Path = document.getElementById("os-page-0-path");
+            const osPage1Path = document.getElementById("os-page-1-path");
+            if (!osPage0Path || !osPage1Path) return;
+            osPage0Path.classList.add("invisible");
+            osPage1Path.classList.add("invisible");
+        }
+    }, [cpu.kind]);
 
     // setup zoom and panning
     useEffect(() => {
@@ -188,6 +248,7 @@ export function App() {
                 if (frameRef.current == null) {
                     frameRef.current = requestAnimationFrame(applyTransform);
                 }
+                scheduleArrowUpdateOnce();
             })
         const containerSelection = select(container);
         containerSelection.call(zoomBehavior).call(zoomBehavior.transform, zoomIdentity);
@@ -201,7 +262,7 @@ export function App() {
                 frameRef.current = null;
             }
         };
-    }, []);
+    }, [scheduleArrowUpdateOnce]);
 
     // show error toast (page fault, no space for process, etc.)
     useEffect(() => {

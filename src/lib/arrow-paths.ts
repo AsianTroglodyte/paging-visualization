@@ -78,7 +78,6 @@ export function updateArrowPathsFromProcessMem(
     const virtualMemoryPfn0 = document.getElementById("virtual-memory-0");
     const physicalMemoryPfn0 = document.getElementById("physical-memory-0");
 
-
     if (virtualMemoryPfn0 === null || physicalMemoryPfn0 === null) return; 
 
     if (virtualMemoryPfn0) {
@@ -87,8 +86,6 @@ export function updateArrowPathsFromProcessMem(
         const virtualMemoryPfn0RelX = (virtualMemoryPfn0Rect.right - diagramRect.left) / diagramRect.width;
         const virtualMemoryPfn0RelY = (virtualMemoryPfn0Rect.top - diagramRect.top) / diagramRect.height;
         const virtualMemoryPfn0Height = (virtualMemoryPfn0Rect.height / diagramRect.height) * viewBoxHeight;
-
-        console.log("virtualMemoryPfn0Height: ", virtualMemoryPfn0Height);
 
         const virtualMemoryPfn0Point: [number, number] = [virtualMemoryPfn0RelX * viewBoxWidth, virtualMemoryPfn0RelY * viewBoxHeight];
 
