@@ -33,7 +33,6 @@ export function MemoryCard({
     runningPid = null,
     className,
     mmu,
-    cpu,
 }: MemoryCardProps) {
 
     return (
