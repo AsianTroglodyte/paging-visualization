@@ -40,7 +40,7 @@ export function VirtualMemory(
 
 
     return (
-    <Card className={`w-80 min-w-80 bg-black ${className}`}>
+    <Card className={`w-82 min-w-82 bg-black ${className}`}>
     <CardHeader>
         <CardTitle>
             <h1 className="text-3xl text-center font-semibold">Virtual Memory</h1>

@@ -7,7 +7,7 @@ export function buildArrowPaths(
     processMemPoint: [number, number],
     mmuTranslated: boolean
 ) {
-    const queryPT = mmuTranslated ? ptPoint : ([1090, 135] as [number, number]);
+    const queryPT = mmuTranslated ? ptPoint : ([1070, 135] as [number, number]);
     const queryPageTablePoints: [number, number][] = [[735, 245], [900, 220], queryPT];
     const pageTableReturnPoints: [number, number][] = [[735, 265], [900, 240], queryPT];
     const processMemoryAccessPoints: [number, number][] = [[850, 340], [1000, 340], processMemPoint];
@@ -53,12 +53,17 @@ export function updateArrowPaths(
 
     // update process memory access path
     const processMemoryAccessPath = getPathElement("process-memory-access-path");
-    if (processMemoryAccessPath) processMemoryAccessPath.setAttribute("d", curveGen([pt, [1000, 340], [850, 340]]) ?? "");
+    if (processMemoryAccessPath) {
+        // Keep point order identical to buildArrowPaths() to avoid visible shifts
+        // when rerenders/zoom updates swap between initial and runtime geometry.
+        processMemoryAccessPath.setAttribute("d", curveGen([[850, 340], [1000, 340], pt]) ?? "");
+    }
 
     // update process memory access head path (triangle: base, tip-top, tip-bottom, close)
     const processMemoryAccessHeadPath = getPathElement("process-memory-access-head-path");
     if (processMemoryAccessHeadPath) {
-        processMemoryAccessHeadPath.setAttribute("d", `M${pt[0] + 20} ${pt[1]} L${pt[0] + 5} ${pt[1] - 6} L${pt[0] + 5} ${pt[1] + 6} Z`);
+        // Match buildArrowPaths() head geometry exactly for stable positioning.
+        processMemoryAccessHeadPath.setAttribute("d", `M${pt[0] + 15} ${pt[1]} L${pt[0]} ${pt[1] - 6} L${pt[0]} ${pt[1] + 6} Z`);
     }
 
 
