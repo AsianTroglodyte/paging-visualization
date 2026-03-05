@@ -51,7 +51,7 @@ export function MemoryCard({
             <Accordion type="single" collapsible className="w-full">
 
                 {/* The OS, pages 0-1: */}
-                {osPage0Accordion(memory, processControlBlocks, mmu, cpu)}
+                {osPage0Accordion(memory, processControlBlocks, mmu)}
 
                 {osPage1Accordion(memory)}
 
