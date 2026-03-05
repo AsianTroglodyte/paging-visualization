@@ -181,7 +181,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
     };
 
     return (
-    <AccordionItem value="pfn-0" id={ mmu.kind === "idle" ? "page-table" : undefined }>
+    <AccordionItem value="pfn-0">
         <AccordionTrigger 
         id={mmu.kind === "translated" ? "page-table" : undefined}
         className="hover:no-underline  text-base px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
@@ -209,14 +209,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                     processCellClass = "bg-primary/30";
                 }
                 return (
-                <TableRow key={index} 
-                id={ 
-                    (() => {
-                        if (mmu.kind === "idle") return undefined;
-                        if (cpu.kind === "idle") return undefined;
-                        if (index === cpu.pageTableBase) return "page-table";
-                        else return undefined;
-                    })()}>
+                <TableRow key={index} >
                     <TableCell className={` ${processCellClass}`}>
                         {index}
                     </TableCell>

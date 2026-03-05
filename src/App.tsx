@@ -162,6 +162,11 @@ export function App() {
         };
     }, [scheduleArrowUpdateOnce, startArrowTracking, stopArrowTracking]);
 
+    // Keep arrows synced after state-driven rerenders.
+    useLayoutEffect(() => {
+        scheduleArrowUpdateOnce();
+    }, [scheduleArrowUpdateOnce, memory, cpu, mmu]);
+
     // hide os page paths when cpu is idle
     useEffect(() => {
         if (cpu.kind === "idle") {
@@ -287,7 +292,7 @@ export function App() {
         <Toaster richColors closeButton position="top-center" toastOptions={{
             duration: 3000,
             classNames: {
-                description: "!text-white !no",
+                description: "!text-white ",
                 title: "!text-white !text-base",
                 toast: "!bg-card !text-white !border-none",
             }
@@ -373,9 +378,7 @@ export function App() {
                         <path d="M555 170 L540 164 L540 177 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
 
                         {(() => {
-                            const pt = ptPointRef.current ?? [1110, 135];
-                            const pm = processMemPointRef.current ?? [1100, 325];
-                            const ip = buildArrowPaths(pt, pm, mmu.kind === "translated");
+                            const ip = buildArrowPaths([1090, 135], [1100, 325], mmu.kind === "translated");
                             return (
                                 <>
                                     <path id="query-page-table-path" className={"absolute inset z-11"} d={ip.queryPageTable} 

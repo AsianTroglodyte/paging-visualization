@@ -77,10 +77,13 @@ export function updateArrowPaths(
 
     const virtualMemoryPfn0 = document.getElementById("virtual-memory-0");
     const physicalMemoryPfn0 = document.getElementById("physical-memory-0");
+    const osPage0Path = getPathElement("os-page-0-path");
+    const osPage1Path = getPathElement("os-page-1-path");
+    if (!osPage0Path || !osPage1Path) return;
 
-    if (virtualMemoryPfn0 === null || physicalMemoryPfn0 === null) return; 
-
-    if (virtualMemoryPfn0) {
+    if (!virtualMemoryPfn0 || !physicalMemoryPfn0) {
+        osPage0Path.classList.add("invisible");
+    } else {
         // virtual memory dimensions
         const virtualMemoryPfn0Rect = virtualMemoryPfn0.getBoundingClientRect();
         const virtualMemoryPfn0RelX = (virtualMemoryPfn0Rect.right - diagramRect.left) / diagramRect.width;
@@ -88,12 +91,6 @@ export function updateArrowPaths(
         const virtualMemoryPfn0Height = (virtualMemoryPfn0Rect.height / diagramRect.height) * viewBoxHeight;
 
         const virtualMemoryPfn0Point: [number, number] = [virtualMemoryPfn0RelX * viewBoxWidth, virtualMemoryPfn0RelY * viewBoxHeight];
-
-
-        const osPage0Path = getPathElement("os-page-0-path");
-        if (!osPage0Path) {
-            throw new Error("os-page-0-path not found");
-        }
 
         // physical memory dimensions
         const physicalMemoryPfn0Rect = physicalMemoryPfn0.getBoundingClientRect();
@@ -116,20 +113,15 @@ export function updateArrowPaths(
     const virtualMemoryPfn1 = document.getElementById("virtual-memory-1");
     const physicalMemoryPfn1 = document.getElementById("physical-memory-1");
 
-    if (virtualMemoryPfn1 === null || physicalMemoryPfn1 === null) return; 
-
-    if (virtualMemoryPfn1) {
+    if (!virtualMemoryPfn1 || !physicalMemoryPfn1) {
+        osPage1Path.classList.add("invisible");
+    } else {
         const virtualMemoryPfn1Rect = virtualMemoryPfn1.getBoundingClientRect();
         const virtualMemoryPfn1RelX = (virtualMemoryPfn1Rect.right - diagramRect.left) / diagramRect.width;
         const virtualMemoryPfn1RelY = (virtualMemoryPfn1Rect.top - diagramRect.top) / diagramRect.height;
         const virtualMemoryPfn1Height = (virtualMemoryPfn1Rect.height / diagramRect.height) * viewBoxHeight;
 
         const virtualMemoryPfn1Point: [number, number] = [virtualMemoryPfn1RelX * viewBoxWidth, virtualMemoryPfn1RelY * viewBoxHeight];
-
-        const osPage1Path = getPathElement("os-page-1-path");
-        if (!osPage1Path) {
-            throw new Error("os-page-1-path not found");
-        }
 
         const physicalMemoryPfn1Rect = physicalMemoryPfn1.getBoundingClientRect();
         const physicalMemoryPfn1RelX = (physicalMemoryPfn1Rect.left - diagramRect.left) / diagramRect.width;
