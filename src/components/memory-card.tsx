@@ -165,9 +165,7 @@ export default MemoryCard
 
 
 
-function osPage0Accordion(memory: number[], processControlBlocks: ProcessControlBlocks, mmu: MmuState, cpu: CpuState) {
-    
-
+function osPage0Accordion(memory: number[], processControlBlocks: ProcessControlBlocks, mmu: MmuState) {
     const pteIndicesInUse = new Set(
         processControlBlocks.flatMap(pcb => [pcb.pageTableBase, pcb.pageTableBase + 1])
     );
