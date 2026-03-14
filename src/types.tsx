@@ -8,3 +8,10 @@ export type ArrowPathsRefs = {
   osPage0Path: React.RefObject<SVGPathElement | null>;
   osPage1Path: React.RefObject<SVGPathElement | null>;
 };
+
+export type ActivePageRefs = {
+  virtualMemoryPfn0: React.RefObject<HTMLDivElement | null>;
+  physicalMemoryPfn0: React.RefObject<HTMLDivElement | null>;
+  virtualMemoryPfn1: React.RefObject<HTMLDivElement | null>;
+  physicalMemoryPfn1: React.RefObject<HTMLDivElement | null>;
+};
