@@ -16,6 +16,7 @@ import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { buildArrowPaths, curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
 import GithubLogoIcon from "./assets/github_logo_icon.png";
+import type { ActivePageRefs, ArrowPathsRefs } from "./types";
 
 export function App() {
 
@@ -65,6 +66,25 @@ export function App() {
     const isArrowTrackingRef = useRef(false);
     const activeArrowMotionCountRef = useRef(0);
 
+    // when we want to update the arrow paths, we can use the arrowPathsRefs to get the path elements
+    const arrowPathsRefs = useRef<ArrowPathsRefs>({
+        writeBackPath: useRef<SVGPathElement | null>(null),
+        processMemoryAccessPath: useRef<SVGPathElement | null>(null),
+        processMemoryAccessHeadPath: useRef<SVGPathElement | null>(null),
+        processBracketPath: useRef<SVGPathElement | null>(null),
+        osPage0Path: useRef<SVGPathElement | null>(null),
+        osPage1Path: useRef<SVGPathElement | null>(null),
+    });
+
+    // when we want to update the highling between the virtual and physical memory of the active page, 
+    // we can use the activePageRefs to get the virtual and physical memory elements
+    const activePageRefs = useRef<ActivePageRefs>({
+        virtualMemoryPfn0: useRef<HTMLDivElement | null>(null),
+        physicalMemoryPfn0: useRef<HTMLDivElement | null>(null),
+        virtualMemoryPfn1: useRef<HTMLDivElement | null>(null),
+        physicalMemoryPfn1: useRef<HTMLDivElement | null>(null),
+    });
+
     const runArrowUpdate = useCallback(() => {
         const diagramEl = diagramContainerRef.current;
         if (!diagramEl) return;
@@ -87,7 +107,8 @@ export function App() {
             viewBoxWidth: VIEWBOX_WIDTH,
             viewBoxHeight: VIEWBOX_HEIGHT,
             setProcessMemPoint: (p) => { processMemPointRef.current = p; },
-            getPathElement: (id) => document.getElementById(id) as SVGPathElement | null,
+            arrowPathsRefs: arrowPathsRefs.current,
+            activePageRefs: activePageRefs.current,
         });
     }, []);
 
@@ -167,16 +188,32 @@ export function App() {
         scheduleArrowUpdateOnce();
     }, [scheduleArrowUpdateOnce, memory, cpu, mmu]);
 
-    // hide os page paths when cpu is idle
+    // hide os page paths when cpu is idle 
     useEffect(() => {
         if (cpu.kind === "idle") {
-            const osPage0Path = document.getElementById("os-page-0-path");
-            const osPage1Path = document.getElementById("os-page-1-path");
+            const osPage0Path = arrowPathsRefs.current.osPage0Path.current;
+            const osPage1Path = arrowPathsRefs.current.osPage1Path.current;
             if (!osPage0Path || !osPage1Path) return;
             osPage0Path.classList.add("invisible");
             osPage1Path.classList.add("invisible");
         }
-    }, [cpu.kind]);
+
+        // when we want to update the highling between the virtual and physical memory of the active page, 
+        // we can use the activePageRefs to get the virtual and physical memory elements
+        if (cpu.kind != "idle") {
+            activePageRefs.current.virtualMemoryPfn0.current = 
+            document.getElementById(`virtual-memory-0`) as HTMLDivElement | null;
+            
+            activePageRefs.current.physicalMemoryPfn0.current = 
+            document.getElementById(`physical-memory-0`) as HTMLDivElement | null;
+            
+            activePageRefs.current.virtualMemoryPfn1.current = 
+            document.getElementById(`virtual-memory-1`) as HTMLDivElement | null;
+            
+            activePageRefs.current.physicalMemoryPfn1.current = 
+            document.getElementById(`physical-memory-1`) as HTMLDivElement | null;
+        }
+    }, [cpu]);
 
     // setup zoom and panning
     useEffect(() => {
@@ -392,15 +429,15 @@ export function App() {
                                     <path d="M730 265 L745 259 L745 271 Z" className={"z-11"}
                                     id="page-table-return-head-path"
                                     fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path id="process-memory-access-path" className={"absolute z-11"}
+                                    <path ref={arrowPathsRefs.current.processMemoryAccessPath} id="process-memory-access-path" className={"absolute z-11"}
                                     d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path id="process-memory-access-head-path" className={"z-11"} 
+                                    <path ref={arrowPathsRefs.current.processMemoryAccessHeadPath} id="process-memory-access-head-path" className={"z-11"} 
                                     d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path id="write-back-path" className={"z-11"}
+                                    <path ref={arrowPathsRefs.current.writeBackPath} id="write-back-path" className={"z-11"}
                                     d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
                                     <path d="M385 190 L400 184 L400 196 Z" 
                                     className={"absolute z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path id="process-bracket-path" className={"z-11"} d={ip.processBracketPoints} 
+                                    <path ref={arrowPathsRefs.current.processBracketPath} id="process-bracket-path" className={"z-11"} d={ip.processBracketPoints} 
                                     fill="none" stroke="currentColor" strokeWidth="1"/>
                                 </>
                             );
@@ -414,9 +451,9 @@ export function App() {
                         {(() => {
                             return (
                                 <>
-                                    <path id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
+                                    <path ref={arrowPathsRefs.current.osPage0Path} id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
                                     className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
-                                    <path id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
+                                    <path ref={arrowPathsRefs.current.osPage1Path} id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
                                     className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
                                 </>
                             );

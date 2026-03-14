@@ -1,4 +1,10 @@
 import { line, curveCatmullRom } from "d3-shape";
+import type { ActivePageRefs, ArrowPathsRefs } from "@/types";
+
+// this is the offset creates a slight overlap between paths that map active virtual 
+// to their physical memory pages counterparts. This overlaps helps to create a visual distinction 
+// between parallel paths, making it easier to understand the mapping relationship.
+const PAGE_SHADING_OFFSET = 1.5;
 
 export const curveGen = line<[number, number]>().curve(curveCatmullRom.alpha(0.5));
 const lineGen = line<[number, number]>();
@@ -29,8 +35,8 @@ export interface UpdateArrowPathsOptions {
     viewBoxWidth: number;
     viewBoxHeight: number;
     setProcessMemPoint: (point: [number, number]) => void;
-    getPathElement: (id: string) => SVGPathElement | null;
-
+    arrowPathsRefs: ArrowPathsRefs;
+    activePageRefs: ActivePageRefs;
 }
 
 export function updateArrowPaths(
@@ -38,7 +44,8 @@ export function updateArrowPaths(
     diagramRect: DOMRect,
     options: UpdateArrowPathsOptions,
 ) {
-    const { viewBoxWidth, viewBoxHeight, setProcessMemPoint, getPathElement } = options;
+    console.log("updateArrowPaths");
+    const { viewBoxWidth, viewBoxHeight, setProcessMemPoint, arrowPathsRefs, activePageRefs } = options;
     const processMemRect = el.getBoundingClientRect();
     const relX = (processMemRect.left - diagramRect.left) / diagramRect.width;
     const relY = (processMemRect.top + processMemRect.height / 2 - diagramRect.top) / diagramRect.height;
@@ -48,11 +55,11 @@ export function updateArrowPaths(
     setProcessMemPoint(pt);
 
     // update write back path
-    const writeBackPath = getPathElement("write-back-path");
+    const writeBackPath = arrowPathsRefs.writeBackPath.current;
     if (writeBackPath) writeBackPath.setAttribute("d", curveGen([pt, [900, 440], [500, 440], [450, 200], [400, 190]]) ?? "");
 
     // update process memory access path
-    const processMemoryAccessPath = getPathElement("process-memory-access-path");
+    const processMemoryAccessPath = arrowPathsRefs.processMemoryAccessPath.current;
     if (processMemoryAccessPath) {
         // Keep point order identical to buildArrowPaths() to avoid visible shifts
         // when rerenders/zoom updates swap between initial and runtime geometry.
@@ -60,7 +67,7 @@ export function updateArrowPaths(
     }
 
     // update process memory access head path (triangle: base, tip-top, tip-bottom, close)
-    const processMemoryAccessHeadPath = getPathElement("process-memory-access-head-path");
+    const processMemoryAccessHeadPath = arrowPathsRefs.processMemoryAccessHeadPath.current;
     if (processMemoryAccessHeadPath) {
         // Match buildArrowPaths() head geometry exactly for stable positioning.
         processMemoryAccessHeadPath.setAttribute("d", `M${pt[0] + 15} ${pt[1]} L${pt[0]} ${pt[1] - 6} L${pt[0]} ${pt[1] + 6} Z`);
@@ -72,7 +79,7 @@ export function updateArrowPaths(
     const bracktXPoint = ((processMemRect.left - diagramRect.left) / diagramRect.width * viewBoxWidth) - 30;
 
     // update process bracket path
-    const processBracketPath = getPathElement("process-bracket-path");
+    const processBracketPath = arrowPathsRefs.processBracketPath.current;
     if (processBracketPath) processBracketPath.setAttribute("d", 
         lineGen([[bracktXPoint + 10, topBracketPoint], 
             [bracktXPoint, topBracketPoint], 
@@ -80,15 +87,13 @@ export function updateArrowPaths(
             [bracktXPoint + 10, bottomBracketPoint]]) ?? "");
 
 
-    const virtualMemoryPfn0 = document.getElementById("virtual-memory-0");
-    const physicalMemoryPfn0 = document.getElementById("physical-memory-0");
-    const osPage0Path = getPathElement("os-page-0-path");
-    const osPage1Path = getPathElement("os-page-1-path");
+    const virtualMemoryPfn0 = activePageRefs.virtualMemoryPfn0.current;
+    const physicalMemoryPfn0 = activePageRefs.physicalMemoryPfn0.current;
+    const osPage0Path = arrowPathsRefs.osPage0Path.current;
+    const osPage1Path = arrowPathsRefs.osPage1Path.current;
     if (!osPage0Path || !osPage1Path) return;
 
-    if (!virtualMemoryPfn0 || !physicalMemoryPfn0) {
-        osPage0Path.classList.add("invisible");
-    } else {
+    if (virtualMemoryPfn0 && physicalMemoryPfn0) {
         // virtual memory dimensions
         const virtualMemoryPfn0Rect = virtualMemoryPfn0.getBoundingClientRect();
         const virtualMemoryPfn0RelX = (virtualMemoryPfn0Rect.right - diagramRect.left) / diagramRect.width;
@@ -107,20 +112,18 @@ export function updateArrowPaths(
 
         const path = lineGen([
             [virtualMemoryPfn0Point[0], virtualMemoryPfn0Point[1]], 
-            [virtualMemoryPfn0Point[0], virtualMemoryPfn0Point[1] + virtualMemoryPfn0Height + 1.5],
-            [physicalMemoryPfn0Point[0], physicalMemoryPfn0Point[1] + physicalMemoryPfn0Height + 1.5],
+            [virtualMemoryPfn0Point[0], virtualMemoryPfn0Point[1] + virtualMemoryPfn0Height + PAGE_SHADING_OFFSET],
+            [physicalMemoryPfn0Point[0], physicalMemoryPfn0Point[1] + physicalMemoryPfn0Height + PAGE_SHADING_OFFSET],
             [physicalMemoryPfn0Point[0], physicalMemoryPfn0Point[1]]]);
 
         osPage0Path.setAttribute("d", path ?? "");
         osPage0Path.classList.remove("invisible");
     }
 
-    const virtualMemoryPfn1 = document.getElementById("virtual-memory-1");
-    const physicalMemoryPfn1 = document.getElementById("physical-memory-1");
+    const virtualMemoryPfn1 = activePageRefs.virtualMemoryPfn1.current;
+    const physicalMemoryPfn1 = activePageRefs.physicalMemoryPfn1.current;
 
-    if (!virtualMemoryPfn1 || !physicalMemoryPfn1) {
-        osPage1Path.classList.add("invisible");
-    } else {
+    if (virtualMemoryPfn1 && physicalMemoryPfn1) {
         const virtualMemoryPfn1Rect = virtualMemoryPfn1.getBoundingClientRect();
         const virtualMemoryPfn1RelX = (virtualMemoryPfn1Rect.right - diagramRect.left) / diagramRect.width;
         const virtualMemoryPfn1RelY = (virtualMemoryPfn1Rect.top - diagramRect.top) / diagramRect.height;
@@ -136,10 +139,10 @@ export function updateArrowPaths(
         const physicalMemoryPfn1Point: [number, number] = [physicalMemoryPfn1RelX * viewBoxWidth, physicalMemoryPfn1RelY * viewBoxHeight];
 
         const path = lineGen([
-            [virtualMemoryPfn1Point[0], virtualMemoryPfn1Point[1] - 1.5], 
+            [virtualMemoryPfn1Point[0], virtualMemoryPfn1Point[1] - PAGE_SHADING_OFFSET], 
             [virtualMemoryPfn1Point[0], virtualMemoryPfn1Point[1] + virtualMemoryPfn1Height],
             [physicalMemoryPfn1Point[0], physicalMemoryPfn1Point[1] + physicalMemoryPfn1Height],
-            [physicalMemoryPfn1Point[0], physicalMemoryPfn1Point[1] - 1.5]]);
+            [physicalMemoryPfn1Point[0], physicalMemoryPfn1Point[1] - PAGE_SHADING_OFFSET]]);
 
         osPage1Path.setAttribute("d", path ?? "");
         osPage1Path.classList.remove("invisible");
