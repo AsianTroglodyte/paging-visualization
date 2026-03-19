@@ -12,7 +12,8 @@ export function SidebarTutorialTab() {
           Add a Process in the Control panel and context switch to it. 
         </p>
         <p className="text-sm text-muted-foreground">
-          Notice the registers of the current process in the CPU card and the virtual memory of the process in the Virtual Memory card.
+          Notice the registers of the current process in the CPU card and the virtual memory 
+          of the process in the Virtual Memory card.
         </p>
         <p className="text-sm text-muted-foreground">
           You can press on an address in the virtual memory card, to select it for Fetch. 
@@ -43,8 +44,9 @@ export function SidebarTutorialTab() {
                 <strong>VPN</strong> and <strong>offset</strong>, looks up the VPN in the process’s 
                 <strong>page table</strong> to get the <strong>PFN</strong>, then forms the physical 
                 address. That location is read to get the <strong>current instruction</strong>. So 
-                every Fetch reads from memory twice:page-table translation (memory read 1) and one memory read. 
-                Watch the <strong>MMU</strong> card after Fetch to see that translation.
+                every Fetch reads from memory twice: the page-table read for the address translation 
+                (memory read 1) and fetching the instruction from memory thanks to the address translation 
+                (memory read 2). Watch the <strong>MMU</strong> card after Fetch to see that translation.
               </p>
               <p>
                 For <strong>lb</strong>, <strong>sb</strong>, <strong>add</strong>, <strong>sub
@@ -56,7 +58,8 @@ export function SidebarTutorialTab() {
                 access.</strong>
               </p>
               <p>
-                Try it: run <strong>Fetch</strong> then <strong>Execute</strong> on an instruction that reads from memory. 
+                Try it: run <strong>Fetch</strong> then <strong>Execute</strong> on an instruction 
+                that reads from memory. 
               </p>
             </div>
           </AccordionContent>
@@ -93,10 +96,17 @@ export function SidebarTutorialTab() {
             <div className="w-full p-2 flex flex-col gap-3 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">Explore the page table (hover over PTEs)</p>
               <p>
-                The <strong>page table</strong> lives in <strong>physical memory</strong>, in <strong>Page 0</strong> (PFN 0). Each process has a small table; each <strong>page table entry (PTE)</strong> is one byte and describes one virtual page.
+                The <strong>page table</strong> lives in <strong>physical memory</strong>, in 
+                <strong>Page 0</strong> (PFN 0). Each process has a small table; each <strong>
+                page table entry (PTE)</strong> is one byte and describes one virtual page.
               </p>
               <p>
-                In the <strong>Memory</strong> card, expand <strong>PFN 0</strong>, find the bytes that belong to the running process’s page table, and <strong>hover over a PTE byte</strong>. The hover card shows the field breakdown of that PTE (valid, present, PFN bits, etc.) — that’s what the MMU uses when it does VPN → PTE → PFN. When you see the MMU translate a VPN to a PFN, the PTE it used is that byte in page 0; hover it to see the bits the MMU used.
+                In the <strong>Memory</strong> card, expand <strong>PFN 0</strong>, find the 
+                bytes that belong to the running process’s page table, and <strong>hover over a 
+                PTE byte</strong>. The hover card shows the field breakdown of that PTE (valid, 
+                present, PFN bits, etc.) — that’s what the MMU uses when it does VPN → PTE → PFN. 
+                When you see the MMU translate a VPN to a PFN, the PTE it used is that byte in page 
+                0; hover it to see the bits the MMU used.
               </p>
             </div>
           </AccordionContent>

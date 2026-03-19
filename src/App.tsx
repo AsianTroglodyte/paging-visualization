@@ -180,7 +180,6 @@ export function App() {
 
         return () => {
             cancelled = true;
-
             diagramEl.removeEventListener("animationstart", startArrowTracking, true);
             diagramEl.removeEventListener("animationend", stopArrowTracking, true);
             stopArrowTracking();
@@ -190,17 +189,16 @@ export function App() {
 
     // hide os page paths when cpu is idle 
     useEffect(() => {
+        console.log("cpu changed");
         if (cpu.kind === "idle") {
             const osPage0Path = arrowPathsRefs.current.osPage0Path.current;
             const osPage1Path = arrowPathsRefs.current.osPage1Path.current;
-            if (!osPage0Path || !osPage1Path) return;
-            osPage0Path.classList.add("invisible");
-            osPage1Path.classList.add("invisible");
+            if (osPage0Path) osPage0Path.classList.add("invisible");
+            if (osPage1Path) osPage1Path.classList.add("invisible");
         }
-
-        // when we want to update the highling between the virtual and physical memory of the active page, 
+        // when we want to update the highlighting between the virtual and physical memory of the active page, 
         // we can use the activePageRefs to get the virtual and physical memory elements
-        if (cpu.kind != "idle") {
+        if (cpu.kind === "running") {
             activePageRefs.current.virtualMemoryPfn0.current = 
             document.getElementById(`virtual-memory-0`) as HTMLDivElement | null;
             
@@ -212,6 +210,12 @@ export function App() {
             
             activePageRefs.current.physicalMemoryPfn1.current = 
             document.getElementById(`physical-memory-1`) as HTMLDivElement | null;
+            runArrowUpdate();
+
+            const osPage0Path = arrowPathsRefs.current.osPage0Path.current;
+            const osPage1Path = arrowPathsRefs.current.osPage1Path.current;
+            if (osPage0Path) osPage0Path.classList.remove("invisible");
+            if (osPage1Path) osPage1Path.classList.remove("invisible");
         }
     }, [cpu]);
 
@@ -460,16 +464,10 @@ export function App() {
                         className={`absolute inset-0 w-full h-full pointer-events-none z-0 ${arrowPathsReady ? "opacity-100" : "opacity-0"}`}
                         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                         preserveAspectRatio="none">
-                        {(() => {
-                            return (
-                                <>
-                                    <path ref={arrowPathsRefs.current.osPage0Path} id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
-                                    className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
-                                    <path ref={arrowPathsRefs.current.osPage1Path} id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
-                                    className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
-                                </>
-                            );
-                        })()}
+                        <path ref={arrowPathsRefs.current.osPage0Path} id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
+                        className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
+                        <path ref={arrowPathsRefs.current.osPage1Path} id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
+                        className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
                     </svg>
                 </div>
             </div>
