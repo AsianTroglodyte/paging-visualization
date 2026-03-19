@@ -22,7 +22,6 @@ export function updateArrowPaths(
     diagramRect: DOMRect,
     options: UpdateArrowPathsOptions,
 ) {
-    console.log("updateArrowPaths");
     const { viewBoxWidth, viewBoxHeight, setProcessMemPoint, arrowPathsRefs, activePageRefs } = options;
     const processMemRect = el.getBoundingClientRect();
     const relX = (processMemRect.left - diagramRect.left) / diagramRect.width;
