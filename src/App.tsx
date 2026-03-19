@@ -14,7 +14,7 @@ import { FREE_LIST_ADDRESS } from "./simulation/constants";
 import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
-import { buildArrowPaths, curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
+import { curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
 import GithubLogoIcon from "./assets/github_logo_icon.png";
 import type { ActivePageRefs, ArrowPathsRefs } from "./types";
 
@@ -45,6 +45,7 @@ export function App() {
     }, [memory]);
 
     const [isControlBarOpen, setIsControlBarOpen] = useState(false);
+    const [arrowPathsReady, setArrowPathsReady] = useState(false);
 
 
     const [selectedVirtualAddress, setSelectedVirtualAddress] = useState<number | null>(null);
@@ -64,7 +65,6 @@ export function App() {
     const processMemElRef = useRef<HTMLElement | null>(null);
     const arrowFrameRef = useRef<number | null>(null);
     const isArrowTrackingRef = useRef(false);
-    const activeArrowMotionCountRef = useRef(0);
 
     // when we want to update the arrow paths, we can use the arrowPathsRefs to get the path elements
     const arrowPathsRefs = useRef<ArrowPathsRefs>({
@@ -76,7 +76,7 @@ export function App() {
         osPage1Path: useRef<SVGPathElement | null>(null),
     });
 
-    // when we want to update the highling between the virtual and physical memory of the active page, 
+    // when we want to update the highlighting between the virtual and physical memory of the active page, 
     // we can use the activePageRefs to get the virtual and physical memory elements
     const activePageRefs = useRef<ActivePageRefs>({
         virtualMemoryPfn0: useRef<HTMLDivElement | null>(null),
@@ -87,7 +87,7 @@ export function App() {
 
     const runArrowUpdate = useCallback(() => {
         const diagramEl = diagramContainerRef.current;
-        if (!diagramEl) return;
+        if (!diagramEl) return false;
 
         const diagramRect = diagramEl.getBoundingClientRect();
         const pageTableEl = document.getElementById("page-table") as HTMLElement | null;
@@ -101,7 +101,7 @@ export function App() {
         if (!processMemElRef.current || !processMemElRef.current.isConnected) {
             processMemElRef.current = document.getElementById("process-mem") as HTMLElement | null;
         }
-        if (!processMemElRef.current) return;
+        if (!processMemElRef.current) return false;
 
         updateArrowPathsFn(processMemElRef.current, diagramRect, {
             viewBoxWidth: VIEWBOX_WIDTH,
@@ -110,6 +110,7 @@ export function App() {
             arrowPathsRefs: arrowPathsRefs.current,
             activePageRefs: activePageRefs.current,
         });
+        return true;
     }, []);
 
     const queueArrowFrame = useCallback(() => {
@@ -123,9 +124,6 @@ export function App() {
         });
     }, [runArrowUpdate]);
 
-    const scheduleArrowUpdateOnce = useCallback(() => {
-        queueArrowFrame();
-    }, [queueArrowFrame]);
 
     const startArrowTracking = useCallback(() => {
         if (isArrowTrackingRef.current) return;
@@ -143,50 +141,52 @@ export function App() {
 
     // On load: initialize arrow update scheduling and motion listeners.
     useLayoutEffect(() => {
+        // schedule the first arrow update
+        queueArrowFrame();
+        let cancelled = false;
+        let retries = 0;
+        const maxRetries = 60;
+
+        const tryInitializeArrowPaths = () => {
+            if (cancelled) return;
+            const updated = runArrowUpdate();
+            if (updated) {
+                setArrowPathsReady(true);
+                return;
+            }
+
+            retries += 1;
+            if (retries < maxRetries) {
+                requestAnimationFrame(tryInitializeArrowPaths);
+            }
+        };
+
+        requestAnimationFrame(tryInitializeArrowPaths);
+
         const diagramEl = diagramContainerRef.current;
         if (!diagramEl) return;
 
         processMemElRef.current = document.getElementById("process-mem") as HTMLElement | null;
 
-        const onMotionStart = () => {
-            activeArrowMotionCountRef.current += 1;
-            startArrowTracking();
-        };
-        const onMotionEnd = () => {
-            activeArrowMotionCountRef.current = Math.max(0, activeArrowMotionCountRef.current - 1);
-            if (activeArrowMotionCountRef.current === 0) {
-                stopArrowTracking();
-                scheduleArrowUpdateOnce();
-            }
-        };
+        // NOTE: Start and stop arrow tracking when the diagram is animating
+        // However, this starts tracking regardless of whether the dimensions of the 
+        // diagram will change based on the dimension of the memory card. 
+        // TODO: start tracking ONLY when the dimensions of the diagram will change.
+        // might be achievable by tracking attributes indicating open and closed state 
+        // of the accordion.
 
-        diagramEl.addEventListener("transitionstart", onMotionStart, true);
-        diagramEl.addEventListener("animationstart", onMotionStart, true);
-        diagramEl.addEventListener("transitionend", onMotionEnd, true);
-        diagramEl.addEventListener("transitioncancel", onMotionEnd, true);
-        diagramEl.addEventListener("animationend", onMotionEnd, true);
-        diagramEl.addEventListener("animationcancel", onMotionEnd, true);
-
-        window.addEventListener("resize", scheduleArrowUpdateOnce);
-        scheduleArrowUpdateOnce();
+        diagramEl.addEventListener("animationstart", startArrowTracking, true);
+        diagramEl.addEventListener("animationend", stopArrowTracking, true);
 
         return () => {
-            window.removeEventListener("resize", scheduleArrowUpdateOnce);
-            diagramEl.removeEventListener("transitionstart", onMotionStart, true);
-            diagramEl.removeEventListener("animationstart", onMotionStart, true);
-            diagramEl.removeEventListener("transitionend", onMotionEnd, true);
-            diagramEl.removeEventListener("transitioncancel", onMotionEnd, true);
-            diagramEl.removeEventListener("animationend", onMotionEnd, true);
-            diagramEl.removeEventListener("animationcancel", onMotionEnd, true);
-            activeArrowMotionCountRef.current = 0;
+            cancelled = true;
+
+            diagramEl.removeEventListener("animationstart", startArrowTracking, true);
+            diagramEl.removeEventListener("animationend", stopArrowTracking, true);
             stopArrowTracking();
         };
-    }, [scheduleArrowUpdateOnce, startArrowTracking, stopArrowTracking]);
+    }, [queueArrowFrame, runArrowUpdate, startArrowTracking, stopArrowTracking]);
 
-    // Keep arrows synced after state-driven rerenders.
-    useLayoutEffect(() => {
-        scheduleArrowUpdateOnce();
-    }, [scheduleArrowUpdateOnce, memory, cpu, mmu]);
 
     // hide os page paths when cpu is idle 
     useEffect(() => {
@@ -288,7 +288,6 @@ export function App() {
                 if (frameRef.current == null) {
                     frameRef.current = requestAnimationFrame(applyTransform);
                 }
-                scheduleArrowUpdateOnce();
             })
         const containerSelection = select(container);
         containerSelection.call(zoomBehavior).call(zoomBehavior.transform, zoomIdentity);
@@ -302,7 +301,7 @@ export function App() {
                 frameRef.current = null;
             }
         };
-    }, [scheduleArrowUpdateOnce]);
+    }, [queueArrowFrame]);
 
     // show error toast (page fault, no space for process, etc.)
     useEffect(() => {
@@ -396,13 +395,31 @@ export function App() {
                             />
                     </div>
 
+                    {/* Diagram labels */}
+                    <p className="absolute top-[6rem] left-[26rem] text-[0.6rem] text-muted-foreground">
+                        1. Send Virtual <br /> Address and PTB <br />  address to MMU
+                    </p>
 
-                    {diagramLabels()}
+                    <p className="absolute top-[6rem] left-[59rem] text-[0.6rem] text-muted-foreground">
+                        2. Use PTB to find PT. <br/> use VPN to index PTE
+                    </p>
+
+                    <p className="absolute top-[15rem] left-[56rem] text-[0.6rem] text-muted-foreground">
+                        3. Extract PFN from PTE. <br/>MMU gets PFN.
+                    </p>
+
+                    <p className="absolute top-[21.5rem] left-[56rem] text-[0.6rem] text-muted-foreground">
+                        4. Use PFN to get <br/> page frame. Use <br/> offset to get <br/> byte.
+                    </p>
+
+                    <p className="absolute top-[29.5rem] left-[45rem] text-[0.6rem] text-muted-foreground">
+                        5. Write back to CPU.
+                    </p>
 
                     {/* Single SVG overlay for all arrows - spans entire diagram */}
                     {/* viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} */}
                     <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                        className={`absolute inset-0 w-full h-full pointer-events-none z-30 ${arrowPathsReady ? "opacity-100" : "opacity-0"}`}
                         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                         preserveAspectRatio="none">
                         <path
@@ -414,38 +431,33 @@ export function App() {
                         />
                         <path d="M555 170 L540 164 L540 177 Z" fill="currentColor" stroke="currentColor" strokeWidth="1" />
 
-                        {(() => {
-                            const ip = buildArrowPaths([1070, 135], [1100, 325], mmu.kind === "translated");
-                            return (
-                                <>
-                                    <path id="query-page-table-path" className={"absolute inset z-11"} d={ip.queryPageTable} 
-                                    fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.queryPageTableHead} className={"absolute inset z-11"}
-                                    id="query-page-table-head-path"
-                                    fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path d={ip.pageTableReturn} className={"z-11"}
-                                    id="page-table-return-path"
-                                    fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d="M730 265 L745 259 L745 271 Z" className={"z-11"}
-                                    id="page-table-return-head-path"
-                                    fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path ref={arrowPathsRefs.current.processMemoryAccessPath} id="process-memory-access-path" className={"absolute z-11"}
-                                    d={ip.processMemoryAccess} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path ref={arrowPathsRefs.current.processMemoryAccessHeadPath} id="process-memory-access-head-path" className={"z-11"} 
-                                    d={ip.processMemoryAccessHead} fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                                    <path ref={arrowPathsRefs.current.writeBackPath} id="write-back-path" className={"z-11"}
-                                    d={ip.writeBack} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                                    <path d="M385 190 L400 184 L400 196 Z" 
-                                    className={"absolute z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                                    <path ref={arrowPathsRefs.current.processBracketPath} id="process-bracket-path" className={"z-11"} d={ip.processBracketPoints} 
-                                    fill="none" stroke="currentColor" strokeWidth="1"/>
-                                </>
-                            );
-                        })()}
+                        <>
+                        <path id="query-page-table-path" className={"absolute inset z-11"} d={curveGen([[735, 245], [900, 220], [1070, 135]]) ?? ""}
+                        fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                        <path d="M1085 135 L1070 129 L1070 141 Z" className={"absolute inset z-11"}
+                        id="query-page-table-head-path"
+                        fill="currentColor" stroke="currentColor" strokeWidth="1"/>
+                        <path d={curveGen([[735, 265], [900, 240], [1070, 135]]) ?? ""} className={"z-11"}
+                        id="page-table-return-path"
+                        fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                        <path d="M730 265 L745 259 L745 271 Z" className={"z-11"}
+                        id="page-table-return-head-path"
+                        fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                        <path ref={arrowPathsRefs.current.processMemoryAccessPath} id="process-memory-access-path" className={"absolute z-11"}
+                        d={curveGen([[850, 340], [1000, 340], [1100, 325]]) ?? ""} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                        <path ref={arrowPathsRefs.current.processMemoryAccessHeadPath} id="process-memory-access-head-path" className={"z-11"}
+                        d="M1115 325 L1100 319 L1100 331 Z" fill="currentColor" stroke="currentColor" strokeWidth="1"/>
+                        <path ref={arrowPathsRefs.current.writeBackPath} id="write-back-path" className={"z-11"}
+                        d={curveGen([[1100, 325], [900, 440], [500, 440], [450, 200], [400, 190]]) ?? ""} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
+                        <path d="M385 190 L400 184 L400 196 Z"
+                        className={"absolute z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                        <path ref={arrowPathsRefs.current.processBracketPath} id="process-bracket-path" className={"z-11"} d="M1110 205 L1100 205 L1100 475 L1110 475"
+                        fill="none" stroke="currentColor" strokeWidth="1"/>
+                        </>
 
                     </svg>
                     <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none z-0"
+                        className={`absolute inset-0 w-full h-full pointer-events-none z-0 ${arrowPathsReady ? "opacity-100" : "opacity-0"}`}
                         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                         preserveAspectRatio="none">
                         {(() => {
@@ -480,32 +492,3 @@ export function App() {
 )}
 
 export default App;
-
-
-
-function diagramLabels() {
-    return (
-    <>
-    <p className="absolute top-[6rem] left-[26rem] text-[0.6rem] text-muted-foreground">
-        1. Send Virtual <br /> Address and PTB <br />  address to MMU
-    </p>
-
-    <p className="absolute top-[6rem] left-[59rem] text-[0.6rem] text-muted-foreground">
-        2. Use PTB to find PT. <br/> use VPN to index PTE
-    </p>
-
-    <p className="absolute top-[15rem] left-[56rem] text-[0.6rem] text-muted-foreground">
-        3. Extract PFN from PTE. <br/>MMU gets PFN.
-    </p>
-
-    <p className="absolute top-[21.5rem] left-[56rem] text-[0.6rem] text-muted-foreground">
-        4. Use PFN to get <br/> page frame. Use <br/> offset to get <br/> byte.
-    </p>
-
-    <p className="absolute top-[29.5rem] left-[45rem] text-[0.6rem] text-muted-foreground">
-        5. Write back to CPU.
-    </p>
-
-    </>
-    )
-}

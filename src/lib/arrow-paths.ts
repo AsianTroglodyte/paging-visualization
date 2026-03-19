@@ -8,28 +8,6 @@ const PAGE_SHADING_OFFSET = 1.5;
 
 export const curveGen = line<[number, number]>().curve(curveCatmullRom.alpha(0.5));
 const lineGen = line<[number, number]>();
-export function buildArrowPaths(
-    ptPoint: [number, number],
-    processMemPoint: [number, number],
-    mmuTranslated: boolean
-) {
-    const queryPT = mmuTranslated ? ptPoint : ([1070, 135] as [number, number]);
-    const queryPageTablePoints: [number, number][] = [[735, 245], [900, 220], queryPT];
-    const pageTableReturnPoints: [number, number][] = [[735, 265], [900, 240], queryPT];
-    const processMemoryAccessPoints: [number, number][] = [[850, 340], [1000, 340], processMemPoint];
-    const writeBackPoints: [number, number][] = [processMemPoint, [900, 440], [500, 440], [450, 200], [400, 190]];
-    const processBracketPoints: [number, number][] = [[1110, 205], [1100, 205], [1100, 475], [1110, 475]];
-
-    return {
-        queryPageTable: curveGen(queryPageTablePoints) ?? "",
-        queryPageTableHead: `M${queryPT[0] + 15} ${queryPT[1]} L${queryPT[0]} ${queryPT[1] - 6} L${queryPT[0]} ${queryPT[1] + 6} Z`,
-        pageTableReturn: curveGen(pageTableReturnPoints) ?? "",
-        processMemoryAccess: curveGen(processMemoryAccessPoints) ?? "",
-        processMemoryAccessHead: `M${processMemPoint[0] + 15} ${processMemPoint[1]} L${processMemPoint[0]} ${processMemPoint[1] - 6} L${processMemPoint[0]} ${processMemPoint[1] + 6} Z`,
-        writeBack: curveGen(writeBackPoints) ?? "",
-        processBracketPoints: lineGen(processBracketPoints) ?? "",
-    };
-}
 
 export interface UpdateArrowPathsOptions {
     viewBoxWidth: number;
@@ -44,6 +22,7 @@ export function updateArrowPaths(
     diagramRect: DOMRect,
     options: UpdateArrowPathsOptions,
 ) {
+    console.log("updateArrowPaths");
     const { viewBoxWidth, viewBoxHeight, setProcessMemPoint, arrowPathsRefs, activePageRefs } = options;
     const processMemRect = el.getBoundingClientRect();
     const relX = (processMemRect.left - diagramRect.left) / diagramRect.width;
@@ -60,15 +39,14 @@ export function updateArrowPaths(
     // update process memory access path
     const processMemoryAccessPath = arrowPathsRefs.processMemoryAccessPath.current;
     if (processMemoryAccessPath) {
-        // Keep point order identical to buildArrowPaths() to avoid visible shifts
-        // when rerenders/zoom updates swap between initial and runtime geometry.
+        // Keep point order stable to avoid visible shifts during updates.
         processMemoryAccessPath.setAttribute("d", curveGen([[850, 340], [1000, 340], pt]) ?? "");
     }
 
     // update process memory access head path (triangle: base, tip-top, tip-bottom, close)
     const processMemoryAccessHeadPath = arrowPathsRefs.processMemoryAccessHeadPath.current;
     if (processMemoryAccessHeadPath) {
-        // Match buildArrowPaths() head geometry exactly for stable positioning.
+        // Keep head geometry stable so re-measured updates do not jump.
         processMemoryAccessHeadPath.setAttribute("d", `M${pt[0] + 15} ${pt[1]} L${pt[0]} ${pt[1] - 6} L${pt[0]} ${pt[1] + 6} Z`);
     }
 
