@@ -199,6 +199,7 @@ export function App() {
         // when we want to update the highlighting between the virtual and physical memory of the active page, 
         // we can use the activePageRefs to get the virtual and physical memory elements
         if (cpu.kind === "running") {
+            console.log(cpu.kind);
             activePageRefs.current.virtualMemoryPfn0.current = 
             document.getElementById(`virtual-memory-0`) as HTMLDivElement | null;
             

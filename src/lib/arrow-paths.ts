@@ -93,7 +93,6 @@ export function updateArrowPaths(
             [physicalMemoryPfn0Point[0], physicalMemoryPfn0Point[1]]]);
 
         osPage0Path.setAttribute("d", path ?? "");
-        osPage0Path.classList.remove("invisible");
     }
 
     const virtualMemoryPfn1 = activePageRefs.virtualMemoryPfn1.current;
@@ -121,7 +120,6 @@ export function updateArrowPaths(
             [physicalMemoryPfn1Point[0], physicalMemoryPfn1Point[1] - PAGE_SHADING_OFFSET]]);
 
         osPage1Path.setAttribute("d", path ?? "");
-        osPage1Path.classList.remove("invisible");
     }
 }
 
