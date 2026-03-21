@@ -19,7 +19,7 @@ export function ControlBar({
     <Card className={`bg-card px-3 w-100 ${className}`}>
       <CardContent className="w-full p-2 flex flex-row gap-4 justify-center">
         <div className="flex flex-col gap-4 align-center">
-          <CardHeader>
+          <CardHeader className="p-0">
             <CardTitle>
               <h1 className="text-xl text-center">Add Processes</h1>
             </CardTitle>
