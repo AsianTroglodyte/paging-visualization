@@ -79,23 +79,25 @@ export function SidebarHelpTab() {
                 Instructions are 8 bits: <strong>opcode</strong> in bits [7:5], <strong>operand</strong> in bits [4:0].
               </p>
               <p className="font-medium text-foreground">Instructions</p>
+              <p>
+                Opcode is the 3-bit value in bits [7:5] (decimal <strong>0–7</strong>, same as binary <code>000</code>–<code>111</code>). The high three bits of the instruction byte are <strong>opcode × 32</strong> (0, 32, …, 224).
+              </p>
               <ul className="list-disc list-inside space-y-1">
-                <li><strong>lb</strong> — load byte from virtual address into accumulator</li>
-                <li><strong>sb</strong> — store accumulator to virtual address</li>
-                <li><strong>add</strong> — add byte at address to accumulator (8-bit wrap)</li>
-                <li><strong>addi</strong> — add immediate (0–31) to accumulator</li>
-                <li><strong>sub</strong> — subtract byte at address from accumulator</li>
-                <li><strong>subi</strong> — subtract immediate from accumulator</li>
-                <li><strong>branch</strong> — if accumulator is 0, jump to address</li>
-                <li><strong>jump</strong> — set PC to address</li>
+                <li><strong>lb</strong> — opcode <strong>0</strong> (<code>0b000</code>) — load byte from virtual address into accumulator</li>
+                <li><strong>sb</strong> — opcode <strong>1</strong> (<code>0b001</code>) — store accumulator to virtual address</li>
+                <li><strong>add</strong> — opcode <strong>2</strong> (<code>0b010</code>) — add byte at address to accumulator (8-bit wrap)</li>
+                <li><strong>addi</strong> — opcode <strong>3</strong> (<code>0b011</code>) — add immediate (0–31) to accumulator</li>
+                <li><strong>sub</strong> — opcode <strong>4</strong> (<code>0b100</code>) — subtract byte at address from accumulator</li>
+                <li><strong>subi</strong> — opcode <strong>5</strong> (<code>0b101</code>) — subtract immediate from accumulator</li>
+                <li><strong>branch</strong> — opcode <strong>6</strong> (<code>0b110</code>) — if accumulator is 0, jump to address</li>
+                <li><strong>jump</strong> — opcode <strong>7</strong> (<code>0b111</code>) — set PC to address</li>
               </ul>
               <p>
                 Use <strong>Fetch</strong> to set the program counter to a virtual address, then <strong>Execute</strong> to run the instruction there. Operand: virtual addresses 0–15, or immediate 0–31 for addi/subi.
               </p>
               <p>
-                Operand must be between 0 and 31. because it is an unsigned 5-bit number.
+                Operand must be between 0 and 31 because it is an unsigned 5-bit number.
               </p>
-              <p></p>
             </div>
           </AccordionContent>
         </AccordionItem>
