@@ -2,6 +2,12 @@
 
 Visualize paging and virtual address translation by taking processes and creating, deleting, switching between them, and running instructions in them.
 
+## Demo
+
+<video src="docs/demo.webm" controls playsinline width="720"></video>
+
+[docs/demo.webm](docs/demo.webm)
+
 ## What you can do in the app
 
 - **Processes** — Add processes from the bottom **Control** bar (each gets **two virtual pages** allocated at random from the free list). **Context switch** by clicking a process row; **delete** a process with its ✕ button. Processes are color-coded in the diagram.
