@@ -4,9 +4,9 @@ Visualize paging and virtual address translation by taking processes and creatin
 
 ## Demo
 
-<video src="docs/demo.webm" controls playsinline width="720"></video>
+<video src="docs/demo-small.webm" controls playsinline width="720"></video>
 
-[docs/demo.webm](docs/demo.webm)
+[docs/demo-small.webm](docs/demo-small.webm)
 
 ## What you can do in the app
 
@@ -19,18 +19,16 @@ Visualize paging and virtual address translation by taking processes and creatin
 - **Errors** — **Page faults** and failures to create a process (e.g. not enough free pages) show as **toasts** at the top.
 
 ## How to run 
-Copy-paste commands matching package.json scripts:
-
 install 
-`pnpm install`
+```pnpm install```
 dev 
-`pnpm dev`
+```pnpm dev```
 production build 
-`pnpm build` 
+```pnpm build```
 and optional preview 
-`pnpm preview`
+```pnpm preview```
 lint 
-`pnpm lint` 
+```pnpm lint```
 
 ## Tech
 Tech used: 
