@@ -2,14 +2,7 @@
 
 Visualize paging and virtual address translation by taking processes and creating, deleting, switching between them, and running instructions in them.
 
-## Demo
-
-<video src="docs/demo-small.webm" controls playsinline width="720"></video>
-
-[docs/demo-small.webm](docs/demo-small.webm)
-
 ## What you can do in the app
-
 - **Processes** — Add processes from the bottom **Control** bar (each gets **two virtual pages** allocated at random from the free list). **Context switch** by clicking a process row; **delete** a process with its ✕ button. Processes are color-coded in the diagram.
 - **CPU** — When a process is running, the CPU card shows **PC**, **page table base (PTBR)**, **accumulator**, and **instruction register (IR)**. **Execute** runs the current opcode on the current operand; **Fetch** loads the instruction at a **virtual address you selected** in virtual memory (click a byte first). You can edit the **operand** (0–31) for the current instruction.
 - **MMU** — While the CPU accesses memory, the MMU card shows how a **virtual address splits into VPN and offset** and maps to a **physical frame (PFN)**.
