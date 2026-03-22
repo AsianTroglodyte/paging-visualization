@@ -12,27 +12,35 @@ Visualize paging and virtual address translation by taking processes and creatin
 - **Errors** — **Page faults** and failures to create a process (e.g. not enough free pages) show as **toasts** at the top.
 
 ## How to run 
-install 
+**install**
+
 ```pnpm install```
-dev 
+
+**dev**
+
 ```pnpm dev```
-production build 
+
+**production build** 
+
 ```pnpm build```
-and optional preview 
+
+**and optional preview** 
+
 ```pnpm preview```
-lint 
+
+**lint**
+
 ```pnpm lint```
 
-## Tech
-Tech used: 
-    - TypeScript
-    - React
-    - Tailwind
-    - Shadcn
-        - Accordion  
-        - SideBar 
-        - Toast
-    - D3
-        - D3 zoom
-        - D3 selection
-        - D3 Shape
+## Tech used: 
+* TypeScript
+* React
+* Tailwind
+* Shadcn
+    * Accordion
+    * SideBar
+    * Toast
+* D3
+    * D3 zoom
+    * D3 selection
+    * D3 Shape
