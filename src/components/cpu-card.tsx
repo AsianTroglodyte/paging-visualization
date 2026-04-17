@@ -94,7 +94,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                     <li>
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
-                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                <span className="cursor-default underline underline-offset-2">
                                     PC: {isIdle ? "-" : cpu.programCounter}
                                 </span>
                             </HoverCardTrigger>
@@ -106,7 +106,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                     <li>
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
-                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                <span className="cursor-default underline underline-offset-2">
                                     PTBR: {isIdle ? "-" : cpu.pageTableBase}
                                 </span>
                             </HoverCardTrigger>
@@ -118,7 +118,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                     <li>
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
-                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                <span className="cursor-default underline underline-offset-2">
                                     Acc: {isIdle ? "-" : cpu.accumulator}
                                 </span>
                             </HoverCardTrigger>
@@ -130,7 +130,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
                     <li>
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
-                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                <span className="cursor-default underline underline-offset-2">
                                     IR: {isIdle ? "-" : cpu.currentInstructionRaw}
                                 </span>
                             </HoverCardTrigger>

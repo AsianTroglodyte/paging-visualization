@@ -55,7 +55,8 @@ export function VirtualMemory(
         <Accordion type="single" collapsible className="w-full" >
         {currentProcessVirtualMemory.map(({vpn, pfn, bytes}, index_virtualPageNumber) => (
             <AccordionItem key={vpn} value={`vpn-${vpn}`} id={`virtual-memory-${vpn}`}>
-                <AccordionTrigger className={`hover:no-underline text-base  px-2 cursor-pointer 
+                <AccordionTrigger
+                    className={`hover:no-underline text-base  px-2 cursor-pointer 
                     ${isRunning && processColorClasses ? `
                     ${processColorClasses.trigger} text-white [&_[data-slot=accordion-trigger-icon]]:text-white` : ""}`}>
                     <div className="flex justify-between w-full pr-4 items-center gap-2 ">
@@ -128,7 +129,7 @@ export function VirtualMemory(
                         {vpn === 1 && (
                         <HoverCard openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
-                                <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                <span className="cursor-default underline underline-offset-2">
                                     {byte.toString(2).padStart(8, "0")}
                                 </span>
                             </HoverCardTrigger>

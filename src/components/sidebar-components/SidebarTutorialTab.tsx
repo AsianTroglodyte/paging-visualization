@@ -23,7 +23,7 @@ export function SidebarTutorialTab() {
           Then you Execute the instruction by pressing the Execute button.
         </p>
         <p className="text-sm ">
-          NOTE: hover over anything that has a dotted underline to see more information.
+          NOTE: hover over anything that has an underline to see more information.
         </p>
 
       </div>

@@ -34,7 +34,6 @@ export function MemoryCard({
     className,
     mmu,
 }: MemoryCardProps) {
-
     return (
     <Card className={`w-82 min-w-82 bg-black  ${className}`} id="memory-card">
         <CardHeader>
@@ -109,7 +108,7 @@ export function MemoryCard({
                                     <HoverCardTrigger asChild>
                                         <span
                                             className={`inline-block leading-4 cursor-default  ${
-                                                isOwned ? "underline decoration-dotted underline-offset-2" : ""
+                                                isOwned ? "underline " : ""
                                             }`}>
                                             {byte.toString(2).padStart(8, "0")}
                                         </span>
@@ -164,7 +163,11 @@ export default MemoryCard
 
 
 
-function osPage0Accordion(memory: number[], processControlBlocks: ProcessControlBlocks, mmu: MmuState) {
+function osPage0Accordion(
+    memory: number[],
+    processControlBlocks: ProcessControlBlocks,
+    mmu: MmuState,
+) {
     const pteIndicesInUse = new Set(
         processControlBlocks.flatMap(pcb => [pcb.pageTableBase, pcb.pageTableBase + 1])
     );
@@ -221,7 +224,7 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
                         <HoverCardTrigger asChild>
                             <span
                                 className={`inline-block leading-4 cursor-default  ${
-                                    isOwned ? "underline decoration-dotted underline-offset-2" : ""
+                                    isOwned ? "underline underline-offset-2" : ""
                                 }`}>
                                 {byte.toString(2).padStart(8, "0")}
                             </span>
@@ -250,7 +253,8 @@ function osPage0Accordion(memory: number[], processControlBlocks: ProcessControl
 function osPage1Accordion(memory: number[]) {
     return (
     <AccordionItem value="pfn-1">
-        <AccordionTrigger className="hover:no-underline text-base  px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
+        <AccordionTrigger
+        className="hover:no-underline text-base  px-2 cursor-pointer bg-primary [&_[data-slot=accordion-trigger-icon]]:text-white">
         <div className="flex justify-between w-full pr-4 items-center gap-2">
             <span>PFN 1</span>
             <span className="text-white">OS: PCBs</span>
@@ -284,7 +288,7 @@ function osPage1Accordion(memory: number[]) {
                             <HoverCardTrigger asChild>
                                 <span
                                     className={`inline-block leading-4 cursor-default  ${
-                                        isPcbValid ? "underline decoration-dotted underline-offset-2" : ""
+                                        isPcbValid ? "underline underline-offset-2" : ""
                                     }`}
                                 >
                                     {byte.toString(2).padStart(8, "0")}
