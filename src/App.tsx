@@ -11,7 +11,7 @@ import { machineReducer } from "./simulation/machine-reducer";
 import { getProcessControlBlocks, getAllProcessPages} from "./simulation/selectors";
 import VirtualMemory from "./components/VirtualMemory";
 import { FREE_LIST_ADDRESS } from "./simulation/constants";
-import { IDLE_CPU_STATE, type MachineState } from "./simulation/types";
+import { IDLE_CPU_STATE, NO_ERROR, type MachineState } from "./simulation/types";
 import { ControlBarDock } from "./components/control-bar";
 import PagingTitle from "./components/paging-title";
 import { curveGen, updateArrowPaths as updateArrowPathsFn } from "./lib/arrow-paths";
@@ -27,7 +27,7 @@ export function App() {
             memory: initialMemory,
             cpu: IDLE_CPU_STATE,
             mmu: { kind: "idle" },
-            error: null,
+            error: NO_ERROR,
         };
     });
 
@@ -189,7 +189,6 @@ export function App() {
 
     // hide os page paths when cpu is idle 
     useEffect(() => {
-        console.log("cpu changed");
         if (cpu.kind === "idle") {
             const osPage0Path = arrowPathsRefs.current.osPage0Path.current;
             const osPage1Path = arrowPathsRefs.current.osPage1Path.current;
@@ -199,7 +198,6 @@ export function App() {
         // when we want to update the highlighting between the virtual and physical memory of the active page, 
         // we can use the activePageRefs to get the virtual and physical memory elements
         if (cpu.kind === "running") {
-            console.log(cpu.kind);
             activePageRefs.current.virtualMemoryPfn0.current = 
             document.getElementById(`virtual-memory-0`) as HTMLDivElement | null;
             
@@ -311,7 +309,7 @@ export function App() {
     // show error toast (page fault, no space for process, etc.)
     useEffect(() => {
         const err = machineState.error;
-        if (err) {
+        if (err.kind !== "none") {
             let title: string;
             if (err.kind === "page_fault" && err.virtualAddress != null) {
                 title = `Page fault (address ${err.virtualAddress})`;

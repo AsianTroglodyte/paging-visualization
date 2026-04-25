@@ -60,9 +60,7 @@ export function CpuCard({ cpu, machineStateDispatch, selectedVirtualAddress, set
         // input validation
         const currentOperand = cpu.currentInstructionRaw & 0b00011111;
         const decrementedOperand =  currentOperand - 1;
-        console.log("decrementedOperand", decrementedOperand);
         const clampedDecrementedOperand = Math.max(0, decrementedOperand);
-        console.log("clampedDecrementedOperand", clampedDecrementedOperand);
 
         // const finalInstructionRaw = (cpu.currentInstructionRaw & 0b11100000) | clampedDecrementedOperand;
 

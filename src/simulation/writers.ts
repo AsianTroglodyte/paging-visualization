@@ -1,7 +1,9 @@
-// Everything below are regular functions that modify on the memory byte array.
-// To be Precise they take some memory state and then return a modifed copy of the memory state
-// based on the previous state and any information provided. 
-// this make use of selector functions that generate some specialized views such as getPageTable
+/**
+ * Writers are pure memory update helpers for the paging simulator.
+ * Each function takes the current memory snapshot and returns a new one after
+ * applying a specific state transition (free list updates, PCB writes, page
+ * table writes, compaction, or byte-level writes at virtual addresses).
+ */
 
 import {
     FREE_LIST_ADDRESS,
@@ -20,7 +22,7 @@ import { getProcessControlBlocks, getPageTable } from "./selectors";
 import type {ProcessControlBlocks } from "./types";
 import { SAMPLE_PROGRAM } from "./isa";
 
-// First page (VPN 0): 8 instructions. Second page (VPN 1): 8 bytes of data.
+/** Writes initial instruction/data contents into newly allocated process pages. */
 export function writeProcessPages(newAllocatedPages: {pfn: number, vpn: number}[], memory: number[]): number[] {
     const newMemory = [...memory];
 
@@ -43,6 +45,7 @@ export function writeProcessPages(newAllocatedPages: {pfn: number, vpn: number}[
 }
 
 
+/** Writes all PCB slots, encoding active PCBs and clearing inactive valid bits. */
 export function setProcessControlBlocks(processControlBlocks: ProcessControlBlocks, memory: number[]): number[] {
     const newMemory: number[] = [...memory];    
     // Set all possible process entries
@@ -80,6 +83,7 @@ export function setProcessControlBlocks(processControlBlocks: ProcessControlBloc
 }
 
 
+/** Encodes free page frame numbers back into the free-list bitmap byte. */
 export function setFreeList(newFreePages: number[], memory: number[]): number[] {
     const bitmap = newFreePages.reduce(
         (accumulator, pageFrameNumber) => accumulator | (1 << pageFrameNumber),
@@ -93,6 +97,7 @@ export function setFreeList(newFreePages: number[], memory: number[]): number[] 
 }
 
 
+/** Writes page table entries for allocated VPN->PFN mappings at a table base. */
 export function writePageTable(AllocatedPagesPFN: {pfn: number, vpn: number}[], pageTableBase: number, memory: number[]): number[] {
     const newMemory: number[] = [...memory];
 
@@ -107,12 +112,12 @@ export function writePageTable(AllocatedPagesPFN: {pfn: number, vpn: number}[], 
             if (processControlBlocks.length > 0) writable = Math.random() < WRITABLE_PAGE_PROBABILITY ? 1 : 0;
 
             const pageTableEntry = (pfn << 5) | 0b00011001 | (writable); // set valid bit and writable bit
-            // console.log("pageTableEntry: ", pageTableEntry.toString(2)) //.padStart(8, "0")
             newMemory[START_OF_PAGE_TABLES + pageTableBase + vpn] = pageTableEntry;
         })
     return newMemory;
 }
 
+/** Compacts active page tables into a contiguous region and rewrites PCB bases. */
 export function compactPagetables(memory: number[]) : {newMemory: number[], cursor: number} {
     const processControlBlocks = getProcessControlBlocks(memory);
 
@@ -154,6 +159,7 @@ export function compactPagetables(memory: number[]) : {newMemory: number[], curs
     return {cursor, newMemory};
 }
 
+/** Writes a byte through virtual addressing for a process and returns new memory. */
 export function writeByteAtVirtualAddress(memory: number[], processID: number, virtualAddress: number, value: number): number[] {
     const newMemory = [...memory];
     const pageTable = getPageTable(memory, processID);

@@ -1,11 +1,13 @@
-export type PageTablesBases = PageTablesBase[];
 
+// Page Table bases
+export type PageTablesBases = PageTablesBase[];
 export type PageTablesBase = {
     processID: number,
     pageTableBase:  number, // physical address pointing to page table (3 bits)
     numPages: 2 | 4, // always 2 with PCB architecture
     valid: boolean,
 }
+
 
 // Process Control Block - replaces activePageTableBases, stored in page 1
 export type ProcessControlBlock = {
@@ -15,10 +17,10 @@ export type ProcessControlBlock = {
     validBit: number,       // 1 bit
     accumulator: number,    // 8 bits - second byte of PCB
 };
-
 export type ProcessControlBlocks = ProcessControlBlock[];
 
 
+//  Page Table
 export type PageTableEntry = {
     pfn: number,
     valid: boolean,
@@ -27,9 +29,10 @@ export type PageTableEntry = {
     dirty: boolean,
     writable: boolean
 }
-
 export type PageTable = PageTableEntry[];
 
+
+// Pages
 export type Page = {
     pfn: number,
     ownerPid: number | null,
@@ -37,9 +40,7 @@ export type Page = {
     isFree: boolean,
     bytes: number[],
 }
-
 export type Pages = Page[];
-
 export type VirtualPage = {
     vpn: number;
     ownerPid: number | null;
@@ -47,6 +48,11 @@ export type VirtualPage = {
     bytes: number[];
 };
 
+
+// Everything Below contains the machine state
+export type TranslationLookasideBuffer = {
+  
+}
 
 /** Tagged union: CPU is either idle or running a process. */
 export type CpuState =
@@ -62,7 +68,6 @@ export type CpuState =
 
 export const IDLE_CPU_STATE: CpuState = { kind: "idle" };
 
-
 export type MmuState = 
 | {
   kind: "idle";
@@ -76,16 +81,18 @@ export type MmuState =
 
 /** Discriminated union of machine errors (page fault, no space for process, etc.). */
 export type MachineError =
+  | { kind: "none" }
   | { kind: "page_fault"; message: string; virtualAddress?: number }
   | { kind: "no_space_for_process"; message: string };
 
 export type PageFault = Extract<MachineError, { kind: "page_fault" }>;
+export const NO_ERROR: MachineError = { kind: "none" };
 
 export type MachineState = {
   memory: number[];
   cpu: CpuState;
   mmu: MmuState;
-  error: MachineError | null;
+  error: MachineError;
 };
 
 export type MachineAction =

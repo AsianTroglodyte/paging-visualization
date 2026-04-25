@@ -15,7 +15,7 @@ import {
     getPhysicalAddressFromVirtualAddress} from "./selectors";
 import { MAX_PAGES_ALLOCATABLE, START_OF_PCBS, BYTES_PER_PCB } from "./constants";
 import type { MachineAction, MachineState, CpuState, MmuState } from "./types";
-import { IDLE_CPU_STATE } from "./types";
+import { IDLE_CPU_STATE, NO_ERROR } from "./types";
 import { OPCODE_NAMES } from "./isa";
 
 export function machineReducer(state: MachineState, action: MachineAction): MachineState {
@@ -25,7 +25,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
 
     switch (action.type) {
         case "CLEAR_ERROR":
-            return { ...state, error: null };
+            return { ...state, error: NO_ERROR };
 
         case "COMPACT_PAGE_TABLES":
             return { ...state, memory: compactPagetables(memory).newMemory };
