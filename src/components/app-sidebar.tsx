@@ -3,7 +3,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsTrigger, TabsList } from "./ui/tabs"
 import { SidebarHelpTab, SidebarSettingsTab, SidebarTutorialTab } from "./sidebar-components";
@@ -36,7 +35,6 @@ export function AppSidebar() {
         </Tabs>
       </SidebarContent>
       <SidebarFooter />
-      <SidebarTrigger className="absolute top-[6px] right-[-36px] cursor-pointer bg-background " size="lg" />
     </Sidebar>
   )
 }

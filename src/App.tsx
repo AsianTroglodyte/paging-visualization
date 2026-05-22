@@ -7,6 +7,7 @@ import { select } from "d3-selection";
 import { Toaster, toast } from "sonner";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
+import { SidebarEdgeTrigger } from "./components/sidebar-edge-trigger";
 import { machineReducer } from "./simulation/machine-reducer";
 import { getProcessControlBlocks, getAllProcessPages} from "./simulation/selectors";
 import VirtualMemory from "./components/VirtualMemory";
@@ -337,6 +338,7 @@ export function App() {
             }
         }}/>
         <AppSidebar />
+        <SidebarEdgeTrigger />
 
         {/* <a href="https://github.com/AsianTroglodyte/paging-visualization" 
         target="_self" rel="noopener noreferrer"
