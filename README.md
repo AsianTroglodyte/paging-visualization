@@ -12,8 +12,12 @@ Visualize paging and virtual address translation by taking processes and creatin
 - **Errors** — **Page faults** and failures to create a process (e.g. not enough free pages) show as **toasts** at the top.
 
 ## How to run 
-**install**
+You can access the site by going to the following Github pages link:
+https://asiantroglodyte.github.io/paging-visualization/
 
+If you would like to install the project for some reason, then you can clone the repo from your machine and run the following commands.
+
+**install**
 ```pnpm install```
 
 **dev**
