@@ -50,9 +50,9 @@ export type VirtualPage = {
 
 
 // Everything Below contains the machine state
-export type TranslationLookasideBuffer = {
+// export type TranslationLookasideBuffer = {
   
-}
+// }
 
 /** Tagged union: CPU is either idle or running a process. */
 export type CpuState =

@@ -346,12 +346,11 @@ export function App() {
             <img src={GithubIcon} alt="Github Icon" className="block h-6 w-6" />
         </a> */}
 
-        <a href="https://github.com/AsianTroglodyte/paging-visualization" 
+        <a href="https://github.com/AsianTroglodyte/paging-visualization"
         target="_self" rel="noopener noreferrer"
         className="absolute top-[10px] right-[10px] z-50">
             <img src={GithubLogoIcon} alt="Github Logo Icon" className="block h-7 w-7" />
         </a>
-
         
         <div
             ref={zoomContainerRef}
