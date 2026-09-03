@@ -30,15 +30,15 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
         case "COMPACT_PAGE_TABLES":
             return { ...state, memory: compactPagetables(memory).newMemory };
 
-        case "CONTEXT_SWITCH":
+        case "CONTEXT_SWITCH": {
             if (action.payload.processID === null) {
                 return { ...state, cpu: IDLE_CPU_STATE };
             }
+
             const pcb = getProcessControlBlock(memory, action.payload.processID);
             if (!pcb) {
                 return { ...state, cpu: IDLE_CPU_STATE };
             }
-
 
             const currentInstructionRaw = getByteAtVirtualAddress(memory, action.payload.processID, pcb.programCounter);
             
@@ -57,7 +57,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 return { ...state, cpu: newCpu };
             }
 
-            let newMemory = [...memory];
+            const newMemory = [...memory];
 
             const firstPcbByte = (cpu.pageTableBase << 5) + (cpu.programCounter << 1) + 1;
             const secondPcbByte = cpu.accumulator;
@@ -66,29 +66,29 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB + 1] = secondPcbByte;
 
             return { ...state, memory: newMemory, cpu: newCpu, mmu: mmu };
+        }
+        case "CREATE_PROCESS_RANDOM": {
 
-        case "CREATE_PROCESS_RANDOM":
-            return (() => {
-                const numPages = 2; // always 2 with PCB architecture
-                const freeList = getFreeList(memory);
-
-                if (freeList.length < numPages) {
-                    return {
-                        ...state,
-                        error: {
+            const numPages = 2; // always 2 with PCB architecture
+            const freeList = getFreeList(memory);
+            
+            if (freeList.length < numPages) {
+                return {
+                    ...state,
+                    error: {
                             kind: "no_space_for_process",
                             message: "Not enough free pages to create a new process.",
                         },
                     };
                 }
-
+                
                 // Inline: select random free pages
                 const shuffled = [...freeList];
                 for (let i = shuffled.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
                 }
-
+                
                 const newAllocatedPagesPFN = shuffled.slice(0, numPages).map((pfn, index) => ({pfn: pfn, vpn: index}));
                 
                 const existingPCBs = getProcessControlBlocks(memory);
@@ -102,12 +102,12 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 if (newProcessID === undefined) {
                     throw new Error("No available process ID.");
                 }
-
+                
                 // Find free slot for page table (offset 0-6, step 2)
                 let newPageTableBase: number | null = null;
                 const tables = existingPCBs
-                    .map(p => ({ start: p.pageTableBase, end: p.pageTableBase + 2 }))
-                    .sort((a, b) => a.start - b.start);
+                .map(p => ({ start: p.pageTableBase, end: p.pageTableBase + 2 }))
+                .sort((a, b) => a.start - b.start);
                 
                 let cursor = 0;
                 for (const t of tables) {
@@ -120,14 +120,14 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 if (newPageTableBase === null && cursor + numPages <= MAX_PAGES_ALLOCATABLE) {
                     newPageTableBase = cursor;
                 }
-
+                
                 let newMemory: number[] = [...memory];
                 if (newPageTableBase === null) {
                     const result = compactPagetables(newMemory);
                     newMemory = result.newMemory;
                     newPageTableBase = result.cursor;
                 }
-
+                
                 const newPCB = {
                     processID: newProcessID,
                     pageTableBase: newPageTableBase,
@@ -135,22 +135,21 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     validBit: 1,
                     accumulator: 0,
                 };
-
+                
                 newMemory = setProcessControlBlocks([...existingPCBs, newPCB], newMemory);
                 newMemory = writePageTable(newAllocatedPagesPFN, newPageTableBase, newMemory);
-
+                
                 // allocatedPFNs is a Set of numbers rather than an object array
                 const allocatedPFNs = new Set(newAllocatedPagesPFN.map(alloc => alloc.pfn));
                 const remainingFreePages = freeList.filter(page => !allocatedPFNs.has(page));
                 newMemory = setFreeList(remainingFreePages, newMemory);
-
+                
                 // writeProcessPages takes an object array of {pfn, vpn}
                 newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
                 return { ...state, memory: newMemory };
-            })();
+            }
 
-        case "DELETE_PROCESS":
-            return (() => {
+        case "DELETE_PROCESS": {
                 const processControlBlocks = getProcessControlBlocks(memory);
                 const pcbToDelete = processControlBlocks.find(pcb => pcb.processID === action.payload.processID);
             
@@ -177,8 +176,8 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                         : cpu
               
                 return { ...state, memory: newMemory, cpu: newCpu, mmu: mmu };
-            })();
-        case "FETCH_INSTRUCTION":
+        }
+        case "FETCH_INSTRUCTION": {
             if (cpu.kind === "idle") {
                 return state;
             }
@@ -201,12 +200,15 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 virtualPageNumber: newVirtualPageNumber, 
                 pageFrameNumber: newPfn,
                 offset: newOffset}};
-        case "EXECUTE_INSTRUCTION":
+        }
+        case "EXECUTE_INSTRUCTION": {
             if (cpu.kind === "idle") {
                 throw new Error("Cannot execute instruction when CPU is idle.");
             }
 
-            action.payload ?? (() => {throw new Error("Opcode is required.");})();
+            if (action.payload == null) {
+                throw new Error("Opcode is required.");
+            }
 
             // opcode is a number between 0 and 7
             if (!(action.payload.opcode >=0 && action.payload.opcode < 8)) {
@@ -346,6 +348,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 default:
                     throw new Error(`Invalid opcode: ${action.payload.opcode}`);
             }
+        }
         case "CHANGE_OPERAND_OF_INSTRUCTION": {
             if (cpu.kind === "idle") {
                 throw new Error("Cannot change operand of instruction when CPU is idle.");
