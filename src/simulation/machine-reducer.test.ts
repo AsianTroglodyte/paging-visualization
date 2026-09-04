@@ -49,7 +49,6 @@ describe('Context Switch', () => {
             .toEqual({...initialState, cpu: IDLE_CPU_STATE});
     });
 
-
     test('Context switch to existing process', () => {
         const machineStateWith1Process: MachineState = makeMachineWithProcess(initialState);
         const action: MachineAction = {

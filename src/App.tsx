@@ -116,13 +116,16 @@ export function App() {
 
     const queueArrowFrame = useCallback(() => {
         if (arrowFrameRef.current != null) return;
-        arrowFrameRef.current = requestAnimationFrame(() => {
+
+        const tick = () => {
             arrowFrameRef.current = null;
             runArrowUpdate();
             if (isArrowTrackingRef.current) {
-                queueArrowFrame();
+              arrowFrameRef.current = requestAnimationFrame(tick);
             }
-        });
+        };
+        arrowFrameRef.current = requestAnimationFrame(tick);
+
     }, [runArrowUpdate]);
 
 
