@@ -67,23 +67,29 @@ export function App() {
     const arrowFrameRef = useRef<number | null>(null);
     const isArrowTrackingRef = useRef(false);
 
-    // when we want to update the arrow paths, we can use the arrowPathsRefs to get the path elements
+    // Individual refs for JSX (pass the RefObject; do not read .current during render).
+    const writeBackPathRef = useRef<SVGPathElement | null>(null);
+    const processMemoryAccessPathRef = useRef<SVGPathElement | null>(null);
+    const processMemoryAccessHeadPathRef = useRef<SVGPathElement | null>(null);
+    const processBracketPathRef = useRef<SVGPathElement | null>(null);
+    const osPage0PathRef = useRef<SVGPathElement | null>(null);
+    const osPage1PathRef = useRef<SVGPathElement | null>(null);
+
+    // Stable bags for imperative updates in effects / rAF (read .current only there).
     const arrowPathsRefs = useRef<ArrowPathsRefs>({
-        writeBackPath: useRef<SVGPathElement | null>(null),
-        processMemoryAccessPath: useRef<SVGPathElement | null>(null),
-        processMemoryAccessHeadPath: useRef<SVGPathElement | null>(null),
-        processBracketPath: useRef<SVGPathElement | null>(null),
-        osPage0Path: useRef<SVGPathElement | null>(null),
-        osPage1Path: useRef<SVGPathElement | null>(null),
+        writeBackPath: writeBackPathRef,
+        processMemoryAccessPath: processMemoryAccessPathRef,
+        processMemoryAccessHeadPath: processMemoryAccessHeadPathRef,
+        processBracketPath: processBracketPathRef,
+        osPage0Path: osPage0PathRef,
+        osPage1Path: osPage1PathRef,
     });
 
-    // when we want to update the highlighting between the virtual and physical memory of the active page, 
-    // we can use the activePageRefs to get the virtual and physical memory elements
     const activePageRefs = useRef<ActivePageRefs>({
-        virtualMemoryPfn0: useRef<HTMLDivElement | null>(null),
-        physicalMemoryPfn0: useRef<HTMLDivElement | null>(null),
-        virtualMemoryPfn1: useRef<HTMLDivElement | null>(null),
-        physicalMemoryPfn1: useRef<HTMLDivElement | null>(null),
+        virtualMemoryPfn0: { current: null },
+        physicalMemoryPfn0: { current: null },
+        virtualMemoryPfn1: { current: null },
+        physicalMemoryPfn1: { current: null },
     });
 
     const runArrowUpdate = useCallback(() => {
@@ -124,8 +130,15 @@ export function App() {
               arrowFrameRef.current = requestAnimationFrame(tick);
             }
         };
-        arrowFrameRef.current = requestAnimationFrame(tick);
 
+        arrowFrameRef.current = requestAnimationFrame(tick);
+        // arrowFrameRef.current = requestAnimationFrame(() => {
+        //     arrowFrameRef.current = null;
+        //     runArrowUpdate();
+        //     if (isArrowTrackingRef.current) {
+        //         queueArrowFrame();
+        //     }
+        // });
     }, [runArrowUpdate]);
 
 
@@ -191,7 +204,7 @@ export function App() {
     }, [queueArrowFrame, runArrowUpdate, startArrowTracking, stopArrowTracking]);
 
 
-    // hide os page paths when cpu is idle 
+    // hide os page paths when cpu is idle
     useEffect(() => {
         if (cpu.kind === "idle") {
             const osPage0Path = arrowPathsRefs.current.osPage0Path.current;
@@ -199,20 +212,20 @@ export function App() {
             if (osPage0Path) osPage0Path.classList.add("invisible");
             if (osPage1Path) osPage1Path.classList.add("invisible");
         }
-        // when we want to update the highlighting between the virtual and physical memory of the active page, 
+        // when we want to update the highlighting between the virtual and physical memory of the active page,
         // we can use the activePageRefs to get the virtual and physical memory elements
         if (cpu.kind === "running") {
-            activePageRefs.current.virtualMemoryPfn0.current = 
-            document.getElementById(`virtual-memory-0`) as HTMLDivElement | null;
-            
-            activePageRefs.current.physicalMemoryPfn0.current = 
-            document.getElementById(`physical-memory-0`) as HTMLDivElement | null;
-            
-            activePageRefs.current.virtualMemoryPfn1.current = 
-            document.getElementById(`virtual-memory-1`) as HTMLDivElement | null;
-            
-            activePageRefs.current.physicalMemoryPfn1.current = 
-            document.getElementById(`physical-memory-1`) as HTMLDivElement | null;
+            activePageRefs.current.virtualMemoryPfn0.current =
+                document.getElementById(`virtual-memory-0`) as HTMLDivElement | null;
+
+            activePageRefs.current.physicalMemoryPfn0.current =
+                document.getElementById(`physical-memory-0`) as HTMLDivElement | null;
+
+            activePageRefs.current.virtualMemoryPfn1.current =
+                document.getElementById(`virtual-memory-1`) as HTMLDivElement | null;
+
+            activePageRefs.current.physicalMemoryPfn1.current =
+                document.getElementById(`physical-memory-1`) as HTMLDivElement | null;
             runArrowUpdate();
 
             const osPage0Path = arrowPathsRefs.current.osPage0Path.current;
@@ -220,7 +233,7 @@ export function App() {
             if (osPage0Path) osPage0Path.classList.remove("invisible");
             if (osPage1Path) osPage1Path.classList.remove("invisible");
         }
-    }, [cpu]);
+    }, [cpu, runArrowUpdate]);
 
     // setup zoom and panning
     useEffect(() => {
@@ -450,15 +463,15 @@ export function App() {
                         <path d="M730 265 L745 259 L745 271 Z" className={"z-11"}
                         id="page-table-return-head-path"
                         fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                        <path ref={arrowPathsRefs.current.processMemoryAccessPath} id="process-memory-access-path" className={"absolute z-11"}
+                        <path ref={processMemoryAccessPathRef} id="process-memory-access-path" className={"absolute z-11"}
                         d={curveGen([[850, 340], [1000, 340], [1100, 325]]) ?? ""} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
-                        <path ref={arrowPathsRefs.current.processMemoryAccessHeadPath} id="process-memory-access-head-path" className={"z-11"}
+                        <path ref={processMemoryAccessHeadPathRef} id="process-memory-access-head-path" className={"z-11"}
                         d="M1115 325 L1100 319 L1100 331 Z" fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-                        <path ref={arrowPathsRefs.current.writeBackPath} id="write-back-path" className={"z-11"}
+                        <path ref={writeBackPathRef} id="write-back-path" className={"z-11"}
                         d={curveGen([[1100, 325], [900, 440], [500, 440], [450, 200], [400, 190]]) ?? ""} fill="none" strokeDasharray="3,3" stroke="currentColor" strokeWidth="1"/>
                         <path d="M385 190 L400 184 L400 196 Z"
                         className={"absolute z-11"} fill="currentColor" stroke="currentColor" strokeWidth="1" />
-                        <path ref={arrowPathsRefs.current.processBracketPath} id="process-bracket-path" className={"z-11"} d="M1110 205 L1100 205 L1100 475 L1110 475"
+                        <path ref={processBracketPathRef} id="process-bracket-path" className={"z-11"} d="M1110 205 L1100 205 L1100 475 L1110 475"
                         fill="none" stroke="currentColor" strokeWidth="1"/>
                         </>
 
@@ -467,9 +480,9 @@ export function App() {
                         className={`absolute inset-0 w-full h-full pointer-events-none z-0 ${arrowPathsReady ? "opacity-100" : "opacity-0"}`}
                         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                         preserveAspectRatio="none">
-                        <path ref={arrowPathsRefs.current.osPage0Path} id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"} 
+                        <path ref={osPage0PathRef} id="os-page-0-path" d={"M1100 160 L1100 200 L745 271 Z"}
                         className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
-                        <path ref={arrowPathsRefs.current.osPage1Path} id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"} 
+                        <path ref={osPage1PathRef} id="os-page-1-path" d={"M1100 220 L1100 260 L745 331 Z"}
                         className="invisible z-11" fill="white" opacity="0.1" strokeWidth="1" />
                     </svg>
                 </div>
