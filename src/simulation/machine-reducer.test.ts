@@ -65,4 +65,42 @@ describe('Context Switch', () => {
                 currentInstructionRaw: 0
         }});
     });
+
+    test('Context switch between processes', () => {
+        const machineStateWith2Process: MachineState = 
+            makeMachineWithProcess(makeMachineWithProcess(initialState));
+
+        const action1: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: { processID: 0},
+        };
+
+        const stateSwitchedToProcess0 = machineReducer({...machineStateWith2Process}, action1);
+        expect(stateSwitchedToProcess0)
+            .toEqual({...machineStateWith2Process, cpu: {
+                kind: "running",
+                runningPid: 0,
+                programCounter: 0,
+                pageTableBase: 0,
+                accumulator: 0,
+                currentInstructionRaw: 0
+        }});
+
+        const action2: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: { processID: 1},
+        };
+
+        const machineStateSwitchedToProcess1 = machineReducer({...machineStateWith2Process}, action2);
+
+        expect(machineStateSwitchedToProcess1)
+            .toEqual({...machineStateWith2Process, cpu: {
+                kind: "running",
+                runningPid: 1,
+                programCounter: 0,
+                pageTableBase: 2,
+                accumulator: 0,
+                currentInstructionRaw: 0
+        }});
+    });
 })

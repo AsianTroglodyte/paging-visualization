@@ -1,9 +1,11 @@
-import { MAX_PAGES_ALLOCATABLE } from "./constants";
-import { getRawFreeList, getProcessControlBlocks } from "./selectors";
-import type { MachineState } from "./types";
+import { BYTES_PER_PCB, MAX_PAGES_ALLOCATABLE, START_OF_PCBS } from "./constants";
+import { getRawFreeList, getProcessControlBlocks, getByteAtVirtualAddress, getProcessControlBlock } from "./selectors";
+import { IDLE_CPU_STATE, type CpuState, type MachineAction, type MachineState, type MmuState} from "./types";
 import { compactPagetables, setFreeList, setProcessControlBlocks, writePageTable, writeProcessPages } from "./writers";
 
 
+
+/** takes in a machine state and then adds process with next 2 available pages */
 export function makeMachineWithProcess(state: MachineState): MachineState {
     const memory = state.memory;
     const numPages = 2; // always 2 with PCB architecture
@@ -76,5 +78,52 @@ export function makeMachineWithProcess(state: MachineState): MachineState {
     // writeProcessPages takes an object array of {pfn, vpn}
     newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
     return { ...state, memory: newMemory };
+}
+
+
+export function contextSwitch(state: MachineState, action: MachineAction): MachineState{
+    const cpu: CpuState = state.cpu;
+    const memory: number[] = state.memory;
+    const mmu: MmuState = state.mmu;
+
+    if (action.type !== "CONTEXT_SWITCH") {
+        return state;
+    }
+
+    if (action.payload.processID === null) {
+        return { ...state, cpu: IDLE_CPU_STATE };
+    }
+
+    const pcb = getProcessControlBlock(memory, action.payload.processID);
+    if (!pcb) {
+        return { ...state, cpu: IDLE_CPU_STATE };
+    }
+
+    const currentInstructionRaw = getByteAtVirtualAddress(memory, action.payload.processID, pcb.programCounter);
+    
+    const newCpu: CpuState = {
+        kind: "running",
+        runningPid: action.payload.processID,
+        programCounter: pcb.programCounter,
+        pageTableBase: pcb.pageTableBase,
+        accumulator: pcb.accumulator,
+        currentInstructionRaw: currentInstructionRaw,
+    };
+
+    // don't need to write to memory is idle. This is because cpu doesn't 
+    // have any state to save onto the PCB.
+    if (cpu.kind === "idle") {
+        return { ...state, cpu: newCpu };
+    }
+
+    const newMemory = [...memory];
+
+    const firstPcbByte = (cpu.pageTableBase << 5) + (cpu.programCounter << 1) + 1;
+    const secondPcbByte = cpu.accumulator;
+
+    newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB] = firstPcbByte;
+    newMemory[START_OF_PCBS + cpu.runningPid * BYTES_PER_PCB + 1] = secondPcbByte;
+
+    return { ...state, memory: newMemory, cpu: newCpu, mmu: mmu };
 }
 

@@ -68,7 +68,6 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             return { ...state, memory: newMemory, cpu: newCpu, mmu: mmu };
         }
         case "CREATE_PROCESS_RANDOM": {
-
             const numPages = 2; // always 2 with PCB architecture
             const freeList = getRawFreeList(memory);
             
