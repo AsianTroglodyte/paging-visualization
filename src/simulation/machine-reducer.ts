@@ -8,7 +8,7 @@ import {
 import { 
     getProcessControlBlocks, 
     getProcessControlBlock, 
-    getFreeList, 
+    getRawFreeList, 
     getPageTable,
     getByteAtVirtualAddress, 
     getPfnFromVirtualAddress,
@@ -70,84 +70,81 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
         case "CREATE_PROCESS_RANDOM": {
 
             const numPages = 2; // always 2 with PCB architecture
-            const freeList = getFreeList(memory);
+            const freeList = getRawFreeList(memory);
             
             if (freeList.length < numPages) {
-                return {
-                    ...state,
-                    error: {
-                            kind: "no_space_for_process",
-                            message: "Not enough free pages to create a new process.",
-                        },
-                    };
-                }
+                return {...state, error: {
+                    kind: "no_space_for_process",
+                    message: "Not enough free pages to create a new process.",
+                }};
+            }
                 
-                // Inline: select random free pages
-                const shuffled = [...freeList];
-                for (let i = shuffled.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+            // Inline: select random free pages
+            const shuffled = [...freeList];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+            }
+            
+            const newAllocatedPagesPFN = shuffled.slice(0, numPages).map((pfn, index) => ({pfn: pfn, vpn: index}));
+            
+            const existingPCBs = getProcessControlBlocks(memory);
+            let newProcessID: number | undefined;
+            for (let i = 0; i < 4; i++) { // 4 PCB slots (addresses 8,10,12,14) but only 3 can be active
+                if (!existingPCBs.some(pcb => pcb.processID === i)) {
+                    newProcessID = i;
+                    break;
                 }
-                
-                const newAllocatedPagesPFN = shuffled.slice(0, numPages).map((pfn, index) => ({pfn: pfn, vpn: index}));
-                
-                const existingPCBs = getProcessControlBlocks(memory);
-                let newProcessID: number | undefined;
-                for (let i = 0; i < 4; i++) { // 4 PCB slots (addresses 8,10,12,14) but only 3 can be active
-                    if (!existingPCBs.some(pcb => pcb.processID === i)) {
-                        newProcessID = i;
-                        break;
-                    }
-                }
-                if (newProcessID === undefined) {
-                    throw new Error("No available process ID.");
-                }
-                
-                // Find free slot for page table (offset 0-6, step 2)
-                let newPageTableBase: number | null = null;
-                const tables = existingPCBs
+            }
+            if (newProcessID === undefined) {
+                throw new Error("No available process ID.");
+            }
+            
+            // Find free slot for page table (offset 0-6, step 2)
+            let newPageTableBase: number | null = null;
+            const tables = existingPCBs
                 .map(p => ({ start: p.pageTableBase, end: p.pageTableBase + 2 }))
                 .sort((a, b) => a.start - b.start);
-                
-                let cursor = 0;
-                for (const t of tables) {
-                    if (cursor + numPages <= t.start) {
-                        newPageTableBase = cursor;
-                        break;
-                    }
-                    cursor = t.end;
-                }
-                if (newPageTableBase === null && cursor + numPages <= MAX_PAGES_ALLOCATABLE) {
+            
+            let cursor = 0;
+            for (const t of tables) {
+                if (cursor + numPages <= t.start) {
                     newPageTableBase = cursor;
+                    break;
                 }
-                
-                let newMemory: number[] = [...memory];
-                if (newPageTableBase === null) {
-                    const result = compactPagetables(newMemory);
-                    newMemory = result.newMemory;
-                    newPageTableBase = result.cursor;
-                }
-                
-                const newPCB = {
-                    processID: newProcessID,
-                    pageTableBase: newPageTableBase,
-                    programCounter: 0,
-                    validBit: 1,
-                    accumulator: 0,
-                };
-                
-                newMemory = setProcessControlBlocks([...existingPCBs, newPCB], newMemory);
-                newMemory = writePageTable(newAllocatedPagesPFN, newPageTableBase, newMemory);
-                
-                // allocatedPFNs is a Set of numbers rather than an object array
-                const allocatedPFNs = new Set(newAllocatedPagesPFN.map(alloc => alloc.pfn));
-                const remainingFreePages = freeList.filter(page => !allocatedPFNs.has(page));
-                newMemory = setFreeList(remainingFreePages, newMemory);
-                
-                // writeProcessPages takes an object array of {pfn, vpn}
-                newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
-                return { ...state, memory: newMemory };
+                cursor = t.end;
             }
+            if (newPageTableBase === null && cursor + numPages <= MAX_PAGES_ALLOCATABLE) {
+                newPageTableBase = cursor;
+            }
+            
+            let newMemory: number[] = [...memory];
+            if (newPageTableBase === null) {
+                const result = compactPagetables(newMemory);
+                newMemory = result.newMemory;
+                newPageTableBase = result.cursor;
+            }
+            
+            const newPCB = {
+                processID: newProcessID,
+                pageTableBase: newPageTableBase,
+                programCounter: 0,
+                validBit: 1,
+                accumulator: 0,
+            };
+            
+            newMemory = setProcessControlBlocks([...existingPCBs, newPCB], newMemory);
+            newMemory = writePageTable(newAllocatedPagesPFN, newPageTableBase, newMemory);
+            
+            // allocatedPFNs is a Set of numbers rather than an object array
+            const allocatedPFNs = new Set(newAllocatedPagesPFN.map(alloc => alloc.pfn));
+            const remainingFreePages = freeList.filter(page => !allocatedPFNs.has(page));
+            newMemory = setFreeList(remainingFreePages, newMemory);
+            
+            // writeProcessPages takes an object array of {pfn, vpn}
+            newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
+            return { ...state, memory: newMemory };
+        }
 
         case "DELETE_PROCESS": {
                 const processControlBlocks = getProcessControlBlocks(memory);
@@ -165,7 +162,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     .filter(pte => pte.valid)
                     .map(pte => pte.pfn);
 
-                const freeList = getFreeList(memory);
+                const freeList = getRawFreeList(memory);
                 newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
                 // Keep page-table slots contiguous after process deletion.
                 // newMemory = compactPagetables(newMemory).newMemory;

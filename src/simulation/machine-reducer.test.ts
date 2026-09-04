@@ -3,6 +3,7 @@ import { machineReducer } from "./machine-reducer";
 import {type MachineState, type MachineAction,  IDLE_CPU_STATE, NO_ERROR} from "./types";
 // type MachineAction, 
 import { FREE_LIST_ADDRESS} from './constants';
+import { makeMachineWithProcess } from './test-helpers';
 
 
 
@@ -17,18 +18,14 @@ describe('Context Switch', () => {
         error: NO_ERROR,
     };
 
-    // console.log(initialState);
-    // type: "CONTEXT_SWITCH";
-    // payload: { processID: number | null };
-    let action: MachineAction = {
-        type: "CONTEXT_SWITCH",
-        payload: { processID: null },
-    };
-
-    test('', () => {
+    test('Context switch to no process.', () => {
+        const action: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: { processID: null },
+        };
         // from null processID to null
-        // machineReducer(initialState, action)
-        expect(initialState).toEqual({...initialState, cpu: IDLE_CPU_STATE});
+        expect(machineReducer(initialState, action))
+            .toEqual({...initialState, cpu: IDLE_CPU_STATE});
         // from non-null cpuState to null
         const nonNullProcessID: MachineState  = {...initialState, cpu: {
             kind: "running",
@@ -38,16 +35,35 @@ describe('Context Switch', () => {
             accumulator: 0,
             currentInstructionRaw: 0,
           }};
-        expect(machineReducer(nonNullProcessID, action)).toEqual({...initialState, cpu: IDLE_CPU_STATE});
+        expect(machineReducer(nonNullProcessID, action))
+            .toEqual({...initialState, cpu: IDLE_CPU_STATE});
     });
 
-    action = {
-        type: "CONTEXT_SWITCH",
-        payload: { processID: null },
-    };
+    
+    test('Context switch to non-existent process', () => {
+        const action: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: { processID: 0},
+        };
+        expect(machineReducer({...initialState, }, action))
+            .toEqual({...initialState, cpu: IDLE_CPU_STATE});
+    });
 
-    test('Math.sqrt works for perfect squares', () => {
-        expect(Math.sqrt(4)).toBe(2);
-        expect(Math.sqrt(9)).toBe(3);
+
+    test('Context switch to existing process', () => {
+        const machineStateWith1Process: MachineState = makeMachineWithProcess(initialState);
+        const action: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: { processID: 0},
+        };    
+        expect(machineReducer({...machineStateWith1Process, }, action))
+            .toEqual({...machineStateWith1Process, cpu: {
+                kind: "running",
+                runningPid: 0,
+                programCounter: 0,
+                pageTableBase: 0,
+                accumulator: 0,
+                currentInstructionRaw: 0
+        }});
     });
 })

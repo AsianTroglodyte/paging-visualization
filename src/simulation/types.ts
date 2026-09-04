@@ -48,6 +48,10 @@ export type VirtualPage = {
     bytes: number[];
 };
 
+export type freeList = {
+  pageID: number;
+  isFree: boolean;
+}[];
 
 // Everything Below contains the machine state
 // export type TranslationLookasideBuffer = {

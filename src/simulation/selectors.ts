@@ -17,10 +17,10 @@ import {
     PROCESS_COLOR_CLASSES,
 } from "./constants";
 import { OPCODE_NAMES } from "./isa";
-import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks } from "./types";
+import type { Pages, PageTable, VirtualPage, ProcessControlBlock, ProcessControlBlocks} from "./types";
 
 /** Returns page frame numbers currently marked free in the free-list bitmap. */
-export function getFreeList(mem: number[]): number[] {
+export function getRawFreeList(mem: number[]): number[] {
     const bitmap = mem[FREE_LIST_ADDRESS];
     const numPages = 8;
     const freePFNList: number[] = [];
@@ -34,6 +34,21 @@ export function getFreeList(mem: number[]): number[] {
     // list of PFNs that are free
     return freePFNList;
 }
+
+// export function getFreeList(mem: number[]): number[] {
+//     const bitmap = mem[FREE_LIST_ADDRESS];
+//     const numPages = 8;
+//     const freeList: freeList = [];
+
+//     for (let page = 0; page < numPages; page++) {
+//         if ((bitmap & (1 << page)) !== 0) {
+//             freeList.push({});
+//         }
+//     }
+
+//     // list of PFNs that are free
+//     return freePFNList;
+// }
 
 /** Decodes a single process control block from memory, or null when invalid. */
 export function getProcessControlBlock(mem: number[], processID: number): ProcessControlBlock | null {
