@@ -87,6 +87,7 @@ export type MmuState =
 export type MachineError =
   | { kind: "none" }
   | { kind: "page_fault"; message: string; virtualAddress?: number }
+  | { kind: "invalid_operand"; message: string}
   | { kind: "no_space_for_process"; message: string };
 
 export type PageFault = Extract<MachineError, { kind: "page_fault" }>;

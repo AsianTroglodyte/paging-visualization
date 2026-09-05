@@ -351,7 +351,10 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             }
 
             if (action.payload.operand < 0 || action.payload.operand > 31) {
-                throw new Error(`Operand ${action.payload.operand} does not fit in 5 bits.`);
+                return { ...state, error: { 
+                    kind: "page_fault", 
+                    message: "Page fault: jump address out of range", 
+                }};
             }
 
             const newMemory = [...memory];
@@ -360,7 +363,6 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             const newInstructionRaw = (cpu.currentInstructionRaw & 0b11100000)  | action.payload.operand;
 
             newMemory[newPhysicalAddress] = newInstructionRaw;
-
 
             return { ...state, memory: newMemory, cpu: { ...cpu, currentInstructionRaw: newInstructionRaw}};
         }

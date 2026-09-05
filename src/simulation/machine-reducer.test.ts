@@ -220,7 +220,7 @@ describe('Change operand of instruction', () => {
         error: NO_ERROR,
     };
     
-    test('Change when CPU idle', () => {
+    test('Change operand of instruction', () => {
 
         const createdProcessState = makeMachineWithProcess(initialState);
 
@@ -245,6 +245,37 @@ describe('Change operand of instruction', () => {
 
         expect(getByteAtVirtualAddress(operandChangedState.memory, 0, 0))
             .toBe(23);
+    })
+
+    test('Change operand of instruction with invalid operand', () => {
+        const createdProcessState = makeMachineWithProcess(initialState);
+
+        const contextSwitchAction: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: {processID: 0}
+        }
+
+        // merely using helper here
+        const runningProcessState: MachineState =  contextSwitch(createdProcessState, contextSwitchAction);
+
+        const changeOperandAction: MachineAction = {
+            type: "CHANGE_OPERAND_OF_INSTRUCTION",
+            payload: { 
+                virtualAddress: 0, 
+                processID: 0, 
+                operand: 100000
+            }
+        }
+
+        const operandChangedState = machineReducer(runningProcessState, changeOperandAction);
+
+        expect(operandChangedState)
+            .toEqual({...runningProcessState,
+                error: {
+                    kind: "page_fault", 
+                    message: "Page fault: jump address out of range", 
+                }
+            });
     })
 })
 

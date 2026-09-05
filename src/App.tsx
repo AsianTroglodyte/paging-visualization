@@ -332,6 +332,8 @@ export function App() {
                 title = `Page fault (address ${err.virtualAddress})`;
             } else if (err.kind === "page_fault") {
                 title = "Page fault";
+            } else if (err.kind === "invalid_operand") {
+                title = "Invalid Operand"
             } else {
                 title = "Cannot create process";
             }
