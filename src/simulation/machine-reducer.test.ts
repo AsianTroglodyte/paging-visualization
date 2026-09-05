@@ -82,6 +82,44 @@ describe("Create process random", () => {
     });
 });
 
+describe("Delete process", () => {
+    const initialMemory = new Array(64).fill(0);
+    initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
+
+    const initialState: MachineState = {
+        memory: initialMemory,
+        cpu: IDLE_CPU_STATE,
+        mmu: { kind: "idle" },
+        error: NO_ERROR,
+    };
+
+    test('Successfully deletes a process', () => {
+        const stateWith1Process = makeMachineWithProcess(initialState);
+        const prevFreeList = getRawFreeList(stateWith1Process.memory);
+        const prevPagetable = getPageTable(stateWith1Process.memory, 0);        
+
+        const action: MachineAction = {
+            type: "DELETE_PROCESS",
+            payload: { processID: 0 },
+        };
+
+        const newMachineState = machineReducer(stateWith1Process, action);
+        const newMemory = newMachineState.memory;
+        const newFreeList = getRawFreeList(newMemory);
+
+
+        const allocated = new Set(prevPagetable.map(page => page.pfn));
+
+        // the only things that really change are the PCB and the freeList everything 
+        // else is left as-is to be overwritten later
+        expect(getProcessControlBlock(newMachineState.memory, 0)).toBeNull();
+
+        expect(newFreeList).toEqual(expect.arrayContaining([...allocated]));
+        expect(prevFreeList.length).toEqual(4);
+        expect(newFreeList.length).toEqual(6);
+    });
+});
+
 describe('Context Switch', () => {
     const initialMemory = new Array(64).fill(0);
     initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
