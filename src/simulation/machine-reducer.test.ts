@@ -131,13 +131,49 @@ describe("Fetch instruction", () => {
         error: NO_ERROR,
     };
 
-    test('Fetch when no CPU idle', () => {
+    test('Fetch when CPU idle', () => {
         const action: MachineAction = {
             type: "FETCH_INSTRUCTION",
             payload: {newProgramCounter: 4}
         }
         const newState = machineReducer(initialState, action);
         expect(initialState).toEqual(newState);
+    });
+
+    test("Fetch with Page fault: virtual address out of range", () => {
+        const instructionVirtualAddress = 120343;
+
+        const contextSwitch: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: {processID: 0}
+        }
+
+        const fetchInstruction: MachineAction = {
+            type: "FETCH_INSTRUCTION",
+            payload: {newProgramCounter: instructionVirtualAddress}
+        }
+
+        const createdProcessState = makeMachineWithProcess(initialState);
+
+        const runningProcessState: MachineState =  {...createdProcessState, cpu: {
+            kind: "running",
+            runningPid: 0,
+            programCounter: 0,
+            pageTableBase: 0,
+            accumulator: 0,
+            currentInstructionRaw: 0,
+        }};
+        console.log("runningProcessState: ", runningProcessState);
+
+        const fetchedInstructionState = machineReducer(runningProcessState, fetchInstruction);
+        console.log("fetchedInstructionState: ", fetchedInstructionState);
+        expect(fetchedInstructionState).toEqual(
+            {...fetchedInstructionState, 
+                error: { 
+                    kind: "page_fault", 
+                    message: "Page fault: virtual address out of range", 
+                    virtualAddress: instructionVirtualAddress
+            }});
     });
 });
 

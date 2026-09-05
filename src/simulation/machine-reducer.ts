@@ -177,6 +177,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                 return state;
             }
             const fetchVa = action.payload.newProgramCounter;
+            // return 1;
             if (fetchVa < 0 || fetchVa > 15) {
                 return { ...state, error: { kind: "page_fault", message: "Page fault: virtual address out of range", virtualAddress: fetchVa } };
             }
