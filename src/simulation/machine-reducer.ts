@@ -145,32 +145,32 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             return { ...state, memory: newMemory };
         }
         case "DELETE_PROCESS": {
-                const processControlBlocks = getProcessControlBlocks(memory);
-                const pcbToDelete = processControlBlocks.find(pcb => pcb.processID === action.payload.processID);
+            const processControlBlocks = getProcessControlBlocks(memory);
+            const pcbToDelete = processControlBlocks.find(pcb => pcb.processID === action.payload.processID);
+        
+            if (!pcbToDelete) {
+                throw new Error(`Process ID ${action.payload.processID} not found.`);
+            }
+
+            const remainingPCBs = processControlBlocks.filter(pcb => pcb.processID !== action.payload.processID);
+            let newMemory = setProcessControlBlocks(remainingPCBs, [...memory]);
+
+            const pageTable = getPageTable(memory, action.payload.processID);
+            const newlyFreedPages = pageTable
+                .filter(pte => pte.valid)
+                .map(pte => pte.pfn);
+
+            const freeList = getRawFreeList(memory);
+            newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
+            // Keep page-table slots contiguous after process deletion.
+            // newMemory = compactPagetables(newMemory).newMemory;
+
+            const newCpu: CpuState =
+                cpu.kind === "running" && cpu.runningPid === action.payload.processID
+                    ? IDLE_CPU_STATE
+                    : cpu
             
-                if (!pcbToDelete) {
-                    throw new Error(`Process ID ${action.payload.processID} not found.`);
-                }
-
-                const remainingPCBs = processControlBlocks.filter(pcb => pcb.processID !== action.payload.processID);
-                let newMemory = setProcessControlBlocks(remainingPCBs, [...memory]);
-
-                const pageTable = getPageTable(memory, action.payload.processID);
-                const newlyFreedPages = pageTable
-                    .filter(pte => pte.valid)
-                    .map(pte => pte.pfn);
-
-                const freeList = getRawFreeList(memory);
-                newMemory = setFreeList([...freeList, ...newlyFreedPages], newMemory);
-                // Keep page-table slots contiguous after process deletion.
-                // newMemory = compactPagetables(newMemory).newMemory;
-
-                const newCpu: CpuState =
-                    cpu.kind === "running" && cpu.runningPid === action.payload.processID
-                        ? IDLE_CPU_STATE
-                        : cpu
-              
-                return { ...state, memory: newMemory, cpu: newCpu, mmu: mmu };
+            return { ...state, memory: newMemory, cpu: newCpu, mmu: mmu };
         }
         case "FETCH_INSTRUCTION": {
             if (cpu.kind === "idle") {

@@ -120,6 +120,27 @@ describe("Delete process", () => {
     });
 });
 
+describe("Fetch instruction", () => {
+    const initialMemory = new Array(64).fill(0);
+    initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
+
+    const initialState: MachineState = {
+        memory: initialMemory,
+        cpu: IDLE_CPU_STATE,
+        mmu: { kind: "idle" },
+        error: NO_ERROR,
+    };
+
+    test('Fetch when no CPU idle', () => {
+        const action: MachineAction = {
+            type: "FETCH_INSTRUCTION",
+            payload: {newProgramCounter: 4}
+        }
+        const newState = machineReducer(initialState, action);
+        expect(initialState).toEqual(newState);
+    });
+});
+
 describe('Context Switch', () => {
     const initialMemory = new Array(64).fill(0);
     initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
