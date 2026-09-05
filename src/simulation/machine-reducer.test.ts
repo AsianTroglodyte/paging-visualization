@@ -277,6 +277,20 @@ describe('Change operand of instruction', () => {
                 }
             });
     })
+
+    test('Change operand when cpu idle', () => {
+        const changeOperandAction: MachineAction = {
+            type: "CHANGE_OPERAND_OF_INSTRUCTION",
+            payload: { 
+                virtualAddress: 0, 
+                processID: 0, 
+                operand: 100000
+            }
+        }
+
+        expect(() => machineReducer(initialState, changeOperandAction))
+            .toThrow(/Cannot change operand of instruction when CPU is idle./);
+    })
 })
 
 describe('Context Switch', () => {
