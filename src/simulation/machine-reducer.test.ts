@@ -3,8 +3,8 @@ import { machineReducer } from "./machine-reducer";
 import {type MachineState, type MachineAction,  IDLE_CPU_STATE, NO_ERROR} from "./types";
 // type MachineAction, 
 import { FREE_LIST_ADDRESS} from './constants';
-import { makeMachineWithProcess } from './test-helpers';
-import { getPage, getPageTable, getProcessControlBlock, getProcessControlBlocks, getRawFreeList } from './selectors';
+import { contextSwitch, makeMachineWithProcess } from './test-helpers';
+import { getByteAtVirtualAddress, getPage, getPageTable, getProcessControlBlock, getProcessControlBlocks, getRawFreeList } from './selectors';
 import { PteHoverContent } from '@/components/hover-content';
 import { SAMPLE_PROGRAM } from './isa';
 
@@ -172,11 +172,6 @@ describe("Fetch instruction", () => {
     test("Successful fetch", () => {
         const instructionVirtualAddress = 4;
 
-        const fetchInstruction: MachineAction = {
-            type: "FETCH_INSTRUCTION",
-            payload: {newProgramCounter: instructionVirtualAddress}
-        }
-
         const createdProcessState = makeMachineWithProcess(initialState);
 
         const runningProcessState: MachineState =  {...createdProcessState, cpu: {
@@ -188,8 +183,12 @@ describe("Fetch instruction", () => {
             currentInstructionRaw: 0,
         }};
 
+        const fetchInstruction: MachineAction = {
+            type: "FETCH_INSTRUCTION",
+            payload: {newProgramCounter: instructionVirtualAddress}
+        }
+
         const fetchedInstructionState = machineReducer(runningProcessState, fetchInstruction);
-        console.log("fetchedInstructionState: ", fetchedInstructionState);
         expect(fetchedInstructionState).toEqual(
             {...runningProcessState, 
                 mmu: {
@@ -210,6 +209,44 @@ describe("Fetch instruction", () => {
         );
     });
 });
+
+describe('Change operand of instruction', () => {
+    const initialMemory = new Array(64).fill(0);
+    initialMemory[FREE_LIST_ADDRESS] = 0b11111100;
+    const initialState: MachineState = {
+        memory: initialMemory,
+        cpu: IDLE_CPU_STATE,
+        mmu: { kind: "idle" },
+        error: NO_ERROR,
+    };
+    
+    test('Change when CPU idle', () => {
+
+        const createdProcessState = makeMachineWithProcess(initialState);
+
+        const contextSwitchAction: MachineAction = {
+            type: "CONTEXT_SWITCH",
+            payload: {processID: 0}
+        }
+
+        // merely using helper here
+        const runningProcessState: MachineState =  contextSwitch(createdProcessState, contextSwitchAction);
+
+        const changeOperandAction: MachineAction = {
+            type: "CHANGE_OPERAND_OF_INSTRUCTION",
+            payload: { 
+                virtualAddress: 0, 
+                processID: 0, 
+                operand: 23
+            }
+        }
+
+        const operandChangedState = machineReducer(runningProcessState, changeOperandAction);
+
+        expect(getByteAtVirtualAddress(operandChangedState.memory, 0, 0))
+            .toBe(23);
+    })
+})
 
 describe('Context Switch', () => {
     const initialMemory = new Array(64).fill(0);
