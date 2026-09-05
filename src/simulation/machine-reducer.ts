@@ -77,7 +77,7 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
                     message: "Not enough free pages to create a new process.",
                 }};
             }
-                
+   
             // Inline: select random free pages
             const shuffled = [...freeList];
             for (let i = shuffled.length - 1; i > 0; i--) {
@@ -144,7 +144,6 @@ export function machineReducer(state: MachineState, action: MachineAction): Mach
             newMemory = writeProcessPages(newAllocatedPagesPFN, newMemory);
             return { ...state, memory: newMemory };
         }
-
         case "DELETE_PROCESS": {
                 const processControlBlocks = getProcessControlBlocks(memory);
                 const pcbToDelete = processControlBlocks.find(pcb => pcb.processID === action.payload.processID);
